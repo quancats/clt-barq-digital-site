@@ -1,0 +1,16 @@
+---
+import HomeArticles from '@/components/astro/sections/home/HomeArticles.astro';
+import HomeHero from '@/components/astro/sections/home/HomeHero.astro';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import { createHomePage } from '@/lib/content/queries/createHomePage';
+import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
+
+const locale = 'ar' as const;
+const site = Astro.site ?? new URL(FALLBACK_SITE_URL);
+const page = await createHomePage({ locale, site });
+---
+
+<WebsiteLayout locale={locale} seo={page.seo} alternates={page.alternates} alternatePath={page.alternatePath} jsonLd={page.jsonLd}>
+	<HomeHero locale={locale} />
+	<HomeArticles locale={locale} articles={page.articles} />
+</WebsiteLayout>

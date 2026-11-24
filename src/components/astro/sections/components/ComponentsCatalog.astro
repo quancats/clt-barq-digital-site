@@ -1,0 +1,61 @@
+---
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Breadcrumbs from '@/components/astro/content/Breadcrumbs.astro';
+import AstroIconsDemo from '@/components/astro/sections/components/AstroIconsDemo.astro';
+import ComponentCatalog from '@/components/islands/interactive/ComponentCatalog.vue';
+import Heading from '@/components/astro/content/Heading.astro';
+import { localizePath, type Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/helpers';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dictionary = getDictionary(locale);
+const { page_title, page_description, icons_demo, ...componentCopy } = dictionary.components;
+void icons_demo;
+
+const catalogCopy = {
+	...componentCopy,
+	close: dictionary.common.close,
+	loading: dictionary.common.loading,
+	more_pages: dictionary.common.more_pages,
+	previous: dictionary.common.previous,
+	next: dictionary.common.next,
+	previous_slide: dictionary.common.previous_slide,
+	next_slide: dictionary.common.next_slide,
+};
+---
+
+<section aria-labelledby="components-catalog-title" class="space-y-8">
+	<header class="space-y-2">
+		<Breadcrumbs label={dictionary.layout.breadcrumbs_label} items={[{ label: dictionary.layout.nav_home, href: localizePath(locale, '/') }, { label: dictionary.layout.nav_components }]} />
+		<Heading id="components-catalog-title" level={1} class="text-3xl">
+			{page_title}
+		</Heading>
+		<p class="max-w-3xl text-muted-foreground">{page_description}</p>
+	</header>
+
+	<div data-catalog-cta class="flex flex-wrap gap-3">
+		<CallToAction href={localizePath(locale, '/articles')} label={dictionary.home.cta_articles} prefetch />
+		<CallToAction href="https://docs.astro.build/" label={locale === 'ar' ? 'وثائق Astro' : 'Astro documentation'} variant="outline" external />
+	</div>
+
+	<AstroIconsDemo locale={locale} />
+
+	<ComponentCatalog client:idle locale={locale} copy={catalogCopy} />
+	<nav data-catalog-fallback aria-label={page_title} class="flex flex-wrap gap-3">
+		<a class="inline-flex min-h-11 items-center underline" href="#combobox">{componentCopy.components.combobox.name}</a>
+		<a class="inline-flex min-h-11 items-center underline" href={localizePath(locale, '/articles')}>{dictionary.layout.nav_articles}</a>
+	</nav>
+</section>
+
+<style>
+	:global(astro-island:not([ssr])) + [data-catalog-fallback] {
+		display: none;
+	}
+	:global(astro-island[ssr] [data-catalog-component='combobox'] button) {
+		display: none;
+	}
+</style>

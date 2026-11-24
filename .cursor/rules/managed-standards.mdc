@@ -1,0 +1,23 @@
+---
+description: Managed standards file rules
+alwaysApply: true
+---
+
+# Managed Standards Rules
+
+Do not edit managed standards inside project repositories unless explicitly asked.
+
+Managed locations commonly include:
+
+- docs/standards/
+- .cursor/rules/ when synced from standards package
+
+Organization and Astro starter baseline rules belong in `docs/standards/astro/` (and matching Cursor rules). Do not invent a parallel override file to restate the baseline.
+
+For true project-specific exceptions that diverge from managed standards, use:
+
+- docs/standards-overrides/PROJECT-OVERRIDES.md
+
+Overrides must name an owner, reason, Feature ID when applicable, and review date.
+
+If standards need improvement, propose changes in the central standards package and version them.

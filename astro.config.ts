@@ -1,0 +1,151 @@
+// @ts-check
+import { writeFile } from 'node:fs/promises';
+import mdx from '@astrojs/mdx';
+import vue from '@astrojs/vue';
+import tailwindcss from '@tailwindcss/vite';
+import icon from 'astro-icon';
+import { defineConfig, envField, fontProviders } from 'astro/config';
+import { loadEnv } from 'vite';
+import { renderHostRedirects } from './src/data/hostRedirects.mjs';
+import { defaultLocale, locales } from './src/i18n/config';
+import { resolveSiteUrl } from './src/lib/env/resolveSiteUrl';
+import { isSiteIndexable } from './src/lib/seo/indexingPolicy';
+import { productionSitemap } from './src/lib/seo/productionSitemap';
+
+// Astro evaluates this file before normal Vite `.env` injection; load file env explicitly.
+const fileEnv = loadEnv(process.env.NODE_ENV === 'production' ? 'production' : 'development', process.cwd(), '');
+const site = resolveSiteUrl({
+	processPublicSiteUrl: process.env.PUBLIC_SITE_URL,
+	filePublicSiteUrl: fileEnv.PUBLIC_SITE_URL,
+});
+const configuredEnv = (process.env.ENV ?? fileEnv.ENV ?? 'local').trim();
+const configuredOrigin = process.env.PUBLIC_SITE_URL?.trim() || fileEnv.PUBLIC_SITE_URL || '';
+const indexable = isSiteIndexable(configuredEnv, configuredOrigin);
+
+export default defineConfig({
+	output: 'static',
+	site,
+	trailingSlash: 'always',
+	build: {
+		// Directory layout (`dist/about/index.html`). Public URLs keep a trailing slash (`/about/`).
+		// Hosts should serve `/about/` from `/about/index.html` and redirect `/about` → `/about/` (ADR-0016).
+		format: 'directory',
+	},
+	fonts: [
+		{
+			provider: fontProviders.google(),
+			name: 'Tajawal',
+			cssVariable: '--font-tajawal',
+			fallbacks: ['sans-serif'],
+			weights: [400, 500, 700],
+			styles: ['normal'],
+			subsets: ['arabic', 'latin'],
+		},
+		{
+			provider: fontProviders.google(),
+			name: 'Manrope',
+			cssVariable: '--font-manrope',
+			fallbacks: ['sans-serif'],
+			weights: [400, 500, 700],
+			styles: ['normal'],
+			subsets: ['latin'],
+		},
+	],
+	env: {
+		schema: {
+			/**
+			 * Project work environment (not Vite `--mode`).
+			 * Use to gate production-only behavior (indexing, analytics eligibility helpers, etc.).
+			 */
+			ENV: envField.enum({
+				context: 'server',
+				access: 'public',
+				values: ['local', 'staging', 'production'],
+				default: 'local',
+			}),
+			/** Absolute public origin; also drives Astro `site` via `resolveSiteUrl` + `loadEnv`. */
+			PREVIEW_CRAWL_POLICY: envField.enum({
+				context: 'server',
+				access: 'public',
+				values: ['public', 'private'],
+				default: 'public',
+			}),
+			PUBLIC_SITE_URL: envField.string({
+				context: 'server',
+				access: 'public',
+				url: true,
+				default: 'https://example.com',
+			}),
+			PUBLIC_DEFAULT_THEME: envField.enum({
+				context: 'client',
+				access: 'public',
+				values: ['light', 'dark', 'auto'],
+				default: 'auto',
+			}),
+			PUBLIC_GOOGLE_ANALYTICS_ID: envField.string({
+				context: 'client',
+				access: 'public',
+				optional: true,
+			}),
+			PUBLIC_GOOGLE_ANALYTICS_ENABLED: envField.boolean({
+				context: 'client',
+				access: 'public',
+				default: true,
+			}),
+			PUBLIC_GOOGLE_ANALYTICS_MODE: envField.enum({
+				context: 'client',
+				access: 'public',
+				values: ['off', 'opt-out', 'opt-in'],
+				default: 'opt-in',
+			}),
+		},
+	},
+	i18n: {
+		locales: [...locales],
+		defaultLocale,
+		routing: {
+			prefixDefaultLocale: true,
+			redirectToDefaultLocale: false,
+		},
+	},
+	prefetch: {
+		prefetchAll: false,
+		defaultStrategy: 'viewport',
+	},
+	devToolbar: {
+		enabled: true,
+	},
+	integrations: [
+		{
+			name: 'template-indexing-policy',
+			hooks: {
+				'astro:config:setup': ({ command }) => {
+					if (command === 'build' && configuredEnv === 'production' && !indexable) {
+						throw new Error('ENV=production requires PUBLIC_SITE_URL to be a public HTTP(S) origin without a path, query, or fragment.');
+					}
+				},
+			},
+		},
+		...(indexable ? [productionSitemap()] : []),
+		{
+			name: 'cloudflare-static-redirects',
+			hooks: {
+				'astro:build:done': async ({ dir }) => {
+					await writeFile(new URL('_redirects', dir), renderHostRedirects(), { flag: 'wx' });
+				},
+			},
+		},
+		mdx({
+			// Keep MDX aligned with Markdown processing defaults unless a project override is approved.
+			extendMarkdownConfig: true,
+		}),
+		vue(),
+		icon({
+			// Canonical local SVG directory (overrides default `src/icons/`).
+			iconDir: 'src/assets/icons',
+		}),
+	],
+	vite: {
+		plugins: [tailwindcss()],
+	},
+});

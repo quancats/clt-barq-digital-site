@@ -1,0 +1,63 @@
+---
+import { ANALYTICS_CONSENT_STORAGE_KEY, ANALYTICS_CONSENT_VERSION, parseAnalyticsMode, shouldAutoOpenConsentBanner, shouldShowAnalyticsPreferenceUi, serializeAnalyticsPreference } from '@/lib/analytics/consent';
+import { isGoogleAnalyticsEnabled, resolveGoogleAnalyticsId } from '@/lib/analytics/googleAnalytics';
+import type { Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/helpers';
+import { PUBLIC_GOOGLE_ANALYTICS_ENABLED, PUBLIC_GOOGLE_ANALYTICS_ID, PUBLIC_GOOGLE_ANALYTICS_MODE } from 'astro:env/client';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dictionary = getDictionary(locale);
+const mode = parseAnalyticsMode(PUBLIC_GOOGLE_ANALYTICS_MODE);
+const analyticsEnabled = isGoogleAnalyticsEnabled(PUBLIC_GOOGLE_ANALYTICS_ENABLED);
+const measurementId = resolveGoogleAnalyticsId({
+	measurementId: PUBLIC_GOOGLE_ANALYTICS_ID,
+	enabled: PUBLIC_GOOGLE_ANALYTICS_ENABLED,
+	isProd: import.meta.env.PROD,
+});
+const showPreferenceUi = shouldShowAnalyticsPreferenceUi({
+	mode,
+	analyticsEnabled,
+});
+const autoOpenBanner = shouldAutoOpenConsentBanner({
+	mode,
+	analyticsEnabled,
+	measurementId,
+});
+const copy = dictionary.common.cookie_consent;
+const grantedValue = serializeAnalyticsPreference('granted');
+const deniedValue = serializeAnalyticsPreference('denied');
+
+const bootScript = `(()=>{const root=document.getElementById('cookie-consent');if(!root)return;const key=${JSON.stringify(ANALYTICS_CONSENT_STORAGE_KEY)};const version=${ANALYTICS_CONSENT_VERSION};const mode=${JSON.stringify(mode)};const autoOpen=${autoOpenBanner ? 'true' : 'false'};const granted=${JSON.stringify(grantedValue)};const denied=${JSON.stringify(deniedValue)};function readPreference(){try{const raw=localStorage.getItem(key);if(!raw)return null;if(raw==='granted'||raw==='denied')return{state:raw,version:version};const parsed=JSON.parse(raw);if((parsed.state==='granted'||parsed.state==='denied')&&parsed.version===version)return parsed;return null;}catch{return null;}}function writePreference(value){try{localStorage.setItem(key,value);}catch{}}function hide(){root.hidden=true;}function show(){root.hidden=false;root.querySelector('[data-cookie-consent-accept]')?.focus();}function onKeydown(event){if(event.key==='Escape'&&!root.hidden){hide();}}if(autoOpen&&readPreference()==null)show();root.querySelector('[data-cookie-consent-accept]')?.addEventListener('click',()=>{writePreference(granted);hide();if(mode==='opt-in')window.location.reload();});root.querySelector('[data-cookie-consent-reject]')?.addEventListener('click',()=>{writePreference(denied);hide();window.location.reload();});document.addEventListener('keydown',onKeydown);document.querySelectorAll('[data-privacy-settings]').forEach((el)=>{el.addEventListener('click',(event)=>{event.preventDefault();show();});});})();`;
+---
+
+{
+	showPreferenceUi ? (
+		<>
+			<div id="cookie-consent" class="pointer-events-none fixed inset-x-0 bottom-0 z-[60] p-4 sm:p-6" hidden data-cookie-consent>
+				<div class="pointer-events-auto mx-auto flex max-w-3xl flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-lg sm:flex-row sm:items-end sm:justify-between sm:gap-6" role="dialog" aria-modal="false" aria-labelledby="cookie-consent-title" aria-describedby="cookie-consent-description">
+					<div class="space-y-2">
+						<p id="cookie-consent-title" class="text-sm font-semibold text-foreground">
+							{copy.title}
+						</p>
+						<p id="cookie-consent-description" class="text-sm leading-relaxed text-muted-foreground">
+							{copy.description}
+						</p>
+					</div>
+					<div class="flex shrink-0 flex-wrap gap-2">
+						<button type="button" class="inline-flex h-11 min-h-11 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted" data-cookie-consent-reject>
+							{copy.reject}
+						</button>
+						<button type="button" class="inline-flex h-11 min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90" data-cookie-consent-accept>
+							{copy.accept}
+						</button>
+					</div>
+				</div>
+			</div>
+			<script is:inline set:html={bootScript} />
+		</>
+	) : null
+}

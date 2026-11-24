@@ -1,0 +1,24 @@
+---
+import Container from '@/components/layout/Container.astro';
+import type { Locale } from '@/i18n/config';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import type { LocaleAlternate, PageSeo } from '@/lib/seo/types';
+
+interface Props {
+	locale: Locale;
+	seo: PageSeo;
+	alternates?: LocaleAlternate[] | undefined;
+	alternatePath?: string | undefined;
+	jsonLd?: Record<string, unknown> | Record<string, unknown>[] | undefined;
+}
+
+const { locale, seo, alternates, alternatePath, jsonLd } = Astro.props;
+---
+
+<WebsiteLayout locale={locale} seo={seo} alternates={alternates} alternatePath={alternatePath} jsonLd={jsonLd}>
+	<Container class="py-10">
+		<article class="mx-auto max-w-3xl">
+			<slot />
+		</article>
+	</Container>
+</WebsiteLayout>

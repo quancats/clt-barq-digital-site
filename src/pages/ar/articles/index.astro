@@ -1,0 +1,33 @@
+---
+import ArticleCard from '@/components/astro/content/ArticleCard.astro';
+import Breadcrumbs from '@/components/astro/content/Breadcrumbs.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import Container from '@/components/layout/Container.astro';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import { createArticlesIndexPage } from '@/lib/content/queries/createArticlesIndexPage';
+import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
+
+const locale = 'ar' as const;
+const site = Astro.site ?? new URL(FALLBACK_SITE_URL);
+const page = await createArticlesIndexPage({ locale, site });
+---
+
+<WebsiteLayout locale={locale} seo={page.seo} alternates={page.alternates} alternatePath={page.alternatePath} jsonLd={page.jsonLd}>
+	<Container class="py-10">
+		<Breadcrumbs class="mb-4" label={page.dictionary.layout.breadcrumbs_label} items={page.breadcrumbItems} />
+		<Heading level={1} class="mb-6 text-3xl">{page.dictionary.common.articles}</Heading>
+		{
+			page.articles.length === 0 ? (
+				<p class="text-muted-foreground">{page.dictionary.common.no_articles}</p>
+			) : (
+				<ul class="grid gap-4">
+					{page.articles.map((article) => (
+						<li>
+							<ArticleCard article={article} readMoreLabel={page.dictionary.common.read_more} badgeLabel={page.dictionary.common.articles} headingLevel={2} />
+						</li>
+					))}
+				</ul>
+			)
+		}
+	</Container>
+</WebsiteLayout>

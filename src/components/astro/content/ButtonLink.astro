@@ -1,0 +1,24 @@
+---
+import { PRIMARY_NAV_PREFETCH_ATTRS } from '@/lib/navigation/prefetch';
+import { cn } from '@/lib/utils';
+import { buttonLinkVariants, type ButtonLinkVariants } from '@/lib/ui/astroVariants';
+
+interface Props {
+	href: string;
+	variant?: ButtonLinkVariants['variant'];
+	size?: ButtonLinkVariants['size'];
+	class?: string;
+	/** Opt into Astro viewport prefetch for high-confidence internal CTAs. */
+	prefetch?: boolean;
+	/** Optional for external CTAs (pair with `rel` as needed). */
+	target?: string;
+	rel?: string;
+}
+
+const { href, variant = 'default', size = 'default', class: className, prefetch = false, target, rel } = Astro.props;
+const prefetchAttrs = prefetch ? PRIMARY_NAV_PREFETCH_ATTRS : {};
+---
+
+<a href={href} class={cn(buttonLinkVariants({ variant, size }), className)} target={target} rel={rel} {...prefetchAttrs}>
+	<slot />
+</a>

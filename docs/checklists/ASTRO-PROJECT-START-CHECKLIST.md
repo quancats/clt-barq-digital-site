@@ -1,0 +1,23 @@
+# Astro Project Start Checklist
+
+- [ ] Business/product scope is approved.
+- [ ] Astro suitability is approved.
+- [ ] Repository naming and ownership are approved.
+- [ ] Locales and URL strategy are approved.
+- [ ] Page inventory and route map exist.
+- [ ] Content ownership and CMS approach exist.
+- [ ] Static/on-demand decision exists.
+- [ ] Design Tokens, layout shell, and component taxonomy are approved (`astro` / `ui` / `islands` / `patterns`).
+- [ ] Official UI stack is approved: Astro + Tailwind CSS 4 + Vue Islands + shadcn-vue/Reka UI when interaction is required.
+- [ ] Styling policy is Tailwind-complete for ordinary UI; Pure/Raw CSS only for tokens/theme, view transitions, keyframes, or generated-content selectors.
+- [ ] Default icon stack is installed: `astro-icon`, `@iconify-json/lucide`, and `@iconify-json/simple-icons`.
+- [ ] Lucide is used for UI icons; Simple Icons is restricted to company and platform logos.
+- [ ] SEO, analytics, legal, forms, and consent scope are known (GA4 ID + disable path; default analytics mode is opt-in).
+- [ ] Locale font pairing is approved (baseline: Tajawal `ar` + Manrope `en` via Astro Fonts).
+- [ ] Package manager/lockfile policy is known (starter: npm + `package-lock.json`).
+- [ ] Optional `docs/recipes/` items in scope are listed (cleanup, host redirects, CSP, CMS, consent, portfolio/Person, contact, header alternative, favicons).
+- [ ] Demo catalog/sample articles kept or removed per [adopting-project-cleanup.md](../recipes/adopting-project-cleanup.md).
+- [ ] Performance budget and deployment target are known; island budget entries match retained islands.
+- [ ] Command layers understood: `validate` → `build` → `verify` (no `fix:*` in CI).
+- [ ] Milestones and initial issues are generated.
+- [ ] Cursor rules and correct adoption profile are installed.

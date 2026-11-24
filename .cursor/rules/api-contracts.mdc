@@ -1,0 +1,28 @@
+---
+description: API contract rules
+alwaysApply: false
+---
+
+# API Contract Rules
+
+Backend must not implement undocumented endpoints.
+Frontend must not invent undocumented endpoints.
+
+Check:
+
+- docs/system/API-CONTRACTS.md
+- docs/app/API-IMPLEMENTATION.md for backend
+- docs/app/API-USAGE.md for frontend
+
+Any API change must update contracts, DTOs, docs, and tests.
+
+## Required response when blocked
+
+If an API contract is missing or unclear, do not implement backend or frontend API logic. Return:
+
+- missing endpoint
+- missing request shape
+- missing response shape
+- missing error cases
+- affected frontend/backend files
+- documentation required before implementation

@@ -1,0 +1,20 @@
+/* Browser-native cross-document View Transitions (MPA). Allowed non-utility CSS — no ClientRouter / SPA JS. */
+@media (prefers-reduced-motion: no-preference) {
+	@view-transition {
+		navigation: auto;
+	}
+
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 0.25s;
+		animation-timing-function: ease;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
+	}
+}

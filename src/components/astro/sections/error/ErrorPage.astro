@@ -1,0 +1,105 @@
+---
+import { Icon } from 'astro-icon/components';
+import ButtonLink from '@/components/astro/content/ButtonLink.astro';
+import ErrorBackground from '@/components/astro/sections/error/ErrorBackground.astro';
+import { getLocaleDirection, localizePath, type Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/helpers';
+import { buttonLinkVariants } from '@/lib/ui/astroVariants';
+import { cn } from '@/lib/utils';
+
+interface Props {
+	locale: Locale;
+	statusCode?: number;
+	/** Optional technical detail for non-404/500 codes (page body only; never used in meta). */
+	technicalMessage?: string;
+}
+
+const { locale, statusCode = 404, technicalMessage } = Astro.props;
+const dictionary = getDictionary(locale);
+const direction = getLocaleDirection(locale);
+const homeHref = localizePath(locale, '/');
+const homeTrailingIcon = direction === 'rtl' ? 'lucide:arrow-left' : 'lucide:arrow-right';
+const showRetryAction = statusCode >= 500 || statusCode === 408;
+
+const copy = dictionary.common.error;
+const title = statusCode === 404 ? copy.titles.not_found : statusCode === 500 ? copy.titles.server_error : copy.titles.generic.replace('{code}', String(statusCode));
+
+const baseDescription = statusCode === 404 ? copy.descriptions.not_found : statusCode === 500 ? copy.descriptions.server_error : copy.descriptions.generic;
+
+const trimmedTechnical = technicalMessage?.trim();
+const description = statusCode !== 404 && statusCode !== 500 && trimmedTechnical ? `${baseDescription} (${trimmedTechnical})` : baseDescription;
+---
+
+<main id="main" class="error-page relative min-h-screen overflow-hidden bg-brand-50 dark:bg-brand-950">
+	<div class="error-page__art pointer-events-none absolute inset-0 flex h-full w-full items-start justify-center" aria-hidden="true">
+		<ErrorBackground class="h-auto w-full max-w-none" />
+	</div>
+
+	<div class="relative z-10 flex min-h-screen items-end justify-center px-4 pb-8 sm:pb-12">
+		<section class="error-page__copy mx-auto max-w-3xl text-center">
+			<h1 class="mb-4 text-2xl font-semibold tracking-tight text-brand-800 md:text-3xl dark:text-brand-100">
+				{title}
+			</h1>
+
+			<p class="mx-auto mb-8 max-w-2xl text-base text-brand-700 md:text-lg dark:text-brand-200">
+				{description}
+			</p>
+
+			<div class="flex flex-wrap items-center justify-center gap-3">
+				{
+					showRetryAction && (
+						<button type="button" class={cn(buttonLinkVariants({ variant: 'secondary', size: 'lg' }), 'h-11 px-5 text-base')} onclick="location.reload()">
+							<Icon name="lucide:refresh-cw" size={18} aria-hidden="true" />
+							{copy.actions.try_again}
+						</button>
+					)
+				}
+
+				<ButtonLink href={homeHref} variant="default" size="lg" class="h-11 px-5 text-base" prefetch>
+					{copy.actions.go_home}
+					<Icon name={homeTrailingIcon} size={18} aria-hidden="true" />
+				</ButtonLink>
+			</div>
+		</section>
+	</div>
+</main>
+
+<style>
+	/* Allowed exception: keyframe motion not expressible as a clear Tailwind utility set. */
+	.error-page__art {
+		animation: error-art-in 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	.error-page__copy {
+		animation: error-copy-in 700ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+	}
+
+	@keyframes error-art-in {
+		from {
+			opacity: 0;
+			transform: translateY(-1.25rem) scale(1.02);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+
+	@keyframes error-copy-in {
+		from {
+			opacity: 0;
+			transform: translateY(1rem);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.error-page__art,
+		.error-page__copy {
+			animation: none;
+		}
+	}
+</style>

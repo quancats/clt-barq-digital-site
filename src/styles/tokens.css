@@ -1,0 +1,23 @@
+/**
+ * Tailwind CSS 4 design tokens.
+ * Brand + base radius live here; theme.css maps Tailwind palettes + brand into shadcn semantics.
+ */
+@theme {
+	/* Font family utilities come from Astro Fonts via global.css @theme inline */
+
+	/* shadcn radius preset: small */
+	--radius-base: 0.4rem;
+
+	/* Project brand scale (drives --primary in theme.css) */
+	--color-brand-50: oklch(97.84% 0.02 316.1);
+	--color-brand-100: oklch(94.96% 0.03 314.16);
+	--color-brand-200: oklch(90.74% 0.06 312.64);
+	--color-brand-300: oklch(83.63% 0.12 313.24);
+	--color-brand-400: oklch(74.03% 0.19 312.94);
+	--color-brand-500: oklch(65.53% 0.24 312.15);
+	--color-brand-600: oklch(59.23% 0.26 311.45);
+	--color-brand-700: oklch(53.07% 0.24 311.66);
+	--color-brand-800: oklch(46.65% 0.21 312.82);
+	--color-brand-900: oklch(40.44% 0.17 313.91);
+	--color-brand-950: oklch(31.19% 0.15 312.08);
+}

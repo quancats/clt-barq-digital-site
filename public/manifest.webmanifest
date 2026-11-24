@@ -1,0 +1,25 @@
+{
+	"name": "قالب محتوى Astro",
+	"short_name": "قالب Astro",
+	"description": "قالب Astro محكوم لمواقع المحتوى الثابتة ثنائية اللغة.",
+	"start_url": "/ar",
+	"display": "standalone",
+	"background_color": "#ffffff",
+	"theme_color": "#ffffff",
+	"lang": "ar",
+	"dir": "rtl",
+	"icons": [
+		{
+			"src": "/favicon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any"
+		},
+		{
+			"src": "/apple-touch-icon.png",
+			"sizes": "180x180",
+			"type": "image/png",
+			"purpose": "any"
+		}
+	]
+}

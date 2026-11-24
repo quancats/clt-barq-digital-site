@@ -1,0 +1,87 @@
+---
+import HeaderChrome from '@/components/islands/interactive/HeaderChrome.vue';
+import Container from '@/components/layout/Container.astro';
+import { primaryNavPaths } from '@/data/navigation';
+import { localizePath, type Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/helpers';
+import { cn } from '@/lib/utils';
+import { resolveStoredTheme } from '@/scripts/theme';
+import { PUBLIC_DEFAULT_THEME } from 'astro:env/client';
+
+interface Props {
+	locale: Locale;
+	alternatePath?: string | undefined;
+	class?: string | undefined;
+}
+
+const { locale, alternatePath, class: className } = Astro.props;
+const dictionary = getDictionary(locale);
+const homeHref = localizePath(locale, primaryNavPaths.home);
+const articlesHref = localizePath(locale, primaryNavPaths.articles);
+const componentsHref = localizePath(locale, primaryNavPaths.components);
+const otherLocale: Locale = locale === 'ar' ? 'en' : 'ar';
+const otherHref = alternatePath ?? localizePath(otherLocale, primaryNavPaths.home);
+const defaultTheme = resolveStoredTheme(PUBLIC_DEFAULT_THEME);
+
+const chromeCopy = {
+	brand: dictionary.common.brand,
+	navLabel: dictionary.layout.nav_label,
+	navMobileLabel: dictionary.layout.nav_mobile_label,
+	navMenu: dictionary.layout.nav_menu,
+	navHome: dictionary.layout.nav_home,
+	navExplore: dictionary.layout.nav_explore,
+	navArticles: dictionary.layout.nav_articles,
+	navComponents: dictionary.layout.nav_components,
+	switchLanguage: dictionary.common.switch_language,
+	languageNameAr: dictionary.common.language_name_ar,
+	languageNameEn: dictionary.common.language_name_en,
+	themeLabel: dictionary.common.theme_label,
+	themeLight: dictionary.common.theme_light,
+	themeDark: dictionary.common.theme_dark,
+	themeAuto: dictionary.common.theme_auto,
+	ctaLabel: dictionary.layout.header_cta,
+	close: dictionary.common.close,
+} as const;
+
+const chromePaths = {
+	home: homeHref,
+	articles: articlesHref,
+	components: componentsHref,
+	cta: articlesHref,
+	alternateHref: otherHref,
+} as const;
+
+const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
+
+function isCurrentPath(href: string): boolean {
+	const normalized = href.replace(/\/$/, '') || '/';
+	return currentPath === normalized;
+}
+---
+
+<header class={cn('sticky top-0 z-50 border-b border-border bg-card', className)}>
+	<Container class="py-4">
+		<HeaderChrome client:load locale={locale} defaultTheme={defaultTheme} copy={chromeCopy} paths={chromePaths} currentPath={currentPath} />
+		<div data-header-fallback>
+			<div class="flex flex-wrap items-center justify-between gap-3 text-sm font-medium">
+				<nav aria-label={dictionary.layout.nav_label} class="flex flex-wrap items-center gap-x-3">
+					<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" href={homeHref} data-astro-prefetch aria-current={isCurrentPath(homeHref) ? 'page' : undefined}>{dictionary.layout.nav_home}</a>
+					<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" href={articlesHref} data-astro-prefetch aria-current={isCurrentPath(articlesHref) ? 'page' : undefined}>{dictionary.layout.nav_articles}</a>
+					<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" href={componentsHref} data-astro-prefetch aria-current={isCurrentPath(componentsHref) ? 'page' : undefined}>{dictionary.layout.nav_components}</a>
+				</nav>
+				<nav aria-label={dictionary.common.switch_language}>
+					<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" href={otherHref} hreflang={otherLocale} lang={otherLocale}>
+						{otherLocale === 'ar' ? dictionary.common.language_name_ar : dictionary.common.language_name_en}
+					</a>
+				</nav>
+			</div>
+		</div>
+	</Container>
+</header>
+
+<style>
+	:global(astro-island[ssr] [data-header-chrome]),
+	:global(astro-island:not([ssr])) + [data-header-fallback] {
+		display: none;
+	}
+</style>

@@ -1,0 +1,20 @@
+---
+import { Icon } from 'astro-icon/components';
+import ButtonLink from './ButtonLink.astro';
+
+interface Props {
+	href: string;
+	label: string;
+	variant?: 'default' | 'outline';
+	external?: boolean;
+	prefetch?: boolean;
+}
+
+const { href, label, variant = 'default', external = false, prefetch = false } = Astro.props;
+const externalAttributes = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+---
+
+<ButtonLink {href} {variant} size="lg" prefetch={!external && prefetch} {...externalAttributes}>
+	<span class="min-w-0">{label}</span>
+	<Icon name={external ? 'lucide:external-link' : 'lucide:arrow-right'} size={18} class:list={['shrink-0', !external && 'rtl:rotate-180']} aria-hidden="true" />
+</ButtonLink>

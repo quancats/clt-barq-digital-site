@@ -1,0 +1,12 @@
+# Screen Map
+
+| Screen            | Routes                                         | Layout        | Primary components                                                                              | Feature IDs                                                                                  |
+| ----------------- | ---------------------------------------------- | ------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Locale home       | `/ar/`, `/en/`                                 | WebsiteLayout | Header, HeaderChrome, Footer (privacy settings), HomeHero, HomeArticles (per-section Container) | FEAT-PLATFORM-001, FEAT-PLATFORM-003, FEAT-PLATFORM-004, FEAT-PLATFORM-007, FEAT-CONTENT-001 |
+| Articles index    | `/ar/articles/`, `/en/articles/`               | WebsiteLayout | Header, HeaderChrome, Container, Breadcrumbs, ArticleCard                                       | FEAT-CONTENT-001, FEAT-PLATFORM-003, FEAT-PLATFORM-004                                       |
+| Article detail    | `/ar/articles/[slug]/`, `/en/articles/[slug]/` | ContentLayout | Header, HeaderChrome, Container, Breadcrumbs, ArticleBody                                       | FEAT-CONTENT-001, FEAT-PLATFORM-003, FEAT-PLATFORM-004                                       |
+| Component catalog | `/ar/components/`, `/en/components/`           | WebsiteLayout | Header, HeaderChrome, Container, Breadcrumbs, ComponentsCatalog, ComponentCatalog (Vue)         | FEAT-PLATFORM-002, FEAT-PLATFORM-003, FEAT-PLATFORM-004                                      |
+| Not found         | `/404`                                         | BaseLayout    | ErrorPage, ErrorBackground, ButtonLink                                                          | FEAT-PLATFORM-001, FEAT-PLATFORM-003, FEAT-PLATFORM-005                                      |
+| Server error      | `/500` (host `500.html`)                       | BaseLayout    | ErrorPage, ErrorBackground, ButtonLink                                                          | FEAT-PLATFORM-001, FEAT-PLATFORM-003, FEAT-PLATFORM-005                                      |
+
+Width constraint: `WebsiteLayout` `<main>` is full-bleed. Pages/sections own `Container` so a section can use a full-width background with centered content inside (ADR-0013).

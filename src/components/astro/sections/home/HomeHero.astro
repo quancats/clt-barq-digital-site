@@ -1,0 +1,32 @@
+---
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Card from '@/components/astro/content/Card.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import Container from '@/components/layout/Container.astro';
+import { localizePath, type Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/helpers';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const dictionary = getDictionary(locale);
+---
+
+<section class="pt-10">
+	<Container>
+		<Card as="div" padding="lg">
+			<Heading level={1} class="text-3xl wrap-anywhere text-foreground sm:text-4xl">
+				{dictionary.home.hero_heading}
+			</Heading>
+			<p class="mt-4 max-w-2xl text-lg wrap-anywhere text-muted-foreground">
+				{dictionary.home.hero_body}
+			</p>
+			<div class="mt-6 flex flex-wrap gap-3">
+				<CallToAction href={localizePath(locale, '/articles')} label={dictionary.home.cta_articles} prefetch />
+				<CallToAction href={localizePath(locale, '/components')} label={dictionary.home.cta_components} variant="outline" prefetch />
+			</div>
+		</Card>
+	</Container>
+</section>

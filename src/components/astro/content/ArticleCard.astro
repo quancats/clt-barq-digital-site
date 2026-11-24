@@ -1,0 +1,39 @@
+---
+import { Icon } from 'astro-icon/components';
+import Badge from '@/components/astro/content/Badge.astro';
+import ButtonLink from '@/components/astro/content/ButtonLink.astro';
+import Card from '@/components/astro/content/Card.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import type { ArticleCardModel } from '@/lib/mappers/mapArticleEntryToCard';
+
+interface Props {
+	article: ArticleCardModel;
+	readMoreLabel: string;
+	badgeLabel: string;
+	headingLevel?: 2 | 3;
+}
+
+const { article, readMoreLabel, badgeLabel, headingLevel = 3 } = Astro.props;
+const published = article.publishedAt.toISOString().slice(0, 10);
+---
+
+<Card as="article" class="wrap-anywhere">
+	<div class="flex flex-wrap items-center gap-2">
+		<Badge variant="secondary">{badgeLabel}</Badge>
+		<p class="text-sm text-muted-foreground">
+			<time datetime={article.publishedAt.toISOString()}>{published}</time>
+		</p>
+	</div>
+	<Heading level={headingLevel} class="mt-3 text-xl text-foreground">
+		<a href={article.href} class="hover:text-primary">
+			{article.title}
+		</a>
+	</Heading>
+	<p class="mt-3 text-muted-foreground">{article.description}</p>
+	<p class="mt-4">
+		<ButtonLink href={article.href} variant="outline" size="sm" class="inline-flex items-center gap-2">
+			{readMoreLabel}
+			<Icon name="lucide:arrow-right" size={16} class="shrink-0 rtl:rotate-180" aria-hidden="true" />
+		</ButtonLink>
+	</p>
+</Card>

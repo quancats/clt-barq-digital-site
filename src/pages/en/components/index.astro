@@ -1,0 +1,17 @@
+---
+import Container from '@/components/layout/Container.astro';
+import ComponentsCatalog from '@/components/astro/sections/components/ComponentsCatalog.astro';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import { createComponentsPage } from '@/lib/content/queries/createComponentsPage';
+import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
+
+const locale = 'en' as const;
+const site = Astro.site ?? new URL(FALLBACK_SITE_URL);
+const page = createComponentsPage({ locale, site });
+---
+
+<WebsiteLayout locale={locale} seo={page.seo} alternates={page.alternates} alternatePath={page.alternatePath} jsonLd={page.jsonLd}>
+	<Container class="py-10">
+		<ComponentsCatalog locale={locale} />
+	</Container>
+</WebsiteLayout>

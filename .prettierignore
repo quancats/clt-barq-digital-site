@@ -1,0 +1,10 @@
+build
+dist
+.env*
+.cursor/command/astro/
+.cursor/rules/
+docs/checklists/
+docs/prompts/
+docs/review-prompts/
+docs/standards/
+docs/templates/

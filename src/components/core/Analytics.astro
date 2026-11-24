@@ -1,0 +1,25 @@
+---
+import { createModeAwareAnalyticsLoaderScript, parseAnalyticsMode } from '@/lib/analytics/consent';
+import { createGoogleAnalyticsInitScript, resolveGoogleAnalyticsId } from '@/lib/analytics/googleAnalytics';
+import { PUBLIC_GOOGLE_ANALYTICS_ENABLED, PUBLIC_GOOGLE_ANALYTICS_ID, PUBLIC_GOOGLE_ANALYTICS_MODE } from 'astro:env/client';
+
+const mode = parseAnalyticsMode(PUBLIC_GOOGLE_ANALYTICS_MODE);
+const measurementId =
+	mode === 'off'
+		? null
+		: resolveGoogleAnalyticsId({
+				measurementId: PUBLIC_GOOGLE_ANALYTICS_ID,
+				enabled: PUBLIC_GOOGLE_ANALYTICS_ENABLED,
+				isProd: import.meta.env.PROD,
+			});
+const loaderScript =
+	measurementId != null
+		? createModeAwareAnalyticsLoaderScript({
+				measurementId,
+				mode,
+				initScript: createGoogleAnalyticsInitScript(measurementId),
+			})
+		: null;
+---
+
+{loaderScript ? <script is:inline set:html={loaderScript} data-analytics-loader /> : null}

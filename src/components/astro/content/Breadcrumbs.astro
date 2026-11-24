@@ -1,0 +1,44 @@
+---
+import { cn } from '@/lib/utils';
+
+export interface BreadcrumbItem {
+	label: string;
+	href?: string;
+}
+
+interface Props {
+	items: BreadcrumbItem[];
+	label: string;
+	class?: string;
+}
+
+const { items, label, class: className } = Astro.props;
+---
+
+<nav aria-label={label} class={cn('text-sm text-muted-foreground', className)}>
+	<ol class="flex flex-wrap items-center gap-1.5">
+		{
+			items.map((item, index) => {
+				const isLast = index === items.length - 1;
+				return (
+					<li class="inline-flex items-center gap-1.5">
+						{index > 0 ? (
+							<span aria-hidden="true" class="text-muted-foreground/70">
+								›
+							</span>
+						) : null}
+						{item.href && !isLast ? (
+							<a href={item.href} class="font-medium text-foreground underline-offset-4 hover:text-primary hover:underline">
+								{item.label}
+							</a>
+						) : (
+							<span aria-current={isLast ? 'page' : undefined} class={isLast ? 'font-medium text-foreground' : undefined}>
+								{item.label}
+							</span>
+						)}
+					</li>
+				);
+			})
+		}
+	</ol>
+</nav>

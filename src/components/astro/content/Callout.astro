@@ -1,0 +1,23 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+	title?: string | undefined;
+}
+
+const { title } = Astro.props;
+---
+
+<aside class="my-6 rounded-xl border border-border bg-muted p-4 text-foreground" role="note">
+	{
+		title ? (
+			<p class="mb-2 flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
+				<Icon name="lucide:info" size={16} class="shrink-0 text-muted-foreground" aria-hidden="true" />
+				<span>{title}</span>
+			</p>
+		) : null
+	}
+	<div class="[&_p]:m-0">
+		<slot />
+	</div>
+</aside>

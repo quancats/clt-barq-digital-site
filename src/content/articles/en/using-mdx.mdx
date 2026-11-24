@@ -1,0 +1,20 @@
+---
+locale: en
+translationGroup: using-mdx
+title: Authoring with MDX
+description: Sample MDX article showing allowlisted Astro components inside content collections.
+publishedAt: 2026-07-25
+draft: false
+---
+
+import Callout from '@/components/astro/content/Callout.astro';
+
+This fixture demonstrates **MDX** in the articles collection. Prefer plain Markdown when components are unnecessary.
+
+<Callout title="Trusted content only">Import only allowlisted Astro components. Do not embed arbitrary client islands or untrusted HTML.</Callout>
+
+## When to use MDX
+
+- Reusable callouts, figures, or structured blocks
+- Light composition that Markdown cannot express cleanly
+- Content authored by trusted repository contributors

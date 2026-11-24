@@ -1,0 +1,95 @@
+---
+import Analytics from '@/components/core/Analytics.astro';
+import StructuredData from '@/components/core/StructuredData.astro';
+import { DEFAULT_OG_IMAGE_PATH, THEME_COLOR_LIGHT } from '@/data/site';
+import { isHostRedirectSource } from '@/data/hostRedirects.mjs';
+import type { Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/helpers';
+import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
+import { createCanonicalUrl } from '@/lib/seo/createCanonicalUrl';
+import type { LocaleAlternate, PageSeo } from '@/lib/seo/types';
+import { isSiteIndexable } from '@/lib/seo/indexingPolicy';
+import { ENV, PUBLIC_SITE_URL } from 'astro:env/server';
+import { Font } from 'astro:assets';
+
+interface Props {
+	locale: Locale;
+	seo: PageSeo;
+	alternates?: LocaleAlternate[] | undefined;
+	jsonLd?: Record<string, unknown> | Record<string, unknown>[] | undefined;
+	themeInitScript: string;
+}
+
+const { locale, seo, alternates = [], jsonLd, themeInitScript } = Astro.props;
+const dictionary = getDictionary(locale);
+const site = Astro.site ?? new URL(FALLBACK_SITE_URL);
+const canonical = createCanonicalUrl({ site, path: seo.canonicalPath });
+const ogImagePath = seo.image ?? DEFAULT_OG_IMAGE_PATH;
+const ogImage = createCanonicalUrl({
+	site,
+	path: ogImagePath,
+});
+const hasCustomOrDefaultImage = Boolean(ogImagePath);
+const twitterCard = hasCustomOrDefaultImage ? 'summary_large_image' : 'summary';
+const indexable = isSiteIndexable(ENV, PUBLIC_SITE_URL) && !seo.noindex && !isHostRedirectSource(Astro.url.pathname);
+const robots = !indexable ? 'noindex, nofollow' : 'index, follow';
+const alternateLocales = alternates.filter((alternate) => alternate.locale !== 'x-default' && alternate.locale !== locale);
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="generator" content={Astro.generator} />
+<meta name="color-scheme" content="light dark" />
+<meta name="theme-color" content={THEME_COLOR_LIGHT} />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+{indexable && <link rel="sitemap" href="/sitemap-index.xml" />}
+{
+	locale === 'ar' ? (
+		<Font
+			cssVariable="--font-tajawal"
+			preload={[
+				{
+					weight: 400,
+					style: 'normal',
+					subset: 'arabic',
+				},
+			]}
+		/>
+	) : (
+		<Font
+			cssVariable="--font-manrope"
+			preload={[
+				{
+					weight: 400,
+					style: 'normal',
+					subset: 'latin',
+				},
+			]}
+		/>
+	)
+}
+<script is:inline set:html={themeInitScript} />
+<title>{seo.title}</title>
+<meta name="description" content={seo.description} />
+<meta name="robots" content={robots} />
+<link rel="canonical" href={canonical.toString()} />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" href="/favicon.ico" />
+<meta property="og:type" content={seo.type ?? 'website'} />
+<meta property="og:title" content={seo.title} />
+<meta property="og:description" content={seo.description} />
+<meta property="og:url" content={canonical.toString()} />
+<meta property="og:image" content={ogImage.toString()} />
+<meta property="og:locale" content={locale === 'ar' ? 'ar_AR' : 'en_US'} />
+{alternateLocales.map((alternate) => <meta property="og:locale:alternate" content={alternate.locale === 'ar' ? 'ar_AR' : 'en_US'} />)}
+{seo.type === 'article' && seo.publishedAt ? <meta property="article:published_time" content={seo.publishedAt.toISOString()} /> : null}
+{seo.type === 'article' && (seo.updatedAt ?? seo.publishedAt) ? <meta property="article:modified_time" content={(seo.updatedAt ?? seo.publishedAt)!.toISOString()} /> : null}
+<meta name="twitter:card" content={twitterCard} />
+<meta name="twitter:title" content={seo.title} />
+<meta name="twitter:description" content={seo.description} />
+<meta name="twitter:image" content={ogImage.toString()} />
+{alternates.map((alternate) => <link rel="alternate" hreflang={alternate.locale} href={alternate.href} />)}
+<link rel="alternate" type="application/rss+xml" title={dictionary.common.brand} href="/rss.xml" />
+<StructuredData jsonLd={jsonLd} />
+<Analytics />

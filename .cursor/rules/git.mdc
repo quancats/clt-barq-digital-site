@@ -1,0 +1,179 @@
+---
+description: Enterprise Git workflow, staging, commit, and PR rules
+alwaysApply: false
+---
+
+# Git Rules
+
+You are responsible for maintaining a clean, scalable, enterprise-grade Git history.
+These rules apply to all repositories and all technologies.
+
+Optimize for **speed with safety**: one fast repository snapshot per commit batch, selective staging, atomic commits, and milestone-sized PRs.
+
+## Core Principles
+
+- Never create giant mixed commits.
+- Never commit unrelated changes together.
+- Keep commits atomic, isolated, and reversible.
+- Prefer multiple small clean commits over large commits.
+- Preserve long-term repository readability and maintainability.
+- Think like a reviewer auditing the history months later.
+- Prefer milestone-sized PRs. Avoid release PRs that dump dozens of features and hundreds of files into one review (review tooling and humans both fail above ~150 files).
+
+## Fast Repository Snapshot (once per batch)
+
+Before proposing or creating commits in a batch, run a **single** lightweight snapshot:
+
+```bash
+git status --short
+git diff --stat
+git diff --cached --stat
+```
+
+From that snapshot, detect feature boundaries, formatting-only changes, refactors, docs, tests, CI, and forbidden files.
+
+Do **not** re-run a full “analyze the whole repository structure / migrations / CI / docs” checklist before every individual commit in the same batch. Re-check only what changed for the next commit group.
+
+## Staging Rules
+
+Never use:
+
+```bash
+git add .
+git add -A
+git commit -am
+```
+
+Use selective staging with pathspecs:
+
+```bash
+git add path/to/file
+git add path/to/directory
+git add -p
+git add -- path/one path/two
+```
+
+Before every commit:
+
+- Review the **staged** diff only (`git diff --cached` / `--stat`).
+- Verify staged files belong logically together.
+
+## Commit Organization
+
+Create separate commits for foundation work when those changes are present:
+
+- Repository bootstrap / tooling / linting / formatting
+- Docker/dev environment / CI/CD
+- Dependency setup / environment configuration
+
+Create separate commits for architecture vs feature work:
+
+- Shared abstractions, infrastructure, utilities
+- Feature-specific logic, tests, and docs for that feature
+
+Each feature commit should contain related business logic, related tests, and related docs when they belong to the same Feature ID / milestone slice.
+
+Do not mix unrelated features.
+
+## Database Rules
+
+- Keep global migrations separate.
+- Keep feature-specific migrations with their feature.
+- Never commit production dumps unintentionally.
+- Never commit secrets or sensitive data.
+
+## Refactor Rules
+
+- Refactors must be isolated from feature implementation.
+- Formatting-only changes must be isolated when large.
+- Renames and moves should preferably be isolated.
+
+## Forbidden Files
+
+Never commit:
+
+- `.env`
+- Secrets / API keys / credentials
+- Logs / cache / build artifacts / temporary files
+- IDE local settings
+- `node_modules` / `vendor`
+- Generated binaries unless explicitly required
+
+## Commit Message Standard
+
+Every commit must follow this format:
+
+```text
+<type>(<scope>): <short summary> (#<issue number>, #<issue number>)
+
+<description>
+```
+
+Allowed types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `perf`, `ci`, `build`, `style`.
+
+Scope should represent module, domain, feature area, infrastructure, or service.
+
+The summary line must be concise, present tense, result-oriented, and non-vague.
+
+The description should cover (briefly):
+
+- Feature ID / Milestone / Domain / Application (when applicable)
+- What changed and why
+- Docs updated
+- Tests / validate / verify run (or why skipped)
+
+## Commit Workflow
+
+1. Take one fast snapshot for the batch.
+2. Propose a short commit plan (title + files + purpose) grouped logically.
+3. Stage with pathspecs only; verify staged diff; commit.
+4. After each commit, confirm status is clean for that group, then continue.
+
+### Split vs proceed
+
+If changes include more than one feature, domain, or milestone, propose a split commit plan first.
+
+**Exception:** when the user explicitly asked to commit / proceed / implement the plan, execute the split plan without waiting for an extra approval round.
+
+### Risk-proportionate checks
+
+- Docs-only / rules-only: no full validate/verify required unless links or scripts changed.
+- Source logic: prefer `npm run validate` (or the smallest relevant subset).
+- Build output / routes / islands: `npm run build` then targeted `verify:*`.
+- Do not run mutating `fix:*` as part of verification.
+
+## Branch Rules
+
+- Never commit directly to protected branches unless explicitly requested.
+- Prefer feature branches.
+- Keep branch history clean and reviewable.
+
+Branch naming examples:
+
+```text
+feat/auth-jwt
+fix/payment-timeout
+refactor/api-structure
+chore/github-actions
+```
+
+## Pull Request Rules
+
+Pull requests should:
+
+- Remain focused on one milestone or tightly related Feature IDs.
+- Avoid unrelated changes and mega release dumps.
+- Contain meaningful descriptions and related issues.
+- Preserve reviewability (prefer well under ~150 changed files when practical).
+
+## Enterprise Standards
+
+Always optimize for:
+
+- Maintainability and auditability
+- Rollback safety
+- Collaboration and scalable workflows
+- Clean repository history
+- Fast agent/human loops that do not re-analyze the world for every commit
+
+Git history is part of the architecture.

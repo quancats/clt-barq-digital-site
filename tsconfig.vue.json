@@ -1,0 +1,11 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"exactOptionalPropertyTypes": false,
+		"noUncheckedIndexedAccess": false,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false
+	},
+	"include": [".astro/types.d.ts", "src/**/*.vue", "src/**/*.ts", "src/**/*.d.ts", "src/env.d.ts"],
+	"exclude": ["dist", "node_modules", "tests"]
+}

@@ -1,0 +1,49 @@
+---
+description: Documentation update rules
+alwaysApply: true
+---
+
+# Documentation Rules
+
+After implementation, update relevant docs.
+
+## Template repository (`astro-template`)
+
+When maintaining this starter template, update:
+
+- `docs/astro/*` maps (routes, screens, components, islands, i18n, performance, dependencies, rendering)
+- `docs/astro/FEATURE-BASELINE.md` when Feature IDs / milestones change
+- `docs/astro/DECISIONS.md` when starter ADRs change
+- `docs/TEMPLATE-CHANGELOG.md` and `docs/TEMPLATE-VERSION.md` for SemVer history
+
+Do **not** update for template-maintainer work:
+
+- root `CHANGELOG.md` / `VERSION.md`
+- `docs/system/*` (including `docs/system/CHANGELOG.md`)
+
+Those adopting-project files are filled only in real product projects.
+
+## Adopting projects
+
+Required maps:
+
+- FEATURE-REGISTRY.md
+- DATA-OWNERSHIP.md
+- API-CONTRACTS.md
+- FLOW-MAP.md
+- IMPLEMENTATION-PLAN.md
+- CHANGELOG.md
+- TECHNICAL-DEBT.md when needed
+
+Frontend docs to update when relevant:
+
+- ROUTE-MAP.md
+- SCREEN-MAP.md
+- COMPONENT-MAP.md
+- API-USAGE.md
+- I18N-MAP.md
+
+## General
+
+Do not document behavior that does not exist.
+Mark uncertainty as Needs Review.

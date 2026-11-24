@@ -1,0 +1,47 @@
+---
+description: SOP project governance rules
+alwaysApply: true
+---
+
+# Project Governance Rules
+
+Treat project documentation as the source of truth.
+
+## Template repository (`astro-template`)
+
+When maintaining this starter, read and update:
+
+- docs/astro/FEATURE-BASELINE.md
+- docs/astro/DECISIONS.md
+- docs/astro/* maps relevant to the change
+- docs/TEMPLATE-CHANGELOG.md / docs/TEMPLATE-VERSION.md
+
+Do not update `docs/system/*`, root `CHANGELOG.md`, or `VERSION.md` for template-maintainer work. Those are reserved for adopting projects.
+
+## Adopting projects
+
+Before implementing meaningful work, read:
+
+- docs/system/PROJECT-BRIEF.md
+- docs/system/PRODUCT-SCOPE.md
+- docs/system/SYSTEM-ARCHITECTURE.md
+- docs/system/APPLICATION-MAP.md
+- docs/system/DOMAIN-MAP.md
+- docs/system/DATA-OWNERSHIP.md
+- docs/system/FEATURE-REGISTRY.md
+- docs/system/API-CONTRACTS.md
+- docs/system/FLOW-MAP.md
+- docs/system/IMPLEMENTATION-PLAN.md
+
+Do not implement if:
+
+- Feature ID is missing
+- milestone is missing
+- application ownership is unclear
+- domain ownership is unclear
+- data ownership is unclear for database work
+- API contract is missing for API work
+- frontend route/screen is missing for page work
+- acceptance criteria are missing
+
+If documentation and code conflict, do not guess. Document the conflict and ask for a decision or return a readiness report.

@@ -1,0 +1,25 @@
+---
+import Footer from '@/components/layout/Footer.astro';
+import Header from '@/components/layout/Header.astro';
+import type { Locale } from '@/i18n/config';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import type { LocaleAlternate, PageSeo } from '@/lib/seo/types';
+
+interface Props {
+	locale: Locale;
+	seo: PageSeo;
+	alternates?: LocaleAlternate[] | undefined;
+	jsonLd?: Record<string, unknown> | Record<string, unknown>[] | undefined;
+	alternatePath?: string | undefined;
+}
+
+const { locale, seo, alternates, jsonLd, alternatePath } = Astro.props;
+---
+
+<BaseLayout locale={locale} seo={seo} alternates={alternates} jsonLd={jsonLd}>
+	<Header class="flex-initial" locale={locale} alternatePath={alternatePath} />
+	<main id="main" class="flex-1">
+		<slot />
+	</main>
+	<Footer class="flex-initial" locale={locale} />
+</BaseLayout>
