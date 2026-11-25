@@ -1,8 +1,8 @@
 {
-	"name": "قالب محتوى Astro",
-	"short_name": "قالب Astro",
-	"description": "قالب Astro محكوم لمواقع المحتوى الثابتة ثنائية اللغة.",
-	"start_url": "/ar",
+	"name": "برق الرقمية",
+	"short_name": "برق الرقمية",
+	"description": "الموقع الإلكتروني لبرق الرقمية.",
+	"start_url": "/ar/",
 	"display": "standalone",
 	"background_color": "#ffffff",
 	"theme_color": "#ffffff",

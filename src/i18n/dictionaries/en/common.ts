@@ -1,5 +1,5 @@
 export const common = {
-	brand: 'Astro Content Template',
+	brand: 'Barq Digital',
 	skip_to_content: 'Skip to content',
 	articles: 'Articles',
 	read_more: 'Read more',
@@ -35,9 +35,9 @@ export const common = {
 	theme_light: 'Light',
 	theme_dark: 'Dark',
 	theme_auto: 'Auto',
-	rss_description: 'Published articles from the Astro content template.',
-	pwa_short_name: 'Astro Template',
-	pwa_description: 'Governed Astro starter for bilingual static content websites.',
+	rss_description: 'Published articles from Barq Digital.',
+	pwa_short_name: 'Barq Digital',
+	pwa_description: 'The Barq Digital website.',
 	cookie_consent: {
 		title: 'Cookies and analytics',
 		description: 'We use analytics to understand how the site is used. Analytics loads only after you accept. You can change this anytime in privacy settings.',

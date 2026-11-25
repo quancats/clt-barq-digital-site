@@ -25,6 +25,21 @@ test('serves the default Arabic home with correct lang and dir', async ({ page }
 	await guards.assertClean();
 });
 
+test.describe('Arabic home without JavaScript', () => {
+	test.use({ javaScriptEnabled: false });
+
+	test('renders readable content and follows a static link', async ({ page }) => {
+		await expectHttpOk(page, '/ar/');
+		await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
+		await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+		const main = page.getByRole('main');
+		await expect(main.getByRole('heading', { level: 1, name: 'برق الرقمية' })).toBeVisible();
+		await expect(main.getByText('مرحبًا بكم في موقع برق الرقمية.')).toBeVisible();
+		await main.getByRole('link', { name: 'تصفح المقالات' }).click();
+		await expect(page).toHaveURL(/\/ar\/articles\/$/);
+	});
+});
+
 test('does not inject Google Analytics when Measurement ID is unset', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
 	await expectHttpOk(page, '/en/');

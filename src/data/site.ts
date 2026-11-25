@@ -1,4 +1,4 @@
-export const SITE_NAME = 'Astro Content Template';
+export const SITE_NAME = 'Barq Digital';
 
 export const DEFAULT_OG_IMAGE_PATH = '/images/og/default.png';
 

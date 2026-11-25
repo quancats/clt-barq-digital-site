@@ -4,17 +4,17 @@
 
 ## Project identity
 
-Project name: Astro Content Template
+Project name: Barq Digital
 
-Project type: Static bilingual informational / content website template (Astro)
+Project type: Static bilingual corporate and product showcase website (Astro)
 
 Ownership: Frontend / Astro site application (`site`)
 
 Repositories involved:
 
-- `astro-template` — this repository (Astro public site template)
+- `clt-barq-digital-site` — Barq Digital website repository
 
-Current status: Baseline template bootstrap complete (MS-001 / MS-002)
+Current status: MS-001 implementation and local verification complete, pending review.
 
 ## Summary
 
@@ -63,7 +63,7 @@ This repository is a governed Astro 7 starter for public content websites. It sh
 - Sites adopting this template are primarily static and rebuild-driven.
 - Arabic is the default locale; every locale is URL-prefixed (`/ar/`, `/en/`).
 - Markdown remains the default; MDX is available for trusted authors when allowlisted components are needed.
-- Production deployments must set a real `SITE_URL`.
+- Production deployments must set the approved `PUBLIC_SITE_URL`.
 
 ## Risks
 
@@ -81,4 +81,4 @@ This repository is a governed Astro 7 starter for public content websites. It sh
 ## Open questions
 
 - Canonical docs path for managed standards copies (`docs/standards` vs `docs/01-standards`) — tracked as technical debt for the central standards package.
-- Exact production `SITE_URL` and hosting target remain project-specific at adoption time.
+- Exact production `PUBLIC_SITE_URL` and hosting target remain project-specific at adoption time.

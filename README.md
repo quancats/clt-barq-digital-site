@@ -1,10 +1,10 @@
-# Astro Content Template
+# Barq Digital
 
-Governed Astro 7 starter for bilingual static content websites (`ar` / `en`).
+Bilingual static website for Barq Digital (`ar` / `en`).
 
-**Template version:** 1.1.0 — see [`docs/TEMPLATE-VERSION.md`](docs/TEMPLATE-VERSION.md) and [`docs/TEMPLATE-CHANGELOG.md`](docs/TEMPLATE-CHANGELOG.md).
+**Upstream template history** — see [`docs/TEMPLATE-VERSION.md`](docs/TEMPLATE-VERSION.md) and [`docs/TEMPLATE-CHANGELOG.md`](docs/TEMPLATE-CHANGELOG.md).
 
-This template ships:
+The inherited foundation includes:
 
 - Static HTML-first architecture (no CMS or adapter in baseline)
 - Prefixed locales with Arabic as default (`/ar`, `/en`)
@@ -20,35 +20,38 @@ This template ships:
 
 ## Requirements
 
-- Node.js `>= 24 < 25` (`.nvmrc` `24`)
-- **npm** (committed `package-lock.json`; use `npm ci`)
+- Node.js `24.15.0` (see `.nvmrc`)
+- pnpm `10.32.1` (see `packageManager` and `pnpm-lock.yaml`)
+
+Barq Digital uses the single pnpm lockfile specified by the unified execution plan. The npm references in the upstream template history describe the upstream project. Astro builds static HTML, TypeScript checks use `strictest`, and Tailwind CSS 4 uses its Vite plugin. Existing Vue and MDX dependencies support the inherited navigation, component catalog and content fixtures.
 
 ## Quick start
 
 ```bash
-npm ci
+corepack enable pnpm
+pnpm install --frozen-lockfile
 cp .env.example .env   # optional for local; set PUBLIC_SITE_URL for real deploys
-npm run dev
+pnpm run dev
 ```
 
-Open the default locale home at `/ar`.
+Open the development URL printed by Astro at `/ar/`. Use `pnpm exec astro dev status`, `pnpm exec astro dev logs`, and `pnpm exec astro dev stop` to manage the background server.
 
 ## Scripts
 
-| Command                 | Purpose                                              |
-| ----------------------- | ---------------------------------------------------- |
-| `npm run dev`           | Local development server                             |
-| `npm run fix:format`    | Prettier write (mutating)                            |
-| `npm run fix:lint`      | ESLint `--fix` (mutating)                            |
-| `npm run validate`      | format check + lint + Astro check + vue-tsc + unit   |
-| `npm run build`         | Static production build (artifact only)              |
-| `npm run verify`        | budget + links + Playwright (requires prior `build`) |
-| `npm run verify:budget` | Route CSS and island JavaScript budget checks        |
-| `npm run verify:links`  | Internal routes, assets and fragments in `dist/`     |
-| `npm run verify:seo`    | Canonicals, hreflang, robots and sitemap in `dist/`  |
-| `npm run verify:e2e`    | Playwright (expects `dist/` already built)           |
-| `npm run ci:local`      | `validate` → `build` → `verify`                      |
-| `npm run preview`       | Preview `dist/`                                      |
+| Command                  | Purpose                                             |
+| ------------------------ | --------------------------------------------------- |
+| `pnpm run dev`           | Local development server                            |
+| `pnpm run fix:format`    | Prettier write (mutating)                           |
+| `pnpm run fix:lint`      | ESLint `--fix` (mutating)                           |
+| `pnpm run validate`      | format check + lint + Astro check + vue-tsc + unit  |
+| `pnpm run build`         | Static production build (artifact only)             |
+| `pnpm run verify`        | budget, links, SEO and Playwright after `build`     |
+| `pnpm run verify:budget` | Route CSS and island JavaScript budget checks       |
+| `pnpm run verify:links`  | Internal routes, assets and fragments in `dist/`    |
+| `pnpm run verify:seo`    | Canonicals, hreflang, robots and sitemap in `dist/` |
+| `pnpm run verify:e2e`    | Playwright (expects `dist/` already built)          |
+| `pnpm run ci:local`      | `validate` → `build` → `verify`                     |
+| `pnpm run preview`       | Preview `dist/`                                     |
 
 Transitional aliases: `format` / `format:fix` → `fix:format`; `test:budget` / `test:links` / `test:e2e` → `verify:*`.
 
@@ -199,8 +202,4 @@ Managed standards live under `docs/standards/`. True project-only exceptions (wh
 
 ## Validation evidence
 
-Baseline bootstrap was validated with:
-
-- `npm run validate`
-- `npm run build`
-- `npm run verify`
+See the [MS-001 verification record](docs/system/MS-001-foundation.md) for the local acceptance checks.

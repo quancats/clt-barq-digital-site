@@ -1,5 +1,5 @@
 export const common = {
-	brand: 'قالب محتوى Astro',
+	brand: 'برق الرقمية',
 	skip_to_content: 'تخطّي إلى المحتوى',
 	articles: 'المقالات',
 	read_more: 'اقرأ المزيد',
@@ -35,9 +35,9 @@ export const common = {
 	theme_light: 'فاتح',
 	theme_dark: 'داكن',
 	theme_auto: 'تلقائي',
-	rss_description: 'المقالات المنشورة من قالب محتوى Astro.',
-	pwa_short_name: 'قالب Astro',
-	pwa_description: 'قالب Astro محكوم لمواقع المحتوى الثابتة ثنائية اللغة.',
+	rss_description: 'المقالات المنشورة من برق الرقمية.',
+	pwa_short_name: 'برق الرقمية',
+	pwa_description: 'الموقع الإلكتروني لبرق الرقمية.',
 	cookie_consent: {
 		title: 'ملفات تعريف الارتباط والتحليلات',
 		description: 'نستخدم أدوات تحليل لفهم استخدام الموقع. تُحمَّل التحليلات فقط بعد موافقتك، ويمكنك تغيير ذلك في أي وقت من إعدادات الخصوصية.',
