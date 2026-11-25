@@ -257,6 +257,36 @@ Affected repositories: astro-template
 
 Follow-up: Do not expand Vue usage beyond catalog/approved islands without a new ADR
 
+### ADR-0009 — Keep the Barq Digital website static in one repository
+
+Date: 2026-11-25
+
+Status: In review
+
+Context: v1.0 REQ-002 and WP-002.1 build on the verified working MS-001 starter. The website showcases the external BIM product and owns only website content and lead integration.
+
+Decision:
+
+- Use Astro SSG, TypeScript strictest and Tailwind 4. Keep Astro components as the default and Vue at explicitly reviewed interaction boundaries.
+- Use local build-time Content Collections and typed UI dictionaries. Prefer Markdown and allow trusted MDX only through the reviewed component allowlist.
+- Keep project code, local content and operational records in the website repository. Exclude a database, custom CMS, general API backend and separate contract repository.
+
+Consequences: Editorial content changes are reviewed and rebuilt. The repository can produce public HTML without a content service. Existing sample routes and fixtures require publication review. The launch locale contract will be implemented separately in MS-004.
+
+### ADR-0010 — Target Cloudflare static hosting with a limited lead Worker
+
+Date: 2026-11-25
+
+Status: In review
+
+Context: v1.0 REQ-002 and WP-002.1 require static hosting and a narrow form-processing runtime for future lead work.
+
+Decision: Target Cloudflare for static output. Limit the planned same-origin Worker to the four approved lead journeys as specified in the release plan. Keep validation, abuse protection, delivery and provider credentials at the Worker boundary. The website continues to build independently of that runtime.
+
+Consequences: The Worker interface, provider and recipient approvals are prerequisites to enabling lead submission. Cloudflare account, hostname, DNS and deployment decisions stay with their later release milestones.
+
+Affected repository: `clt-barq-digital-site`. See [module ownership](SYSTEM-ARCHITECTURE.md) and [local evidence](MS-002-architecture.md).
+
 ## Usage rules
 
 - Treat this file as a working document, not a decorative template.
