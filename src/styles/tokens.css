@@ -7,17 +7,30 @@
 
 	/* shadcn radius preset: small */
 	--radius-base: 0.4rem;
+}
 
-	/* Project brand scale (drives --primary in theme.css) */
-	--color-brand-50: oklch(97.84% 0.02 316.1);
-	--color-brand-100: oklch(94.96% 0.03 314.16);
-	--color-brand-200: oklch(90.74% 0.06 312.64);
-	--color-brand-300: oklch(83.63% 0.12 313.24);
-	--color-brand-400: oklch(74.03% 0.19 312.94);
-	--color-brand-500: oklch(65.53% 0.24 312.15);
-	--color-brand-600: oklch(59.23% 0.26 311.45);
-	--color-brand-700: oklch(53.07% 0.24 311.66);
-	--color-brand-800: oklch(46.65% 0.21 312.82);
-	--color-brand-900: oklch(40.44% 0.17 313.91);
-	--color-brand-950: oklch(31.19% 0.15 312.08);
+@theme static {
+	--color-primary-50: oklch(96.78% 0.02 257.2);
+	--color-primary-100: oklch(92.61% 0.04 257.39);
+	--color-primary-200: oklch(87.12% 0.06 256.48);
+	--color-primary-300: oklch(79.28% 0.11 254.09);
+	--color-primary-400: oklch(69.48% 0.16 256.71);
+	--color-primary-500: oklch(60.51% 0.21 261.09);
+	--color-primary-600: oklch(55.03% 0.24 263.56);
+	--color-primary-700: oklch(47.9% 0.25 264.34);
+	--color-primary-800: oklch(41.44% 0.21 265.25);
+	--color-primary-900: oklch(36.9% 0.16 265.55);
+	--color-primary-950: oklch(27.47% 0.1 267.6);
+
+	--color-secondary-50: oklch(98.34% 0.02 200.56);
+	--color-secondary-100: oklch(95.67% 0.05 202.74);
+	--color-secondary-200: oklch(92.11% 0.08 204.11);
+	--color-secondary-300: oklch(87.79% 0.12 206.05);
+	--color-secondary-400: oklch(84.83% 0.13 208.74);
+	--color-secondary-500: oklch(75.42% 0.13 213.85);
+	--color-secondary-600: oklch(63.82% 0.12 220.73);
+	--color-secondary-700: oklch(54.12% 0.1 222.93);
+	--color-secondary-800: oklch(46.51% 0.08 223.22);
+	--color-secondary-900: oklch(40.76% 0.07 227.5);
+	--color-secondary-950: oklch(31.17% 0.06 228.5);
 }

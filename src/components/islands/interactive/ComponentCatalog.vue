@@ -648,10 +648,10 @@ const componentCount = computed(() => catalogComponents.length);
 											</Button>
 										</StepperTrigger>
 										<div class="mt-5 flex flex-col items-center text-center">
-											<StepperTitle class="text-sm font-semibold" :class="state === 'active' && 'text-primary dark:text-brand-300'">
+											<StepperTitle class="text-sm font-semibold" :class="state === 'active' && 'text-primary-link'">
 												{{ item.title }}
 											</StepperTitle>
-											<StepperDescription class="text-xs text-muted-foreground" :class="state === 'active' && 'text-primary dark:text-brand-300'">
+											<StepperDescription class="text-xs text-muted-foreground" :class="state === 'active' && 'text-primary-link'">
 												{{ item.description }}
 											</StepperDescription>
 										</div>

@@ -8,7 +8,7 @@ defineProps<{
 </script>
 
 <template>
-	<p data-slot="empty-description" :class="cn('text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary', $attrs.class ?? '')">
+	<p data-slot="empty-description" :class="cn('text-sm/relaxed text-muted-foreground [&>a]:underline [&>a]:underline-offset-4 [&>a:hover]:text-primary-link', $attrs.class ?? '')">
 		<slot />
 	</p>
 </template>

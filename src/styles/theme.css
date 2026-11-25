@@ -1,6 +1,6 @@
 /**
  * Semantic theme variables.
- * Surfaces map Tailwind slate (+ status/chart palettes); primary comes from tokens brand scale.
+ * Surfaces map Tailwind slate (+ status/chart palettes); brand actions use the Barq Digital palettes.
  */
 
 :root {
@@ -16,10 +16,10 @@
 	--card-foreground: var(--color-slate-950);
 	--popover: var(--color-white);
 	--popover-foreground: var(--color-slate-950);
-	--primary: var(--color-brand-800);
-	--primary-foreground: var(--color-brand-50);
-	--secondary: var(--color-slate-100);
-	--secondary-foreground: var(--color-slate-900);
+	--primary: var(--color-primary-600);
+	--primary-foreground: var(--color-white);
+	--secondary: var(--color-secondary-400);
+	--secondary-foreground: var(--color-slate-950);
 	--muted: var(--color-slate-100);
 	--muted-foreground: var(--color-slate-600);
 	--accent: var(--color-slate-100);
@@ -44,8 +44,8 @@
 	--chart-5: var(--color-amber-500);
 	--sidebar: var(--color-slate-50);
 	--sidebar-foreground: var(--color-slate-950);
-	--sidebar-primary: var(--color-brand-800);
-	--sidebar-primary-foreground: var(--color-brand-100);
+	--sidebar-primary: var(--color-primary-600);
+	--sidebar-primary-foreground: var(--color-white);
 	--sidebar-accent: var(--color-slate-100);
 	--sidebar-accent-foreground: var(--color-slate-900);
 	--sidebar-border: var(--color-slate-200);
@@ -59,7 +59,8 @@
 	--text-muted: var(--muted-foreground);
 	--border-default: var(--border);
 	--action-primary: var(--primary);
-	--action-primary-hover: var(--color-brand-800);
+	--action-primary-hover: var(--color-primary-700);
+	--primary-link: var(--color-primary-600);
 	--radius-control: var(--radius);
 	--radius-card: calc(var(--radius) * 1.4);
 }
@@ -74,10 +75,10 @@
 	--card-foreground: var(--color-slate-50);
 	--popover: var(--color-slate-900);
 	--popover-foreground: var(--color-slate-50);
-	--primary: var(--color-brand-800);
-	--primary-foreground: var(--color-brand-100);
-	--secondary: var(--color-slate-800);
-	--secondary-foreground: var(--color-slate-50);
+	--primary: var(--color-primary-600);
+	--primary-foreground: var(--color-white);
+	--secondary: var(--color-secondary-400);
+	--secondary-foreground: var(--color-slate-950);
 	--muted: var(--color-slate-800);
 	--muted-foreground: var(--color-slate-400);
 	--accent: var(--color-slate-800);
@@ -102,14 +103,14 @@
 	--chart-5: var(--color-rose-500);
 	--sidebar: var(--color-slate-900);
 	--sidebar-foreground: var(--color-slate-50);
-	--sidebar-primary: var(--color-brand-800);
-	--sidebar-primary-foreground: var(--color-brand-100);
+	--sidebar-primary: var(--color-primary-600);
+	--sidebar-primary-foreground: var(--color-white);
 	--sidebar-accent: var(--color-slate-800);
 	--sidebar-accent-foreground: var(--color-slate-50);
 	--sidebar-border: color-mix(in oklch, var(--color-white) 10%, transparent);
 	--sidebar-ring: var(--color-gray-500);
 
-	--action-primary-hover: var(--color-brand-300);
+	--primary-link: var(--color-primary-300);
 }
 
 @media (prefers-reduced-motion: no-preference) {

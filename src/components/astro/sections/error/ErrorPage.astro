@@ -30,18 +30,18 @@ const trimmedTechnical = technicalMessage?.trim();
 const description = statusCode !== 404 && statusCode !== 500 && trimmedTechnical ? `${baseDescription} (${trimmedTechnical})` : baseDescription;
 ---
 
-<main id="main" class="error-page relative min-h-screen overflow-hidden bg-brand-50 dark:bg-brand-950">
+<main id="main" class="error-page relative min-h-screen overflow-hidden bg-primary-50 dark:bg-primary-950">
 	<div class="error-page__art pointer-events-none absolute inset-0 flex h-full w-full items-start justify-center" aria-hidden="true">
 		<ErrorBackground class="h-auto w-full max-w-none" />
 	</div>
 
 	<div class="relative z-10 flex min-h-screen items-end justify-center px-4 pb-8 sm:pb-12">
 		<section class="error-page__copy mx-auto max-w-3xl text-center">
-			<h1 class="mb-4 text-2xl font-semibold tracking-tight text-brand-800 md:text-3xl dark:text-brand-100">
+			<h1 class="mb-4 text-2xl font-semibold tracking-tight text-primary-800 md:text-3xl dark:text-primary-100">
 				{title}
 			</h1>
 
-			<p class="mx-auto mb-8 max-w-2xl text-base text-brand-700 md:text-lg dark:text-brand-200">
+			<p class="mx-auto mb-8 max-w-2xl text-base text-primary-700 md:text-lg dark:text-primary-200">
 				{description}
 			</p>
 

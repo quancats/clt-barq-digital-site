@@ -28,7 +28,7 @@ const { items, label, class: className } = Astro.props;
 							</span>
 						) : null}
 						{item.href && !isLast ? (
-							<a href={item.href} class="font-medium text-foreground underline-offset-4 hover:text-primary hover:underline">
+							<a href={item.href} class="font-medium text-foreground underline-offset-4 hover:text-primary-link hover:underline">
 								{item.label}
 							</a>
 						) : (

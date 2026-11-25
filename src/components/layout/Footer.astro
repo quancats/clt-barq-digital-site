@@ -39,7 +39,7 @@ function resolveFooterHref(path: string): string {
 	<Container class="py-12 lg:py-16">
 		<div class="space-y-12">
 			<div class="max-w-sm space-y-4">
-				<a href={homeHref} class="inline-flex items-center text-primary transition-opacity hover:opacity-80" {...PRIMARY_NAV_PREFETCH_ATTRS}>
+				<a href={homeHref} class="inline-flex items-center text-primary-link transition-opacity hover:opacity-80" {...PRIMARY_NAV_PREFETCH_ATTRS}>
 					<Icon name="simple-icons:astro" size={28} aria-hidden="true" />
 					<span class="sr-only">{dictionary.common.brand}</span>
 				</a>
@@ -91,7 +91,7 @@ function resolveFooterHref(path: string): string {
 				}
 				<p class="text-sm text-muted-foreground">
 					{dictionary.layout.footer_made_with}{' '}
-					<a href="https://quancats.com" class="font-medium text-brand-800 underline-offset-4 hover:underline dark:text-brand-300" rel="noopener noreferrer" target="_blank">
+					<a href="https://quancats.com" class="font-medium text-primary-link underline-offset-4 hover:underline" rel="noopener noreferrer" target="_blank">
 						{dictionary.layout.footer_made_with_brand}
 					</a>
 				</p>

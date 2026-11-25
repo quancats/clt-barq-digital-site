@@ -17,7 +17,7 @@
 }
 
 .prose :where(a) {
-	color: var(--primary);
+	color: var(--primary-link);
 	text-decoration: underline;
 	text-underline-offset: 0.15em;
 }

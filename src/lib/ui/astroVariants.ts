@@ -3,11 +3,11 @@ import { cva, type VariantProps } from 'class-variance-authority';
 export const buttonLinkVariants = cva('inline-flex max-w-full items-center justify-center gap-1.5 rounded-lg border border-transparent text-sm text-center font-medium wrap-anywhere whitespace-normal transition-all outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50', {
 	variants: {
 		variant: {
-			default: 'bg-primary text-primary-foreground hover:opacity-90',
+			default: 'bg-primary text-primary-foreground hover:bg-primary-hover',
 			secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
 			outline: 'border-border bg-background text-foreground hover:bg-muted hover:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
 			ghost: 'text-foreground hover:bg-muted hover:text-foreground dark:hover:bg-muted/50',
-			link: 'text-primary underline-offset-4 hover:underline',
+			link: 'text-primary-link underline-offset-4 hover:underline',
 		},
 		size: {
 			default: 'min-h-8 px-3 py-1',
