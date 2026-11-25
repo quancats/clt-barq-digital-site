@@ -6,7 +6,7 @@ Help a new developer understand the project quickly.
 
 ## Project overview
 
-`astro-template` is a static bilingual Astro content website template. There is no backend or CMS in the baseline.
+Barq Digital uses a static bilingual Astro foundation.
 
 ## Repository map
 
@@ -21,13 +21,14 @@ Help a new developer understand the project quickly.
 ## Local setup
 
 ```bash
-npm ci
-npm run dev
+corepack enable pnpm
+pnpm install --frozen-lockfile
+pnpm run dev
 ```
 
 ## Required environment variables
 
-- `SITE_URL` for production canonical/sitemap/RSS values
+- `PUBLIC_SITE_URL` for production canonical/sitemap/RSS values
 - See `.env.example`
 
 ## How to read the docs
@@ -43,16 +44,16 @@ Not applicable in baseline.
 ## How to run frontend
 
 ```bash
-npm run dev
-npm run build
-npm run preview
+pnpm run dev
+pnpm run build
+pnpm run preview
 ```
 
 ## How to run tests
 
 ```bash
 npm test
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 ## How to use Cursor safely

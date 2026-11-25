@@ -6,7 +6,7 @@ import { readBuild } from './build-output.mjs';
 const directory = path.resolve('dist');
 const { assets, pages } = await readBuild(directory);
 const expectedMode = process.argv[2];
-if (expectedMode && !['preview', 'private-preview', 'production'].includes(expectedMode)) throw new Error('Usage: npm run verify:seo -- [preview|private-preview|production]');
+if (expectedMode && !['preview', 'private-preview', 'production'].includes(expectedMode)) throw new Error('Usage: pnpm run verify:seo [preview|private-preview|production]');
 const robots = await readFile(path.join(directory, 'robots.txt'), 'utf8');
 const production = expectedMode ? expectedMode === 'production' : assets.has('/sitemap-index.xml');
 const privatePreview = expectedMode === 'private-preview' || (!expectedMode && process.env.PREVIEW_CRAWL_POLICY === 'private');

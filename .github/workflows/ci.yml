@@ -13,49 +13,51 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            - uses: pnpm/action-setup@v4
+
             - uses: actions/setup-node@v4
               with:
                   node-version-file: '.nvmrc'
-                  cache: npm
+                  cache: pnpm
 
             - name: Install dependencies
-              run: npm ci
+              run: pnpm install --frozen-lockfile
 
             - name: Format check
-              run: npm run format:check
+              run: pnpm run format:check
 
             - name: Lint
-              run: npm run lint
+              run: pnpm run lint
 
             - name: Astro check
-              run: npm run check
+              run: pnpm run check
 
             - name: Vue typecheck
-              run: npm run typecheck:vue
+              run: pnpm run typecheck:vue
 
             - name: Unit tests
-              run: npm test
+              run: pnpm test
 
             - name: Static preview build
-              run: npm run build
+              run: pnpm run build
               env:
                   ENV: local
                   PUBLIC_SITE_URL: https://example.com
 
             - name: Performance budget check
-              run: npm run verify:budget
+              run: pnpm run verify:budget
 
             - name: Internal link check
-              run: npm run verify:links
+              run: pnpm run verify:links
 
             - name: Static SEO and redirect check
-              run: npm run verify:seo -- preview
+              run: pnpm run verify:seo preview
 
             - name: Install Playwright Chromium
-              run: npx playwright install --with-deps chromium
+              run: pnpm exec playwright install --with-deps chromium
 
             - name: End-to-end tests
-              run: npm run verify:e2e
+              run: pnpm run verify:e2e
               env:
                   CI: true
                   ENV: local
