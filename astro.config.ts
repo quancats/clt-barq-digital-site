@@ -1,12 +1,13 @@
 // @ts-check
-import { writeFile } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import mdx from '@astrojs/mdx';
 import vue from '@astrojs/vue';
 import tailwindcss from '@tailwindcss/vite';
 import icon from 'astro-icon';
-import { defineConfig, envField, fontProviders } from 'astro/config';
+import { defineConfig, envField } from 'astro/config';
 import { loadEnv } from 'vite';
 import { renderHostRedirects } from './src/data/hostRedirects.mjs';
+import { previewAssets } from './src/data/previewAssets';
 import { defaultLocale, locales } from './src/i18n/config';
 import { resolveSiteUrl } from './src/lib/env/resolveSiteUrl';
 import { isSiteIndexable } from './src/lib/seo/indexingPolicy';
@@ -31,26 +32,6 @@ export default defineConfig({
 		// Hosts should serve `/about/` from `/about/index.html` and redirect `/about` → `/about/` (ADR-0016).
 		format: 'directory',
 	},
-	fonts: [
-		{
-			provider: fontProviders.google(),
-			name: 'Tajawal',
-			cssVariable: '--font-tajawal',
-			fallbacks: ['sans-serif'],
-			weights: [400, 500, 700],
-			styles: ['normal'],
-			subsets: ['arabic', 'latin'],
-		},
-		{
-			provider: fontProviders.google(),
-			name: 'Manrope',
-			cssVariable: '--font-manrope',
-			fallbacks: ['sans-serif'],
-			weights: [400, 500, 700],
-			styles: ['normal'],
-			subsets: ['latin'],
-		},
-	],
 	env: {
 		schema: {
 			/**
@@ -132,6 +113,9 @@ export default defineConfig({
 			hooks: {
 				'astro:build:done': async ({ dir }) => {
 					await writeFile(new URL('_redirects', dir), renderHostRedirects(), { flag: 'wx' });
+					if (configuredEnv === 'production') {
+						await Promise.all(previewAssets.map((path) => rm(new URL(path.slice(1), dir), { force: true })));
+					}
 				},
 			},
 		},
