@@ -1,0 +1,18 @@
+---
+import ErrorPage from '@/components/astro/sections/error/ErrorPage.astro';
+import { localizePath, type Locale } from '@/i18n/config';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { resolveErrorSeo } from '@/lib/error/resolveErrorSeo';
+import { createPageSeo } from '@/lib/seo/createPageSeo';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const { title, description } = resolveErrorSeo(locale, 404);
+---
+
+<BaseLayout locale={locale} seo={createPageSeo({ title, description, canonicalPath: localizePath(locale, '/'), noindex: true })}>
+	<ErrorPage {locale} statusCode={404} />
+</BaseLayout>

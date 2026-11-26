@@ -18,6 +18,8 @@ const { locale, statusCode = 404, technicalMessage } = Astro.props;
 const dictionary = getDictionary(locale);
 const direction = getLocaleDirection(locale);
 const homeHref = localizePath(locale, '/');
+const otherLocale = locale === 'ar' ? 'en' : 'ar';
+const otherLocaleHomeLabel = locale === 'ar' ? 'English home' : 'الرئيسية بالعربية';
 const homeTrailingIcon = direction === 'rtl' ? 'lucide:arrow-left' : 'lucide:arrow-right';
 const showRetryAction = statusCode >= 500 || statusCode === 408;
 
@@ -59,6 +61,13 @@ const description = statusCode !== 404 && statusCode !== 500 && trimmedTechnical
 					{copy.actions.go_home}
 					<Icon name={homeTrailingIcon} size={18} aria-hidden="true" />
 				</ButtonLink>
+				{
+					statusCode === 404 && (
+						<a href={localizePath(otherLocale, '/')} lang={otherLocale} hreflang={otherLocale} class="inline-flex min-h-11 items-center rounded-sm px-2 text-primary-link underline focus-visible:outline-2">
+							{otherLocaleHomeLabel}
+						</a>
+					)
+				}
 			</div>
 		</section>
 	</div>

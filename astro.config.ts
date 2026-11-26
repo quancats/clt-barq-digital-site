@@ -1,5 +1,5 @@
 // @ts-check
-import { rm, writeFile } from 'node:fs/promises';
+import { rename, rm, writeFile } from 'node:fs/promises';
 import mdx from '@astrojs/mdx';
 import vue from '@astrojs/vue';
 import tailwindcss from '@tailwindcss/vite';
@@ -111,6 +111,8 @@ export default defineConfig({
 			name: 'cloudflare-static-redirects',
 			hooks: {
 				'astro:build:done': async ({ dir }) => {
+					// Workers Static Assets uses the closest 404.html when 404-page handling is enabled.
+					await rename(new URL('en/404/index.html', dir), new URL('en/404.html', dir));
 					await writeFile(new URL('_redirects', dir), renderHostRedirects(), { flag: 'wx' });
 					if (configuredEnv === 'production') {
 						await Promise.all(previewAssets.map((path) => rm(new URL(path.slice(1), dir), { force: true })));

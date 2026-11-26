@@ -1,0 +1,40 @@
+---
+import ButtonLink from '@/components/astro/content/ButtonLink.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import ProseText from '@/components/astro/content/ProseText.astro';
+import Section from '@/components/astro/content/Section.astro';
+import Stack from '@/components/astro/content/Stack.astro';
+import { localizePath, type Locale } from '@/i18n/config';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import { createPageSeo } from '@/lib/seo/createPageSeo';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = {
+	ar: {
+		title: 'حالة الطلب',
+		description: 'لا توجد حالة طلب متاحة في هذه الصفحة. يمكنك العودة إلى الصفحة الرئيسية.',
+		home: 'العودة إلى الصفحة الرئيسية',
+	},
+	en: {
+		title: 'Request status',
+		description: 'No request status is available on this page. You can return to the home page.',
+		home: 'Return to the home page',
+	},
+}[locale];
+const route = '/thank-you/';
+const alternateLocale = locale === 'ar' ? 'en' : 'ar';
+---
+
+<WebsiteLayout {locale} alternatePath={localizePath(alternateLocale, route)} seo={createPageSeo({ title: copy.title, description: copy.description, canonicalPath: localizePath(locale, route), noindex: true })}>
+	<Section labelledBy="request-status-title">
+		<Stack spacing="relaxed">
+			<Heading id="request-status-title" size="display">{copy.title}</Heading>
+			<ProseText>{copy.description}</ProseText>
+			<div><ButtonLink href={localizePath(locale, '/')}>{copy.home}</ButtonLink></div>
+		</Stack>
+	</Section>
+</WebsiteLayout>
