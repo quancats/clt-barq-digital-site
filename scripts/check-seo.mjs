@@ -3,10 +3,10 @@ import { readFile } from 'node:fs/promises';
 import { isHostRedirectSource, renderHostRedirects } from '../src/data/hostRedirects.mjs';
 import { readBuild } from './build-output.mjs';
 
-const directory = path.resolve('dist');
+const directory = path.resolve(process.argv[3] ?? 'dist');
 const { assets, pages } = await readBuild(directory);
 const expectedMode = process.argv[2];
-if (expectedMode && !['preview', 'private-preview', 'production'].includes(expectedMode)) throw new Error('Usage: pnpm run verify:seo [preview|private-preview|production]');
+if (expectedMode && !['preview', 'private-preview', 'production'].includes(expectedMode)) throw new Error('Usage: pnpm run verify:seo [preview|private-preview|production] [output-directory]');
 const robots = await readFile(path.join(directory, 'robots.txt'), 'utf8');
 const production = expectedMode ? expectedMode === 'production' : assets.has('/sitemap-index.xml');
 const privatePreview = expectedMode === 'private-preview' || (!expectedMode && process.env.PREVIEW_CRAWL_POLICY === 'private');
@@ -18,6 +18,7 @@ const origin = process.env.PUBLIC_SITE_URL ? new URL(process.env.PUBLIC_SITE_URL
 const sitemapFiles = [...assets].filter((file) => /^\/sitemap[^/]*\.xml$/.test(file));
 const references = async (file) => [...(await readFile(path.join(directory, file.slice(1)), 'utf8')).matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, loc]) => loc.replaceAll('&amp;', '&'));
 const sitemapUrls = new Set();
+const indexedTitles = new Set();
 
 const allowsCrawling = /^Allow: \/$/m.test(robots) && !/^Disallow:\s*\S/m.test(robots);
 
@@ -45,17 +46,35 @@ if (production) {
 
 check(pages.size > 0, 'missing HTML pages');
 check(pages.has('/'), 'Arabic home must be rendered at the root');
-check(assets.has('/_redirects') && (await readFile(path.join(directory, '_redirects'), 'utf8')) === renderHostRedirects(), 'missing or outdated Cloudflare redirect rules');
+const expectedRedirects = renderHostRedirects((route) => {
+	const target = pages.get(route);
+	return Boolean(target && !target.error && !target.redirect && (!production || !target.noindex));
+});
+check(assets.has('/_redirects') && (await readFile(path.join(directory, '_redirects'), 'utf8')) === expectedRedirects, 'missing or outdated Cloudflare redirect rules');
 for (const [route, page] of pages) {
 	const excluded = page.noindex || page.error || page.redirect || isHostRedirectSource(route);
 	const links = page.elements.filter(({ name }) => name === 'link').map(({ attributes }) => attributes);
 	check(links.some(({ rel, href }) => rel === 'sitemap' && href === '/sitemap-index.xml') === (production && !excluded), route + ' sitemap advertisement mismatch');
 	if (page.redirect) continue;
+	for (const payload of page.structuredData) {
+		try {
+			const entry = JSON.parse(payload);
+			check(entry?.['@context'] === 'https://schema.org' && typeof entry['@type'] === 'string', route + ' malformed structured data object');
+		} catch {
+			failures.push(route + ' invalid JSON-LD');
+		}
+	}
 	if (!production) check(page.noindex, route + ' must use noindex in preview');
 	if (excluded || !production) continue;
 
 	const canonicals = links.filter(({ rel }) => rel === 'canonical');
 	const expected = origin && new URL(route, origin).href;
+	const metadata = new Map(page.elements.filter(({ name }) => name === 'meta').map(({ attributes }) => [attributes.property ?? attributes.name, attributes.content]));
+	const description = metadata.get('description');
+	check(page.title.trim() && !indexedTitles.has(page.title), route + ' missing or duplicate title');
+	indexedTitles.add(page.title);
+	check(description?.trim() && metadata.get('og:description') === description, route + ' missing or mismatched description');
+	check(metadata.get('og:url') === expected && metadata.get('og:title') === page.title && metadata.get('og:type'), route + ' missing or mismatched Open Graph metadata');
 	check(canonicals.length === 1 && canonicals[0].href === expected && route.endsWith('/'), route + ' has an incorrect canonical');
 	check(sitemapUrls.delete(expected), route + ' missing from sitemap');
 	const locale = page.elements.find(({ name }) => name === 'html')?.attributes.lang;
@@ -67,7 +86,7 @@ for (const [route, page] of pages) {
 		const equivalent = url && pages.get(decodeURIComponent(url.pathname));
 		check(!languages.has(hreflang), route + ' duplicate hreflang ' + hreflang);
 		languages.add(hreflang);
-		check(url?.origin === origin && url?.pathname.endsWith('/') && equivalent && !equivalent.redirect && !equivalent.error, route + ' invalid hreflang destination ' + href);
+		check(url?.origin === origin && url?.pathname.endsWith('/') && equivalent && !equivalent.noindex && !equivalent.redirect && !equivalent.error, route + ' invalid hreflang destination ' + href);
 		if (hreflang === 'x-default' || !equivalent) continue;
 		check(
 			equivalent.elements.some(({ name, attributes }) => name === 'html' && attributes.lang === hreflang),

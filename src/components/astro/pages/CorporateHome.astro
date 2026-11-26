@@ -13,6 +13,7 @@ import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
 import { createHomePage } from '@/lib/content/queries/createHomePage';
 import { getSiteContent, getSiteSections } from '@/lib/content/queries/getSiteRoutes';
 import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
+import { createOrganizationJsonLd } from '@/lib/seo/structured-data/createOrganizationJsonLd';
 import { ENV } from 'astro:env/server';
 
 interface Props {
@@ -25,6 +26,7 @@ const [page, content, destinations] = await Promise.all([createHomePage({ locale
 const home = content.pages.find(({ data }) => data.locale === locale && data.translationKey === 'home')?.data;
 const destination = (key: string) => destinations.find((item) => item.key === key);
 const seo = home ? { ...page.seo, title: home.seo?.title ?? home.title, description: home.seo?.description ?? home.description, image: home.media[0]?.path } : page.seo;
+const jsonLd = home ? [page.jsonLd, createOrganizationJsonLd({ site, name: page.dictionary.common.brand, description: home.description, path: seo.canonicalPath })] : page.jsonLd;
 const contact = destination('contact');
 const primary = destination('consultation') ?? contact;
 const demo = destination('demo');
@@ -36,7 +38,7 @@ const commercial = ['solutions', 'services', 'industries', 'projects'].flatMap((
 const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواصل معنا' } : { explore: 'Explore', getInTouch: 'Get in touch' };
 ---
 
-<WebsiteLayout {locale} {seo} alternates={page.alternates} alternatePath={page.alternatePath} jsonLd={page.jsonLd}>
+<WebsiteLayout {locale} {seo} alternates={page.alternates} alternatePath={page.alternatePath} {jsonLd}>
 	{
 		home ? (
 			<>

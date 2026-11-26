@@ -1,5 +1,6 @@
 // @ts-check
 import { rename, rm, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import mdx from '@astrojs/mdx';
 import vue from '@astrojs/vue';
 import tailwindcss from '@tailwindcss/vite';
@@ -12,6 +13,7 @@ import { defaultLocale, locales } from './src/i18n/config';
 import { resolveSiteUrl } from './src/lib/env/resolveSiteUrl';
 import { isSiteIndexable } from './src/lib/seo/indexingPolicy';
 import { productionSitemap } from './src/lib/seo/productionSitemap';
+import { readBuild } from './scripts/build-output.mjs';
 
 // Astro evaluates this file before normal Vite `.env` injection; load file env explicitly.
 const fileEnv = loadEnv(process.env.NODE_ENV === 'production' ? 'production' : 'development', process.cwd(), '');
@@ -113,7 +115,15 @@ export default defineConfig({
 				'astro:build:done': async ({ dir }) => {
 					// Workers Static Assets uses the closest 404.html when 404-page handling is enabled.
 					await rename(new URL('en/404/index.html', dir), new URL('en/404.html', dir));
-					await writeFile(new URL('_redirects', dir), renderHostRedirects(), { flag: 'wx' });
+					const { pages } = await readBuild(fileURLToPath(dir));
+					await writeFile(
+						new URL('_redirects', dir),
+						renderHostRedirects((path) => {
+							const target = pages.get(path);
+							return Boolean(target && !target.error && !target.redirect && (!indexable || !target.noindex));
+						}),
+						{ flag: 'wx' },
+					);
 					if (configuredEnv === 'production') {
 						await Promise.all(previewAssets.map((path) => rm(new URL(path.slice(1), dir), { force: true })));
 					}

@@ -10,6 +10,8 @@ import type { SitePageProps } from '@/lib/content/queries/getSitePagePaths';
 import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
 import { createLocaleAlternates } from '@/lib/seo/createLocaleAlternates';
 import { createPageSeo } from '@/lib/seo/createPageSeo';
+import { createBreadcrumbListJsonLd } from '@/lib/seo/structured-data/createBreadcrumbListJsonLd';
+import { createCanonicalUrl } from '@/lib/seo/createCanonicalUrl';
 
 type Props = SitePageProps;
 
@@ -25,6 +27,20 @@ const metadata =
 		const entry = commercial.kind === 'commercial' ? commercial.entry.data : undefined;
 		const title = entry?.title ?? familyTitle;
 		const other = locale === 'ar' ? 'en' : 'ar';
+		const breadcrumbs = [{ label: dictionary.layout.nav_home, href: localizePath(locale) }, { label: familyTitle, href: localizePath(locale, family) }, { label: title }];
+		const jsonLd = [];
+		if (entry) {
+			jsonLd.push(createBreadcrumbListJsonLd({ site, items: breadcrumbs.map(({ label, href }) => ({ label, path: href ?? path })) }));
+		}
+		if (family === 'products' && entry?.translationKey === 'bim') {
+			jsonLd.push({
+				'@context': 'https://schema.org',
+				'@type': 'SoftwareApplication',
+				name: entry.title,
+				description: entry.description,
+				url: createCanonicalUrl({ site, path }).href,
+			});
+		}
 		return {
 			alternates: createLocaleAlternates({ site, pathsByLocale: { [locale]: path, [other]: alternatePath } }),
 			seo: createPageSeo({
@@ -33,14 +49,15 @@ const metadata =
 				canonicalPath: path,
 				image: entry?.media[0]?.path,
 			}),
-			breadcrumbs: [{ label: dictionary.layout.nav_home, href: localizePath(locale) }, { label: familyTitle, href: localizePath(locale, family) }, { label: title }],
+			breadcrumbs,
+			jsonLd,
 		};
 	})();
 ---
 
 {
 	commercial && metadata && (
-		<WebsiteLayout locale={commercial.locale} alternatePath={commercial.alternatePath} seo={metadata.seo} alternates={metadata.alternates}>
+		<WebsiteLayout locale={commercial.locale} alternatePath={commercial.alternatePath} seo={metadata.seo} alternates={metadata.alternates} jsonLd={metadata.jsonLd}>
 			{commercial.kind === 'catalog' ? <CommercialCatalog locale={commercial.locale} family={commercial.family} entries={commercial.entries} /> : <CommercialDetail locale={commercial.locale} entry={commercial.entry} breadcrumbs={metadata.breadcrumbs} related={commercial.related} {...(commercial.cta ? { cta: commercial.cta } : {})} {...(commercial.officialLink ? { officialLink: commercial.officialLink } : {})} />}
 		</WebsiteLayout>
 	)

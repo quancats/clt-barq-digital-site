@@ -7,4 +7,4 @@ const { jsonLd } = Astro.props;
 const payload = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 ---
 
-{payload.map((entry) => <script is:inline type="application/ld+json" set:html={JSON.stringify(entry)} />)}
+{payload.map((entry) => <script is:inline type="application/ld+json" set:html={JSON.stringify(entry).replaceAll('<', '\\u003c')} />)}
