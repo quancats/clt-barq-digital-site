@@ -2,6 +2,7 @@
 import { createModeAwareAnalyticsLoaderScript, parseAnalyticsMode } from '@/lib/analytics/consent';
 import { createGoogleAnalyticsInitScript, resolveGoogleAnalyticsId } from '@/lib/analytics/googleAnalytics';
 import { PUBLIC_GOOGLE_ANALYTICS_ENABLED, PUBLIC_GOOGLE_ANALYTICS_ID, PUBLIC_GOOGLE_ANALYTICS_MODE } from 'astro:env/client';
+import { ENV } from 'astro:env/server';
 
 const mode = parseAnalyticsMode(PUBLIC_GOOGLE_ANALYTICS_MODE);
 const measurementId =
@@ -10,14 +11,16 @@ const measurementId =
 		: resolveGoogleAnalyticsId({
 				measurementId: PUBLIC_GOOGLE_ANALYTICS_ID,
 				enabled: PUBLIC_GOOGLE_ANALYTICS_ENABLED,
-				isProd: import.meta.env.PROD,
+				isProd: import.meta.env.PROD && ENV === 'production',
 			});
+const page = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
 const loaderScript =
-	measurementId != null
+	measurementId != null && page
 		? createModeAwareAnalyticsLoaderScript({
 				measurementId,
 				mode,
-				initScript: createGoogleAnalyticsInitScript(measurementId),
+				origin: page.origin,
+				initScript: createGoogleAnalyticsInitScript(measurementId, page.href, Astro.currentLocale === 'en' ? 'en' : 'ar'),
 			})
 		: null;
 ---

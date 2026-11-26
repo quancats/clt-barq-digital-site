@@ -8,13 +8,14 @@ interface Props {
 	variant?: 'default' | 'outline';
 	external?: boolean;
 	prefetch?: boolean;
+	analyticsAction?: 'bim_outbound' | 'contact_action' | 'consultation_cta' | 'demo_cta' | 'partnership_cta';
 }
 
-const { href, label, variant = 'default', external = false, prefetch = false } = Astro.props;
+const { href, label, variant = 'default', external = false, prefetch = false, analyticsAction } = Astro.props;
 const externalAttributes = external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 ---
 
-<ButtonLink {href} {variant} size="lg" prefetch={!external && prefetch} {...externalAttributes}>
+<ButtonLink {href} {variant} size="lg" prefetch={!external && prefetch} {...analyticsAction ? { analyticsAction } : {}} {...externalAttributes}>
 	<span class="min-w-0">{label}</span>
 	<Icon name={external ? 'lucide:external-link' : 'lucide:arrow-right'} size={18} class:list={['shrink-0', !external && 'rtl:rotate-180']} aria-hidden="true" />
 </ButtonLink>

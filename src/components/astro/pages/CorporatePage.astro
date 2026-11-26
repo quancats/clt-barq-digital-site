@@ -67,7 +67,7 @@ const Content = (props.kind === 'legal' || props.kind === 'project') && props.en
 						<ul class="flex flex-wrap gap-4">
 							{page.contactLinks.map((link) => (
 								<li>
-									<a class="font-semibold wrap-anywhere text-primary-link underline" href={link.href}>
+									<a class="font-semibold wrap-anywhere text-primary-link underline" href={link.href} data-analytics-action="contact_action">
 										{link.label}
 									</a>
 								</li>
@@ -182,7 +182,7 @@ const Content = (props.kind === 'legal' || props.kind === 'project') && props.en
 						<ul class="flex flex-wrap gap-4">
 							{related.map((link) => (
 								<li>
-									<CallToAction {...link} variant="outline" />
+									<CallToAction {...link} variant="outline" {...(link.href === links.consultation ? { analyticsAction: 'consultation_cta' as const } : link.href === links.demo ? { analyticsAction: 'demo_cta' as const } : link.href === links.partners ? { analyticsAction: 'partnership_cta' as const } : {})} />
 								</li>
 							))}
 							{page?.translationKey === 'about' && page.profile && (

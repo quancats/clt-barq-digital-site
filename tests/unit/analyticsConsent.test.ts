@@ -75,7 +75,7 @@ describe('analytics preference helpers', () => {
 		expect(script).toContain(ANALYTICS_CONSENT_STORAGE_KEY);
 		expect(script).toContain('googletagmanager.com/gtag/js');
 		expect(script).toContain('"opt-out"');
-		expect(script).toContain("!=='denied'");
+		expect(script).toContain("state!=='denied'");
 	});
 
 	it('builds an opt-in loader that requires granted', () => {

@@ -51,7 +51,7 @@ const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواص�
 							<ProseText>{home.description}</ProseText>
 							{primary && (
 								<div>
-									<CallToAction href={primary.href} label={primary.title} />
+									<CallToAction href={primary.href} label={primary.title} analyticsAction={primary === contact ? 'contact_action' : 'consultation_cta'} />
 								</div>
 							)}
 						</Stack>
@@ -69,7 +69,7 @@ const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواص�
 								{(bim || demo) && (
 									<div class="flex flex-wrap gap-3">
 										{bim && <CallToAction href={bim.href} label={bim.title} />}
-										{demo && <CallToAction href={demo.href} label={demo.title} variant="outline" />}
+										{demo && <CallToAction href={demo.href} label={demo.title} variant="outline" analyticsAction="demo_cta" />}
 									</div>
 								)}
 							</Stack>
@@ -145,7 +145,7 @@ const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواص�
 						{copy.getInTouch}
 					</Heading>
 					<div>
-						<CallToAction href={contact.href} label={contact.title} />
+						<CallToAction href={contact.href} label={contact.title} analyticsAction="contact_action" />
 					</div>
 				</Stack>
 			</Section>

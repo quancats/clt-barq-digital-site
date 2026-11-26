@@ -101,8 +101,8 @@ const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 		{
 			(cta || officialLink) && (
 				<div class="flex flex-wrap gap-3">
-					{cta && <CallToAction {...cta} />}
-					{officialLink && <CallToAction {...officialLink} variant={cta ? 'outline' : 'default'} external />}
+					{cta && <CallToAction {...cta} analyticsAction={product?.translationKey === 'bim' ? 'demo_cta' : 'consultation_cta'} />}
+					{officialLink && <CallToAction {...officialLink} variant={cta ? 'outline' : 'default'} external {...(product?.translationKey === 'bim' ? { analyticsAction: 'bim_outbound' as const } : {})} />}
 				</div>
 			)
 		}

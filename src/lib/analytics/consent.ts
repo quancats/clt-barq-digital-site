@@ -103,12 +103,34 @@ export function shouldAutoOpenConsentBanner(options: { mode: AnalyticsMode; anal
  * Builds the inline loader that injects gtag according to analytics mode.
  * Always honors a stored `denied` preference. Never loads when mode is `off`.
  */
-export function createModeAwareAnalyticsLoaderScript(options: { measurementId: string; mode: AnalyticsMode; initScript: string }): string {
+export function createModeAwareAnalyticsLoaderScript(options: { measurementId: string; mode: AnalyticsMode; initScript: string; origin?: string }): string {
 	const measurementId = JSON.stringify(options.measurementId);
 	const storageKey = JSON.stringify(ANALYTICS_CONSENT_STORAGE_KEY);
 	const initScriptLiteral = JSON.stringify(options.initScript);
 	const modeLiteral = JSON.stringify(options.mode);
 	const versionLiteral = String(ANALYTICS_CONSENT_VERSION);
+	const origin = JSON.stringify(options.origin ?? null);
 
-	return `(()=>{const id=${measurementId};const key=${storageKey};const initSource=${initScriptLiteral};const mode=${modeLiteral};const version=${versionLiteral};let loaded=false;function readPreference(){try{const raw=localStorage.getItem(key);if(!raw)return null;if(raw==='granted'||raw==='denied')return{state:raw,version:version};const parsed=JSON.parse(raw);if((parsed.state==='granted'||parsed.state==='denied')&&parsed.version===version)return parsed;return null;}catch{return null;}}function load(){if(loaded||mode==='off')return;loaded=true;const s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+id;document.head.appendChild(s);const i=document.createElement('script');i.textContent=initSource;document.head.appendChild(i);}function maybeLoad(){const pref=readPreference();if(mode==='off')return;if(mode==='opt-in'){if(pref&&pref.state==='granted')load();return;}if(!pref||pref.state!=='denied')load();}maybeLoad();})();`;
+	return `(()=>{
+		const id=${measurementId}, key=${storageKey}, mode=${modeLiteral}, version=${versionLiteral}, origin=${origin};
+		if (mode==='off' || (origin && location.origin!==origin)) return;
+		function mayMeasure(){
+			try {
+				const raw=localStorage.getItem(key);
+				const parsed=raw==='granted'||raw==='denied' ? {state:raw,version} : JSON.parse(raw);
+				const state=parsed?.version===version ? parsed.state : null;
+				return mode==='opt-in' ? state==='granted' : state!=='denied';
+			} catch { return false; }
+		}
+		if (!mayMeasure()) return;
+		window.barqMayMeasure=mayMeasure;
+		const init=document.createElement('script');
+		init.textContent=${initScriptLiteral};
+		document.head.appendChild(init);
+		const tag=document.createElement('script');
+		tag.async=true;
+		tag.referrerPolicy='no-referrer';
+		tag.src='https://www.googletagmanager.com/gtag/js?id='+id;
+		document.head.appendChild(tag);
+	})();`;
 }

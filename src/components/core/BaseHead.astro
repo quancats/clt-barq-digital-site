@@ -64,4 +64,4 @@ const alternateLocales = alternates.filter((alternate) => alternate.locale !== '
 {alternates.map((alternate) => <link rel="alternate" hreflang={alternate.locale} href={alternate.href} />)}
 <link rel="alternate" type="application/rss+xml" title={dictionary.common.brand} href="/rss.xml" />
 <StructuredData jsonLd={jsonLd} />
-<Analytics />
+{!seo.noindex && <Analytics />}

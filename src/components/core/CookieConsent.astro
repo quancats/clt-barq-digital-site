@@ -4,6 +4,7 @@ import { isGoogleAnalyticsEnabled, resolveGoogleAnalyticsId } from '@/lib/analyt
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/helpers';
 import { PUBLIC_GOOGLE_ANALYTICS_ENABLED, PUBLIC_GOOGLE_ANALYTICS_ID, PUBLIC_GOOGLE_ANALYTICS_MODE } from 'astro:env/client';
+import { ENV } from 'astro:env/server';
 
 interface Props {
 	locale: Locale;
@@ -16,7 +17,7 @@ const analyticsEnabled = isGoogleAnalyticsEnabled(PUBLIC_GOOGLE_ANALYTICS_ENABLE
 const measurementId = resolveGoogleAnalyticsId({
 	measurementId: PUBLIC_GOOGLE_ANALYTICS_ID,
 	enabled: PUBLIC_GOOGLE_ANALYTICS_ENABLED,
-	isProd: import.meta.env.PROD,
+	isProd: import.meta.env.PROD && ENV === 'production',
 });
 const showPreferenceUi = shouldShowAnalyticsPreferenceUi({
 	mode,
