@@ -1,0 +1,129 @@
+---
+import '@/styles/global.css';
+import Button from '@/components/astro/content/Button.astro';
+import Card from '@/components/astro/content/Card.astro';
+import Disclosure from '@/components/astro/content/Disclosure.astro';
+import Field from '@/components/astro/content/Field.astro';
+import Grid from '@/components/astro/content/Grid.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import ProseText from '@/components/astro/content/ProseText.astro';
+import Section from '@/components/astro/content/Section.astro';
+import Stack from '@/components/astro/content/Stack.astro';
+import StatusMessage from '@/components/astro/content/StatusMessage.astro';
+import FeatureGrid from '@/components/astro/sections/FeatureGrid.astro';
+import ProcessSteps from '@/components/astro/sections/ProcessSteps.astro';
+import ProductShowcase from '@/components/astro/sections/ProductShowcase.astro';
+import { getLocaleDirection, type Locale } from '@/i18n/config';
+
+export function getStaticPaths() {
+	return import.meta.env.DEV
+		? [
+				{ params: { locale: 'arabic' }, props: { locale: 'ar', alternatePath: '/design-preview/english/' } },
+				{ params: { locale: 'english' }, props: { locale: 'en', alternatePath: '/design-preview/arabic/' } },
+			]
+		: [];
+}
+
+interface Props {
+	locale: Locale;
+	alternatePath: string;
+}
+
+const { locale, alternatePath } = Astro.props;
+const copy = {
+	ar: {
+		title: 'معاينة مكوّنات الموقع',
+		intro: 'نماذج محلية لاختبار القراءة والتنقّل وحالات الحقول.',
+		language: 'English',
+		content: 'المحتوى والتنبيهات',
+		disclosure: 'كيف تعمل لوحة التفاصيل؟',
+		details: 'يمكن فتح هذه اللوحة أو إغلاقها بلوحة المفاتيح.',
+		success: 'اكتمل الإجراء في المثال',
+		empty: 'لا توجد عناصر لعرضها',
+		form: 'حقول النموذج',
+		email: 'البريد الإلكتروني',
+		hint: 'أدخل عنوان البريد الإلكتروني للعمل.',
+		error: 'تحقق من صيغة البريد الإلكتروني.',
+		message: 'الرسالة',
+		subject: 'موضوع الطلب',
+		subjects: ['استفسار عام', 'استشارة'],
+		save: 'حفظ',
+	},
+	en: {
+		title: 'Website component preview',
+		intro: 'Local examples for testing reading order, navigation and form states.',
+		language: 'العربية',
+		content: 'Content and messages',
+		disclosure: 'How does the details panel work?',
+		details: 'Open or close this panel with the keyboard.',
+		success: 'The example action is complete',
+		empty: 'There are no items to display',
+		form: 'Form fields',
+		email: 'Email address',
+		hint: 'Enter your work email address.',
+		error: 'Check your email address format.',
+		message: 'Message',
+		subject: 'Request topic',
+		subjects: ['General inquiry', 'Consultation'],
+		save: 'Save',
+	},
+}[locale];
+const alternate = locale === 'ar' ? 'en' : 'ar';
+const journey = locale === 'ar' ? { title: 'مسار الطلب', steps: ['اختر استفسارًا عامًا أو استشارة أو عرض BIM أو شراكة.', 'راجع البيانات المطلوبة وإشعار الخصوصية.', 'أرسل الطلب وراجع حالة الإرسال.', 'راجع التأكيد بعد قبول الطلب.'] } : { title: 'Request journey', steps: ['Choose general inquiry, consultation, BIM demo or partnership.', 'Review the required information and privacy notice.', 'Submit the request and review its status.', 'Review the confirmation after acceptance.'] };
+const productCopy = locale === 'ar' ? { description: 'BIM هو المنتج الرئيسي لبرق الرقمية.', link: 'زيارة موقع BIM', patterns: 'أنماط الصفحات' } : { description: 'BIM is the flagship product of Barq Digital.', link: 'Visit the BIM website', patterns: 'Page patterns' };
+---
+
+<!doctype html>
+<html lang={locale} dir={getLocaleDirection(locale)}>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="robots" content="noindex, nofollow" />
+		<title>{copy.title}</title>
+	</head>
+	<body>
+		<main>
+			<Section labelledBy="preview-title" tone="muted">
+				<Stack spacing="relaxed">
+					<Stack>
+						<Heading id="preview-title" size="display">{copy.title}</Heading>
+						<ProseText>{copy.intro}</ProseText>
+						<a class="w-fit text-primary-link underline focus-visible:outline-2 focus-visible:outline-offset-2" href={alternatePath} lang={alternate}>{copy.language}</a>
+					</Stack>
+					<Grid columns={2}>
+						<Card>
+							<Stack>
+								<Heading level={2}>{copy.content}</Heading>
+								<Disclosure label={copy.disclosure}><ProseText>{copy.details}</ProseText></Disclosure>
+								<StatusMessage tone="success" title={copy.success} />
+								<StatusMessage tone="empty" title={copy.empty} />
+							</Stack>
+						</Card>
+						<Card>
+							<Stack>
+								<Heading level={2}>{copy.form}</Heading>
+								<Field id="preview-email" name="email" label={copy.email} hint={copy.hint} error={copy.error} type="email" required />
+								<Field id="preview-topic" name="topic" label={copy.subject} control="select" options={copy.subjects.map((label, index) => ({ label, value: String(index) }))} />
+								<Field id="preview-message" name="message" label={copy.message} control="textarea" />
+								<div class="flex flex-wrap gap-2">
+									<Button disabled>{copy.save}</Button>
+									<Button icon="lucide:save" label={copy.save} variant="outline" disabled />
+								</div>
+							</Stack>
+						</Card>
+					</Grid>
+				</Stack>
+			</Section>
+			<ProductShowcase id="product-preview" name="BIM" description={productCopy.description} link={{ href: 'https://bimchat.sa/ar/', label: productCopy.link, external: true }} />
+			<FeatureGrid
+				id="feature-preview"
+				title={productCopy.patterns}
+				items={[
+					{ title: copy.content, description: copy.details },
+					{ title: copy.form, description: copy.hint },
+				]}
+			/>
+			<ProcessSteps id="request-preview" {...journey} />
+		</main>
+	</body>
+</html>

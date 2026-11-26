@@ -1,0 +1,31 @@
+---
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import ProseText from '@/components/astro/content/ProseText.astro';
+import Section from '@/components/astro/content/Section.astro';
+import Stack from '@/components/astro/content/Stack.astro';
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+
+interface Props {
+	id: string;
+	name: string;
+	description: string;
+	link: { href: string; label: string; external?: boolean };
+	image?: { src: ImageMetadata; alt: string };
+}
+
+const { id, name, description, link, image } = Astro.props;
+const headingId = `${id}-heading`;
+---
+
+<Section {id} labelledBy={headingId} tone="muted">
+	<div class:list={['grid items-center gap-grid-gutter', image && 'md:grid-cols-2']}>
+		<Stack spacing="relaxed">
+			<Heading id={headingId} level={2}>{name}</Heading>
+			<ProseText>{description}</ProseText>
+			<div><CallToAction {...link} /></div>
+		</Stack>
+		{image && <Image src={image.src} alt={image.alt} layout="constrained" sizes="(min-width: 768px) 50vw, 100vw" class="rounded-lg" />}
+	</div>
+</Section>

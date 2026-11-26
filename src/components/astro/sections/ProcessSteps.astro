@@ -1,0 +1,28 @@
+---
+import Heading from '@/components/astro/content/Heading.astro';
+import Section from '@/components/astro/content/Section.astro';
+
+interface Props {
+	id: string;
+	title: string;
+	steps: readonly string[];
+}
+
+const { id, title, steps } = Astro.props;
+const headingId = `${id}-heading`;
+---
+
+{
+	steps.length > 0 && (
+		<Section {id} labelledBy={headingId}>
+			<Heading id={headingId} level={2}>
+				{title}
+			</Heading>
+			<ol class="mt-4 list-decimal space-y-3 ps-6">
+				{steps.map((step) => (
+					<li class="wrap-anywhere">{step}</li>
+				))}
+			</ol>
+		</Section>
+	)
+}

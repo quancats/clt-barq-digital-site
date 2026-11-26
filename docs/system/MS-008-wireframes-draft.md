@@ -1,6 +1,6 @@
-# MS-008 | Responsive wireframe draft
+# MS-008 | Approved responsive wireframes
 
-This low-fidelity specification covers REQ-008 and both work packages. UX/UI review and acceptance are pending [content decisions in MS-003](MS-003-route-content-register.md) and the visual direction, asset rights and font decisions in MS-007. Each slot described below needs the corresponding approved material before public use. The component inventory and responsive behavior are candidates for review.
+The user approved these bilingual wireframes and the four lead journeys on 2026-11-26. The specification covers REQ-008 and both work packages. Each content slot requires authorized material before public use. Engineering verifies the implemented patterns and accessibility in MS-010 through MS-013.
 
 ## Shared frame
 
@@ -46,7 +46,7 @@ The following sequences describe the body after the shared header. Wide layouts 
 
 ## Navigation interaction
 
-On wide screens, approved categories use links or button disclosures. A grouped panel can place sections and featured destinations in columns, with headings and links in document order. Compact screens use a drawer with the same destinations grouped vertically. Give disclosures an accessible name and expanded state. Escape closes the panel, and closing an overlay restores focus to its trigger. Keep primary links available without hydration. Offer the language switch for an approved matching translation, with a clear fallback to the other language home when a match is unavailable. Avoid hidden keyboard traps and hover-only controls.
+On wide screens, approved categories use links or button disclosures. A grouped panel can place sections and featured destinations in columns, with headings and links in document order. Compact screens use a drawer with the same destinations grouped vertically. Give disclosures an accessible name and expanded state. Escape closes the panel, and closing an overlay restores focus to its trigger. Keep primary links available without hydration. Offer the language switch for an approved matching translation, with a localized unavailable message when a match is unavailable. Avoid hidden keyboard traps and hover-only controls.
 
 ## Four lead journeys
 

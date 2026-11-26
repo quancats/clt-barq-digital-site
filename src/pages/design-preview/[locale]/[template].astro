@@ -1,0 +1,67 @@
+---
+import Heading from '@/components/astro/content/Heading.astro';
+import ProseText from '@/components/astro/content/ProseText.astro';
+import Section from '@/components/astro/content/Section.astro';
+import Stack from '@/components/astro/content/Stack.astro';
+import FeatureGrid from '@/components/astro/sections/FeatureGrid.astro';
+import ProcessSteps from '@/components/astro/sections/ProcessSteps.astro';
+import ProductShowcase from '@/components/astro/sections/ProductShowcase.astro';
+import type { Locale } from '@/i18n/config';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+
+export function getStaticPaths() {
+	if (!import.meta.env.DEV) return [];
+
+	return (['corporate', 'commercial'] as const).flatMap((template) => [
+		{ params: { locale: 'arabic', template }, props: { locale: 'ar', template, alternatePath: `/design-preview/english/${template}/` } },
+		{ params: { locale: 'english', template }, props: { locale: 'en', template, alternatePath: `/design-preview/arabic/${template}/` } },
+	]);
+}
+
+interface Props {
+	locale: Locale;
+	template: 'corporate' | 'commercial';
+	alternatePath: string;
+}
+
+const { locale, template, alternatePath } = Astro.props;
+const copy = {
+	ar: {
+		corporate: { title: 'معاينة قالب الشركة', description: 'برق الرقمية شركة سعودية للتقنية والأمن السيبراني.' },
+		commercial: { title: 'معاينة القالب التجاري', description: 'نموذج لعرض الخدمات والحلول ومسار اتخاذ القرار.' },
+		product: 'BIM هو المنتج الرئيسي لبرق الرقمية.',
+		productLink: 'زيارة موقع BIM',
+		categories: 'الخدمات والحلول',
+		services: { title: 'الخدمات', description: 'الأعمال التي تقدمها برق، بحسب النطاق المعتمد لكل خدمة.' },
+		solutions: { title: 'الحلول', description: 'احتياجات العملاء والتحديات التي تعالجها الحلول المعتمدة.' },
+		processTitle: 'من الاستكشاف إلى الطلب',
+		steps: ['استعرض نطاق الخدمة أو الحل.', 'راجع التفاصيل والمتطلبات.', 'انتقل إلى رحلة الطلب المناسبة عند توفرها.'],
+		trust: 'الاعتمادات والمراجع',
+	},
+	en: {
+		corporate: { title: 'Corporate template preview', description: 'Barq Digital is a Saudi technology and cybersecurity company.' },
+		commercial: { title: 'Commercial template preview', description: 'A layout for presenting services, solutions and the decision journey.' },
+		product: 'BIM is the flagship product of Barq Digital.',
+		productLink: 'Visit the BIM website',
+		categories: 'Services and solutions',
+		services: { title: 'Services', description: 'Work that Barq delivers, according to each approved service scope.' },
+		solutions: { title: 'Solutions', description: 'Customer needs and the challenges addressed by approved solutions.' },
+		processTitle: 'From exploration to inquiry',
+		steps: ['Explore the scope of the service or solution.', 'Review the details and requirements.', 'Open the relevant request journey when it is available.'],
+		trust: 'Credentials and references',
+	},
+}[locale];
+const page = copy[template];
+---
+
+<WebsiteLayout {locale} {alternatePath} seo={{ ...page, canonicalPath: Astro.url.pathname, noindex: true }}>
+	<Section id="template-overview" labelledBy="template-heading">
+		<Stack>
+			<Heading id="template-heading" size="display">{page.title}</Heading>
+			<ProseText>{page.description}</ProseText>
+		</Stack>
+	</Section>
+	{template === 'corporate' ? <ProductShowcase id="template-product" name="BIM" description={copy.product} link={{ href: 'https://bimchat.sa/ar/', label: copy.productLink, external: true }} /> : <ProcessSteps id="template-process" title={copy.processTitle} steps={copy.steps} />}
+	<FeatureGrid id="template-categories" title={copy.categories} items={[copy.services, copy.solutions]} />
+	<FeatureGrid id="template-trust" title={copy.trust} items={[]} />
+</WebsiteLayout>
