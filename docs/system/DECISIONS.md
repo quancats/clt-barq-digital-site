@@ -261,7 +261,7 @@ Follow-up: Do not expand Vue usage beyond catalog/approved islands without a new
 
 Date: 2026-11-25
 
-Status: In review
+Status: Accepted by the user on 2026-11-25
 
 Context: v1.0 REQ-002 and WP-002.1 build on the verified working MS-001 starter. The website showcases the external BIM product and owns only website content and lead integration.
 
@@ -277,7 +277,7 @@ Consequences: Editorial content changes are reviewed and rebuilt. The repository
 
 Date: 2026-11-25
 
-Status: In review
+Status: Accepted by the user on 2026-11-25
 
 Context: v1.0 REQ-002 and WP-002.1 require static hosting and a narrow form-processing runtime for future lead work.
 

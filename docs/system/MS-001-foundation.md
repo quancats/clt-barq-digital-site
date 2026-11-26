@@ -3,7 +3,7 @@
 | Field                            | Value                                                            |
 | -------------------------------- | ---------------------------------------------------------------- |
 | Release and requirement          | v1.0, MS-001, REQ-001                                            |
-| State                            | IN_REVIEW, local implementation and verification complete        |
+| State                            | ACCEPTED by the user on 2026-11-25                               |
 | Owner                            | Website foundation engineer                                      |
 | Dependencies                     | None                                                             |
 | Repository and starting revision | `clt-barq-digital-site`, `release-v1.0/pr-sdfevnfj` at `3e5ade6` |
@@ -27,4 +27,4 @@
 | `pnpm run verify`                           | Performance budgets, links and preview indexing policy passed. Chromium passed 64 tests, including Arabic RTL content and link navigation with JavaScript disabled                           |
 | Repository and asset review                 | Only `.env.example` was tracked as an environment file. The focused search found no private key blocks or matching token patterns. Default template browser and sharing images were replaced |
 
-No API, schema or external provider change was required. Hosted CI and production infrastructure were outside this verification. The handoff is for review of MS-001 and its existing-template compatibility decisions. MS-002 remains outside the implementation scope.
+No API, schema or external provider change was required. Hosted CI and production infrastructure were outside this verification. The user accepted MS-001 on 2026-11-25. See the [execution register](MS-002-MS-013-execution.md) for the downstream handoff.

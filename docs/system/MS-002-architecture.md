@@ -1,13 +1,13 @@
 # MS-002 | Architecture and engineering conventions
 
-| Field                 | Evidence                                                                                     |
-| --------------------- | -------------------------------------------------------------------------------------------- |
-| Release / requirement | v1.0 / REQ-002                                                                               |
-| Owner                 | Barq Digital website technical lead                                                          |
-| Starting checkout     | `release-v1.0/pr-sdfevnfj` at `9af8729`                                                      |
-| Date                  | 2026-11-25                                                                                   |
-| Dependency            | [MS-001 local evidence](MS-001-foundation.md) is available. Its project review remains open. |
-| State                 | In review. Architecture and conventions are documented locally.                              |
+| Field                 | Evidence                                                                                            |
+| --------------------- | --------------------------------------------------------------------------------------------------- |
+| Release / requirement | v1.0 / REQ-002                                                                                      |
+| Owner                 | Barq Digital website technical lead                                                                 |
+| Starting checkout     | `release-v1.0/pr-sdfevnfj` at `9af8729`                                                             |
+| Date                  | 2026-11-25                                                                                          |
+| Dependency            | [MS-001 local evidence](MS-001-foundation.md) is available. The user accepted MS-001 on 2026-11-25. |
+| State                 | ACCEPTED by the user on 2026-11-25.                                                                 |
 
 ## WP-002.1 architecture decisions
 
@@ -33,4 +33,4 @@ References reviewed include the Astro guides for [routing](https://docs.astro.bu
 | `pnpm run verify`                | Artifact budgets, internal links, SEO and Playwright |
 | `pnpm run ci:local`              | Validation, build and verification in sequence       |
 
-The existing hosted workflow uses manual dispatch. GitHub issues [#20](https://github.com/quancats/clt-barq-digital-site/issues/20) and [#21](https://github.com/quancats/clt-barq-digital-site/issues/21) for MS-001 and [#22](https://github.com/quancats/clt-barq-digital-site/issues/22) and [#23](https://github.com/quancats/clt-barq-digital-site/issues/23) for MS-002 were open with no recorded review comments. The current branch had no PR in the project repository. A technical reviewer needs to record acceptance of the foundation and both architecture work packages. A client approval is needed only for a change that affects the agreed product scope. MS-004 and MS-005 can consume these architecture boundaries after milestone review and their other declared dependencies pass.
+MS-006 configures the repository workflow for manual dispatch and pull requests to `dev` and `master`. The hosted run remains unverified. GitHub issues [#20](https://github.com/quancats/clt-barq-digital-site/issues/20) and [#21](https://github.com/quancats/clt-barq-digital-site/issues/21) for MS-001 and [#22](https://github.com/quancats/clt-barq-digital-site/issues/22) and [#23](https://github.com/quancats/clt-barq-digital-site/issues/23) for MS-002 were open with no recorded review comments. The current branch had no PR in the project repository. The user accepted MS-001 and MS-002 in the execution conversation on 2026-11-25. MS-003 has since been accepted. MS-004 and MS-005 use these architecture boundaries.
