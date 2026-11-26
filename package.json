@@ -20,6 +20,7 @@
 		"check": "astro check",
 		"typecheck:vue": "vue-tsc --noEmit -p tsconfig.vue.json",
 		"test": "vitest run",
+		"test:content": "vitest run tests/unit/publication.test.ts",
 		"test:watch": "vitest",
 		"validate": "pnpm run format:check && pnpm run lint && pnpm run check && pnpm run typecheck:vue && pnpm test",
 		"build": "astro build",
