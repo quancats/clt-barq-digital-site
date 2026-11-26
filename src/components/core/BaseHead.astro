@@ -41,6 +41,7 @@ const alternateLocales = alternates.filter((alternate) => alternate.locale !== '
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 {indexable && <link rel="sitemap" href="/sitemap-index.xml" />}
 <link rel="preload" href="/fonts/ibm-plex-sans-arabic/IBMPlexSansArabic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+{locale === 'ar' && <link rel="preload" href="/fonts/ibm-plex-sans-arabic/IBMPlexSansArabic-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous" />}
 <script is:inline set:html={themeInitScript} />
 <title>{seo.title}</title>
 <meta name="description" content={seo.description} />

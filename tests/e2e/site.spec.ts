@@ -69,8 +69,10 @@ test('loads the approved local font in both languages', async ({ page }) => {
 	for (const path of ['/', '/en/']) {
 		await expectHttpOk(page, path);
 		const preloads = page.locator('link[rel="preload"][as="font"]');
-		await expect(preloads).toHaveCount(1);
-		await expect(preloads).toHaveAttribute('href', '/fonts/ibm-plex-sans-arabic/IBMPlexSansArabic-Regular.woff2');
+		const fontPath = '/fonts/ibm-plex-sans-arabic/IBMPlexSansArabic-';
+		await expect(preloads).toHaveCount(path === '/' ? 2 : 1);
+		await expect(preloads.and(page.locator(`[href="${fontPath}Regular.woff2"]`))).toHaveCount(1);
+		await expect(preloads.and(page.locator(`[href="${fontPath}Bold.woff2"]`))).toHaveCount(path === '/' ? 1 : 0);
 		expect(
 			await page.evaluate(async () => {
 				const sample = document.documentElement.lang === 'ar' ? 'برق الرقمية' : 'Barq Digital';

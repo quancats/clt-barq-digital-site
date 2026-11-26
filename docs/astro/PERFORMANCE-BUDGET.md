@@ -6,7 +6,7 @@
 | -------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------- |
 | Hydrated roots per route   | 1                              | `HeaderChrome` only (ADR-0010); BaseLayout theme bootstrap / CookieConsent are not Vue islands |
 | Client JS (template-owned) | ≤ 120 KB gzipped header chrome | Vue + Reka NavigationMenu/Select shared with UI primitives                                     |
-| Critical font files        | ≤ 1 family per page            | Selective preload weight 400 + locale subset; Tajawal on `ar`, Manrope on `en` (ADR-0015)      |
+| Critical font files        | ≤ 1 family per page            | Local IBM Plex Sans Arabic. Weight 400 is preloaded and Arabic pages also preload weight 700.  |
 | LCP image                  | N/A initially                  | No hero image asset required in fixture; default OG image is `/images/og/default.png`          |
 | Third-party scripts        | 0 until configured             | GA4 `gtag.js` per analytics mode when ID set/enabled; stored `denied` always blocks (ADR-0014) |
 | Core Web Vitals target     | Good on mobile for static HTML | Measure on adopting brand content                                                              |
@@ -43,11 +43,9 @@ Notes on view transitions (FEAT-PLATFORM-006 / ADR-0012):
 
 Notes on fonts (ADR-0015):
 
-- Tajawal (`--font-tajawal`) and Manrope (`--font-manrope`) are registered via Google provider in `astro.config.ts`
-- `BaseHead` selectively preloads weight `400` + locale subset for the active family only; `html[lang]` maps `--font-document`
-- Fonts are locally served build assets; do not assume a fixed `/_astro/fonts` public path
-- Do not reintroduce Google Fonts / CDN `@import` stylesheets; add families through the Astro Fonts API only
-- Keep registered subsets/weights to what production UI uses (`400`/`500`/`700`); preload remains body weight only
+- Barq serves IBM Plex Sans Arabic WOFF2 files for weights `400`, `500`, and `700` locally.
+- `BaseHead` preloads weight `400` and gives Arabic pages an early request for the display heading weight.
+- Weight `700` uses `font-display: optional`. Uncached visits on slower connections may render bold text in the platform fallback for that page view, avoiding a late change in line wrapping.
 
 Notes on analytics (FEAT-PLATFORM-007 / ADR-0014 / TADR-0002):
 
