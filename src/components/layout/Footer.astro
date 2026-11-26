@@ -11,6 +11,7 @@ import { isGoogleAnalyticsEnabled } from '@/lib/analytics/googleAnalytics';
 import { PRIMARY_NAV_PREFETCH_ATTRS } from '@/lib/navigation/prefetch';
 import { getRouteAvailability } from '@/lib/navigation/getRouteAvailability';
 import { getSiteSections } from '@/lib/content/queries/getSiteRoutes';
+import { getEditorialNavigation } from '@/lib/content/queries/getEditorialPaths';
 import { cn } from '@/lib/utils';
 import { PUBLIC_GOOGLE_ANALYTICS_ENABLED, PUBLIC_GOOGLE_ANALYTICS_MODE } from 'astro:env/client';
 
@@ -22,7 +23,8 @@ interface Props {
 const { locale, class: className } = Astro.props;
 const dictionary = getDictionary(locale);
 const availability = await getRouteAvailability(locale);
-const siteLinks = await getSiteSections(locale);
+const [sections, editorial] = await Promise.all([getSiteSections(locale), getEditorialNavigation(locale)]);
+const siteLinks = [...sections, ...editorial];
 const columns = dictionary.layout.footer_columns
 	.map((column) => ({
 		...column,

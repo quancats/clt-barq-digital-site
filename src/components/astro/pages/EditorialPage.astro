@@ -1,0 +1,187 @@
+---
+import { render } from 'astro:content';
+import ArticleBody from '@/components/astro/content/ArticleBody.astro';
+import Breadcrumbs, { type BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+import { formatDate } from '@/i18n/format';
+import { localizePath } from '@/i18n/config';
+import { getDictionary } from '@/i18n/helpers';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import { editorialCopy, getEditorialEntryPath, type EditorialPageProps } from '@/lib/content/queries/getEditorialPaths';
+import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
+import { createLocaleAlternates } from '@/lib/seo/createLocaleAlternates';
+import { createPageSeo } from '@/lib/seo/createPageSeo';
+import { createArticleJsonLd } from '@/lib/seo/structured-data/createArticleJsonLd';
+import { createBreadcrumbListJsonLd } from '@/lib/seo/structured-data/createBreadcrumbListJsonLd';
+
+type Props = EditorialPageProps;
+
+const page = Astro.props;
+const { locale, title, description, path, alternatePath } = page;
+const copy = editorialCopy[locale];
+const dictionary = getDictionary(locale);
+const site = Astro.site ?? new URL(FALLBACK_SITE_URL);
+const breadcrumbs: BreadcrumbItem[] = [{ label: dictionary.layout.nav_home, href: localizePath(locale) }, ...page.parents, { label: title }];
+const entry = page.kind === 'detail' || page.kind === 'hub' ? page.entry : undefined;
+const detail = page.kind === 'detail' ? page.entry.data : undefined;
+const image = entry?.data.media[0]?.path;
+const seo = createPageSeo({
+	title: entry?.data.seo?.title ?? `${title} | ${dictionary.common.brand}`,
+	description: entry?.data.seo?.description ?? description,
+	canonicalPath: path,
+	image,
+	...(detail ? { type: 'article', publishedAt: detail.publishedAt, updatedAt: detail.updatedAt } : {}),
+});
+const alternates = createLocaleAlternates({ site, pathsByLocale: { [locale]: path, [locale === 'ar' ? 'en' : 'ar']: alternatePath } });
+const breadcrumbData = createBreadcrumbListJsonLd({ site, items: breadcrumbs.map(({ label, href }) => ({ label, path: href ?? path })) });
+const jsonLd = detail ? [breadcrumbData, createArticleJsonLd({ site, path, title, description, locale, image, publishedAt: detail.publishedAt, updatedAt: detail.updatedAt })] : breadcrumbData;
+const Rendered = page.kind === 'detail' ? (await render(page.entry)).Content : undefined;
+
+const linkClass = 'inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:outline-2';
+const cardClass = 'rounded-lg border border-border p-5 wrap-anywhere';
+const bytes = new Intl.NumberFormat(locale, { style: 'unit', unit: 'byte' });
+const kilobytes = new Intl.NumberFormat(locale, { style: 'unit', unit: 'kilobyte', maximumFractionDigits: 1 });
+---
+
+<WebsiteLayout {locale} {seo} {alternates} {alternatePath} {jsonLd}>
+	<Container class="py-10">
+		<div class="mx-auto max-w-3xl wrap-anywhere">
+			<Breadcrumbs class="mb-6" label={dictionary.layout.breadcrumbs_label} items={breadcrumbs} />
+			{
+				page.kind === 'detail' ? (
+					<article>
+						<ArticleBody {locale} {title} {description} publishedAt={page.entry.data.publishedAt}>
+							{page.author && (
+								<p>
+									{copy.author} <bdi>{page.author}</bdi>
+								</p>
+							)}
+							{page.entry.data.media.map((image, index) => (
+								<CorporateMedia {image} priority={index === 0} />
+							))}
+							{Rendered && <Rendered />}
+						</ArticleBody>
+					</article>
+				) : (
+					<header class="mb-8 border-b border-border pb-6">
+						<h1 class="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
+						<p class="mt-3 text-muted-foreground">{description}</p>
+					</header>
+				)
+			}
+			{
+				page.kind === 'hub' && (
+					<>
+						{page.entry.data.media.map((image, index) => (
+							<CorporateMedia {image} priority={index === 0} />
+						))}
+						{page.entry.data.sections.map(({ title, body }) => (
+							<section class="my-6">
+								<h2 class="text-xl font-semibold">{title}</h2>
+								<p class="mt-2 whitespace-pre-line">{body}</p>
+							</section>
+						))}
+						<ul class="flex flex-wrap gap-x-6">
+							{page.sections.map(({ href, label }) => (
+								<li>
+									<a {href} class={linkClass}>
+										{label}
+									</a>
+								</li>
+							))}
+						</ul>
+					</>
+				)
+			}
+			{
+				(page.kind === 'detail' || page.kind === 'list') &&
+					page.taxonomies
+						.filter(({ terms }) => terms.length)
+						.map(({ taxonomy, terms }) => (
+							<nav class="my-6" aria-label={copy[taxonomy]}>
+								<p class="font-semibold">{copy[taxonomy]}</p>
+								<ul class="flex flex-wrap gap-x-5">
+									{terms.map(({ href, label }) => (
+										<li>
+											<a {href} class={linkClass} aria-current={href === path ? 'page' : undefined}>
+												<bdi>{label}</bdi>
+											</a>
+										</li>
+									))}
+								</ul>
+							</nav>
+						))
+			}
+			{
+				page.kind === 'list' && (
+					<ul class="grid gap-4">
+						{page.entries.map((entry) => (
+							<li class={cardClass}>
+								<article>
+									<h2 class="text-xl font-semibold">
+										<a href={getEditorialEntryPath(entry)} class={linkClass}>
+											{entry.data.title}
+										</a>
+									</h2>
+									<p>{entry.data.description}</p>
+									<time class="mt-2 block text-sm text-muted-foreground" datetime={entry.data.publishedAt.toISOString()}>
+										{formatDate(locale, entry.data.publishedAt)}
+									</time>
+								</article>
+							</li>
+						))}
+					</ul>
+				)
+			}
+			{
+				page.kind === 'detail' && page.related.length > 0 && (
+					<section class="my-6">
+						<h2 class="text-xl font-semibold">{copy.related}</h2>
+						<ul>
+							{page.related.map(({ href, label }) => (
+								<li>
+									<a {href} class={linkClass}>
+										{label}
+									</a>
+								</li>
+							))}
+						</ul>
+					</section>
+				)
+			}
+			{
+				page.kind === 'resources' && (
+					<ul class="grid gap-4">
+						{page.entries.map(({ entry: { data }, sizeBytes, related }) => (
+							<li class={cardClass}>
+								<h2 class="text-xl font-semibold">{data.title}</h2>
+								<p class="mt-2">{data.description}</p>
+								<p class="mt-2 text-sm text-muted-foreground">
+									{copy[data.kind]} · <bdi>{data.categoryLabel ?? data.category}</bdi> · <time datetime={data.publishedAt.toISOString()}>{formatDate(locale, data.publishedAt)}</time>
+								</p>
+								<a class={linkClass} href={data.file.path} download type="application/pdf" hreflang={data.file.locale}>
+									{data.file.label}{' '}
+									<bdi>
+										(PDF · {sizeBytes < 1000 ? bytes.format(sizeBytes) : kilobytes.format(sizeBytes / 1000)} · {dictionary.common[`language_name_${data.file.locale}`]})
+									</bdi>
+								</a>
+								{related.length > 0 && (
+									<ul>
+										{related.map(({ href, label }) => (
+											<li>
+												<a {href} class={linkClass}>
+													{label}
+												</a>
+											</li>
+										))}
+									</ul>
+								)}
+							</li>
+						))}
+					</ul>
+				)
+			}
+		</div>
+	</Container>
+</WebsiteLayout>

@@ -93,7 +93,9 @@ describe('content publication', () => {
 		expect(contentSchemas.services.safeParse({ ...service, media: [{ path: '/images/../private.webp', alt: 'صورة', usageRef: 'rights-1' }] }).success).toBe(false);
 		expect(contentSchemas.services.safeParse({ ...service, media: [{ path: '/images/approved.webp', alt: ' ' }] }).success).toBe(false);
 		const download = { path: '/downloads/guide.pdf', locale: 'ar', label: 'دليل', usageRef: 'rights-1' };
-		expect(contentSchemas.resources.safeParse({ ...base, file: download }).success).toBe(true);
-		expect(contentSchemas.resources.safeParse({ ...base, file: { ...download, path: '/downloads/guide.html' } }).success).toBe(false);
+		const resource = { ...base, publishedAt: '2026-01-12', category: 'guides', file: download };
+		expect(contentSchemas.resources.safeParse(resource).success).toBe(true);
+		expect(contentSchemas.resources.safeParse({ ...resource, file: { ...download, locale: 'en' } }).success).toBe(false);
+		expect(contentSchemas.resources.safeParse({ ...resource, file: { ...download, path: '/downloads/guide.html' } }).success).toBe(false);
 	});
 });

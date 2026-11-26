@@ -1,0 +1,12 @@
+---
+import EditorialPage from '@/components/astro/pages/EditorialPage.astro';
+import { getEditorialPaths, type EditorialPageProps } from '@/lib/content/queries/getEditorialPaths';
+
+type Props = EditorialPageProps;
+
+export async function getStaticPaths() {
+	return getEditorialPaths('ar', 'resources');
+}
+---
+
+<EditorialPage {...Astro.props} />

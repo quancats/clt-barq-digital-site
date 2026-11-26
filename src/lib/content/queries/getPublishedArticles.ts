@@ -9,10 +9,9 @@ export { getArticleSlug, isPublicArticle };
 
 export async function getPublishedArticles(locale?: Locale): Promise<ArticleEntry[]> {
 	await validateWebsiteContent();
-	const articles = await getCollection('articles', ({ data }) => isPublicArticle(data, locale, ENV));
-	const approvedRoutes = new Set(articles.filter(({ data }) => 'governance' in data).map((entry) => `${entry.data.locale}/${getArticleSlug(entry)}`));
-
-	return articles.filter((entry) => 'governance' in entry.data || !approvedRoutes.has(`${entry.data.locale}/${getArticleSlug(entry)}`)).sort((left, right) => right.data.publishedAt.valueOf() - left.data.publishedAt.valueOf());
+	// This starter collection view serves the legacy preview namespace.
+	const articles = await getCollection('articles', ({ data }) => 'translationGroup' in data && isPublicArticle(data, locale, ENV));
+	return articles.sort((left, right) => right.data.publishedAt.valueOf() - left.data.publishedAt.valueOf());
 }
 
 export async function getPublishedArticleBySlug(locale: Locale, slug: string): Promise<ArticleEntry | undefined> {

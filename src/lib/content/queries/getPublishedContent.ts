@@ -1,5 +1,5 @@
-import { statSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { closeSync, lstatSync, openSync, readSync, readdirSync, statSync } from 'node:fs';
+import { relative, resolve, sep } from 'node:path';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { isPublishedContent, validatePublication, type PublicationCandidate } from '@/lib/content/publication';
 import type { Locale } from '@/i18n/config';
@@ -22,17 +22,49 @@ function asCandidate(entry: CollectionEntry<CollectionName>): PublicationCandida
 			slug: data.slug,
 			governance: data.governance,
 			assets: [...data.media.flatMap(({ path, variants }) => [path, ...(variants?.map((variant) => variant.path) ?? [])]), ...('file' in data ? [data.file.path] : []), ...('profile' in data && data.profile ? [data.profile.path] : [])],
-			relations: [...('products' in data ? data.products.map((translationKey) => ({ collection: 'products', translationKey })) : []), ...('services' in data ? data.services.map((translationKey) => ({ collection: 'services', translationKey })) : []), ...('solutions' in data ? data.solutions.map((translationKey) => ({ collection: 'solutions', translationKey })) : []), ...('projects' in data ? data.projects.map((translationKey) => ({ collection: 'projects', translationKey })) : []), ...('author' in data && data.author ? [{ collection: 'authors', translationKey: data.author }] : [])],
+			relations: [...('products' in data ? data.products.map((translationKey) => ({ collection: 'products', translationKey })) : []), ...('services' in data ? data.services.map((translationKey) => ({ collection: 'services', translationKey })) : []), ...('solutions' in data ? data.solutions.map((translationKey) => ({ collection: 'solutions', translationKey })) : []), ...('projects' in data ? data.projects.map((translationKey) => ({ collection: 'projects', translationKey })) : []), ...('articles' in data ? data.articles.map((translationKey) => ({ collection: 'articles', translationKey })) : []), ...('news' in data ? data.news.map((translationKey) => ({ collection: 'news', translationKey })) : []), ...('author' in data && data.author ? [{ collection: 'authors', translationKey: data.author }] : [])],
 		},
 	];
 }
 
 async function validateAllContent() {
 	const entries = await Promise.all(collectionNames.map((name) => getCollection(name)));
+	const publicRoot = resolve(process.cwd(), 'public');
 	validatePublication(
 		entries.flatMap((collection) => collection.flatMap(asCandidate)),
-		(path) => !isPreviewAsset(path) && Boolean(statSync(resolve(process.cwd(), 'public', path.slice(1)), { throwIfNoEntry: false })?.isFile()),
+		(path) => !isPreviewAsset(path) && Boolean(statSync(resolve(publicRoot, path.slice(1)), { throwIfNoEntry: false })?.isFile()),
 	);
+	const approvedDownloads = new Map<string, number | undefined>();
+	for (const { body, collection, data, id } of entries.flat()) {
+		if (!('governance' in data) || !isPublishedContent(data)) continue;
+		if ((collection === 'articles' || collection === 'news') && !body?.trim()) throw new Error(`Approved editorial entry needs a body: ${collection}/${id}`);
+		const file = 'file' in data ? data.file : 'profile' in data ? data.profile : undefined;
+		if (!file) continue;
+		const previous = approvedDownloads.get(file.path);
+		if (previous !== undefined && file.sizeBytes !== undefined && previous !== file.sizeBytes) throw new Error(`Conflicting public download sizes: ${file.path}`);
+		approvedDownloads.set(file.path, file.sizeBytes ?? previous);
+	}
+	const downloadRoot = resolve(publicRoot, 'downloads');
+	const downloadDirectory = lstatSync(downloadRoot, { throwIfNoEntry: false });
+	if (!downloadDirectory) return;
+	if (!downloadDirectory.isDirectory()) throw new Error('Public downloads must be stored in a local directory');
+	const publicDownloads = readdirSync(downloadRoot, { withFileTypes: true, recursive: true });
+	for (const download of publicDownloads) {
+		if (download.isDirectory()) continue;
+		const absolute = resolve(download.parentPath, download.name);
+		const url = '/downloads/' + relative(downloadRoot, absolute).split(sep).join('/');
+		if (!download.isFile() || !approvedDownloads.has(url)) throw new Error(`Unapproved public download: ${url}`);
+		const declaredSize = approvedDownloads.get(url);
+		if (declaredSize !== undefined && statSync(absolute).size !== declaredSize) throw new Error(`Public download size mismatch: ${url}`);
+		const descriptor = openSync(absolute, 'r');
+		try {
+			const signature = Buffer.alloc(5);
+			readSync(descriptor, signature, 0, signature.length, 0);
+			if (signature.toString('ascii') !== '%PDF-') throw new Error(`Public download is missing the PDF signature: ${url}`);
+		} finally {
+			closeSync(descriptor);
+		}
+	}
 }
 
 let buildValidation: Promise<void> | undefined;

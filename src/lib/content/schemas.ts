@@ -10,7 +10,7 @@ const slug = z
 	.regex(/^[\p{Ll}\p{Lo}\p{N}][\p{Ll}\p{Lo}\p{M}\p{N}]*(?:-[\p{Ll}\p{Lo}\p{N}][\p{Ll}\p{Lo}\p{M}\p{N}]*)*$/u);
 const safeFileName = '[a-zA-Z0-9_-]+(?:\\.[a-zA-Z0-9_-]+)*';
 const imagesPath = z.string().regex(new RegExp(`^/images/(?:${safeFileName}/)*${safeFileName}\\.(?:avif|gif|jpe?g|png|webp)$`, 'i'));
-const downloadPath = z.string().regex(new RegExp(`^/downloads/(?:${safeFileName}/)*${safeFileName}\\.pdf$`, 'i'));
+const downloadPath = z.string().regex(new RegExp(`^/downloads/(?:${safeFileName}/)*${safeFileName}\\.[pP][dD][fF]$`));
 const editorAsset = z.strictObject({
 	path: imagesPath,
 	alt: text,
@@ -25,6 +25,7 @@ const resourceFile = z.strictObject({
 	label: text,
 	locale,
 	usageRef: key,
+	sizeBytes: z.number().int().positive().optional(),
 });
 const date = z.union([z.date(), z.iso.date(), z.iso.datetime({ offset: true })]).pipe(z.coerce.date());
 const governance = z.discriminatedUnion('status', [z.strictObject({ status: z.literal('published'), approvalRef: key }), z.strictObject({ status: z.enum(['draft', 'review', 'archived']), approvalRef: key.optional() })]);
@@ -53,6 +54,11 @@ const editorial = {
 	tags: z.array(key).default([]),
 	category: key,
 	author: key.optional(),
+	categoryLabel: text.optional(),
+	tagLabels: z.record(key, text).default({}),
+	products: references,
+	services: references,
+	solutions: references,
 };
 
 const article = z.strictObject({
@@ -130,7 +136,16 @@ export const contentSchemas = {
 	}),
 	articles: z.union([article, previewArticle]),
 	news: z.strictObject({ ...common, ...editorial }),
-	resources: z.strictObject({ ...common, file: resourceFile }),
+	resources: z
+		.strictObject({
+			...common,
+			...editorial,
+			kind: z.enum(['guide', 'report', 'checklist', 'reference']).default('guide'),
+			file: resourceFile,
+			articles: references,
+			news: references,
+		})
+		.refine(({ locale, file }) => locale === file.locale, { path: ['file', 'locale'], message: 'Download and resource locales must match' }),
 	authors: z.strictObject({ ...common, bio: text }),
 	legal: z.strictObject({ ...common, revision: key, effectiveDate: date }),
 };
