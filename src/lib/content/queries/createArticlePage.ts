@@ -16,6 +16,7 @@ export async function createArticlePage(options: { locale: Locale; site: URL; en
 	const homePath = localizePath(locale, '/');
 	const articlesPath = localizePath(locale, '/articles');
 	const alternatePath = translation ? localizePath(alternateLocale, `/articles/${getArticleSlug(translation)}`) : localizePath(alternateLocale, '/');
+	const image = 'media' in entry.data ? entry.data.media[0]?.path : entry.data.image;
 
 	const breadcrumbItems = [{ label: dictionary.layout.nav_home, href: homePath }, { label: dictionary.common.articles, href: articlesPath }, { label: entry.data.title }];
 
@@ -30,7 +31,7 @@ export async function createArticlePage(options: { locale: Locale; site: URL; en
 			description: entry.data.description,
 			canonicalPath,
 			type: 'article',
-			image: entry.data.image,
+			image,
 			publishedAt: entry.data.publishedAt,
 			updatedAt: entry.data.updatedAt,
 		}),
@@ -53,7 +54,7 @@ export async function createArticlePage(options: { locale: Locale; site: URL; en
 				description: entry.data.description,
 				publishedAt: entry.data.publishedAt,
 				updatedAt: entry.data.updatedAt,
-				image: entry.data.image,
+				image,
 				locale,
 			}),
 			createBreadcrumbListJsonLd({

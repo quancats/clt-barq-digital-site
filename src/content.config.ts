@@ -1,22 +1,29 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
-import { z } from 'astro/zod';
+import { contentSchemas } from './lib/content/schemas';
 
-const articles = defineCollection({
-	loader: glob({
-		base: './src/content/articles',
-		pattern: '**/*.{md,mdx}',
-	}),
-	schema: z.object({
-		locale: z.enum(['ar', 'en']),
-		translationGroup: z.string().min(1),
-		title: z.string().min(1),
-		description: z.string().min(1),
-		publishedAt: z.coerce.date(),
-		updatedAt: z.coerce.date().optional(),
-		draft: z.boolean().default(false),
-		image: z.string().optional(),
-	}),
-});
+function localLoader(name: keyof typeof contentSchemas) {
+	return glob({
+		base: './src/content',
+		pattern: `${name}/**/*.${name === 'articles' ? '{md,mdx}' : '{md,json,yaml,yml}'}`,
+		// Keep file identities distinct so validation can report duplicated public slugs.
+		generateId: ({ entry, data }) => {
+			const relativePath = entry.slice(name.length + 1);
+			return name === 'articles' && typeof data.translationGroup === 'string' ? relativePath.replace(/\.[^.]+$/, '') : relativePath;
+		},
+	});
+}
 
-export const collections = { articles };
+export const collections = {
+	pages: defineCollection({ loader: localLoader('pages'), schema: contentSchemas.pages }),
+	products: defineCollection({ loader: localLoader('products'), schema: contentSchemas.products }),
+	services: defineCollection({ loader: localLoader('services'), schema: contentSchemas.services }),
+	solutions: defineCollection({ loader: localLoader('solutions'), schema: contentSchemas.solutions }),
+	industries: defineCollection({ loader: localLoader('industries'), schema: contentSchemas.industries }),
+	projects: defineCollection({ loader: localLoader('projects'), schema: contentSchemas.projects }),
+	articles: defineCollection({ loader: localLoader('articles'), schema: contentSchemas.articles }),
+	news: defineCollection({ loader: localLoader('news'), schema: contentSchemas.news }),
+	resources: defineCollection({ loader: localLoader('resources'), schema: contentSchemas.resources }),
+	authors: defineCollection({ loader: localLoader('authors'), schema: contentSchemas.authors }),
+	legal: defineCollection({ loader: localLoader('legal'), schema: contentSchemas.legal }),
+};
