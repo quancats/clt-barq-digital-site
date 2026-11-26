@@ -37,6 +37,7 @@ export interface HeaderChromePaths {
 	articles: string | undefined;
 	components: string | undefined;
 	alternateHref: string | undefined;
+	siteLinks?: { href: string; title: string }[];
 }
 
 const props = defineProps<{
@@ -67,7 +68,7 @@ const homeCurrent = computed(() => isCurrent(props.paths.home));
 const articlesCurrent = computed(() => isCurrent(props.paths.articles));
 const componentsCurrent = computed(() => isCurrent(props.paths.components));
 const exploreCurrent = computed(() =>
-	[props.paths.articles, props.paths.components].some((href) => {
+	[props.paths.articles, props.paths.components, ...(props.paths.siteLinks ?? []).map(({ href }) => href)].some((href) => {
 		if (!href) return false;
 		const section = normalizePath(href);
 		const current = normalizePath(props.currentPath);
@@ -97,12 +98,15 @@ function onMobileOpenChange(open: boolean) {
 							{{ copy.navHome }}
 						</NavigationMenuLink>
 					</NavigationMenuItem>
-					<NavigationMenuItem v-if="paths.articles || paths.components" value="explore">
+					<NavigationMenuItem v-if="paths.articles || paths.components || paths.siteLinks?.length" value="explore">
 						<NavigationMenuTrigger class="h-10" :data-active="exploreCurrent ? '' : undefined">
 							{{ copy.navExplore }}
 						</NavigationMenuTrigger>
 						<NavigationMenuContent>
 							<ul class="grid w-48 gap-1 p-1">
+								<li v-for="link in paths.siteLinks" :key="link.href">
+									<NavigationMenuLink :href="link.href" :active="isCurrent(link.href)" data-astro-prefetch>{{ link.title }}</NavigationMenuLink>
+								</li>
 								<li>
 									<NavigationMenuLink v-if="paths.articles" :href="paths.articles" :active="articlesCurrent" data-astro-prefetch>
 										{{ copy.navArticles }}
@@ -155,13 +159,16 @@ function onMobileOpenChange(open: boolean) {
 								{{ copy.navHome }}
 							</a>
 
-							<Collapsible v-if="paths.articles || paths.components" v-model:open="exploreOpen">
+							<Collapsible v-if="paths.articles || paths.components || paths.siteLinks?.length" v-model:open="exploreOpen">
 								<CollapsibleTrigger :class="cn(mobileNavLinkClass, 'flex w-full items-center justify-between gap-2 data-[state=open]:bg-muted', exploreCurrent && 'bg-muted')">
 									<span>{{ copy.navExplore }}</span>
 									<ChevronDownIcon class="size-4 shrink-0 text-muted-foreground transition-transform duration-200" :class="exploreOpen ? 'rotate-180' : ''" aria-hidden="true" />
 								</CollapsibleTrigger>
 								<CollapsibleContent>
 									<ul class="ms-3 mt-1 flex flex-col gap-0.5 border-s border-border ps-3">
+										<li v-for="link in paths.siteLinks" :key="link.href">
+											<a :href="link.href" :class="mobileSubLinkClass" :aria-current="isCurrent(link.href) ? 'page' : undefined" data-astro-prefetch @click="onMobileOpenChange(false)">{{ link.title }}</a>
+										</li>
 										<li>
 											<a v-if="paths.articles" :href="paths.articles" :class="mobileSubLinkClass" :aria-current="articlesCurrent ? 'page' : undefined" data-astro-prefetch @click="onMobileOpenChange(false)">
 												{{ copy.navArticles }}

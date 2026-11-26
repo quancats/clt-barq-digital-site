@@ -1,0 +1,31 @@
+---
+import Heading from '@/components/astro/content/Heading.astro';
+import Section from '@/components/astro/content/Section.astro';
+import Stack from '@/components/astro/content/Stack.astro';
+
+interface Props {
+	id: string;
+	title: string;
+	items: readonly string[];
+}
+
+const { id, title, items } = Astro.props;
+const headingId = `${id}-heading`;
+---
+
+{
+	items.length > 0 && (
+		<Section {id} labelledBy={headingId}>
+			<Stack>
+				<Heading id={headingId} level={2} class="text-2xl">
+					{title}
+				</Heading>
+				<ul class="list-disc space-y-2 ps-6 wrap-anywhere">
+					{items.map((item) => (
+						<li>{item}</li>
+					))}
+				</ul>
+			</Stack>
+		</Section>
+	)
+}

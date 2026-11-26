@@ -1,0 +1,152 @@
+---
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Card from '@/components/astro/content/Card.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import ProseText from '@/components/astro/content/ProseText.astro';
+import Section from '@/components/astro/content/Section.astro';
+import Stack from '@/components/astro/content/Stack.astro';
+import HomeArticles from '@/components/astro/sections/home/HomeArticles.astro';
+import HomeHero from '@/components/astro/sections/home/HomeHero.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import type { Locale } from '@/i18n/config';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import { createHomePage } from '@/lib/content/queries/createHomePage';
+import { getSiteContent, getSiteSections } from '@/lib/content/queries/getSiteRoutes';
+import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
+import { ENV } from 'astro:env/server';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const site = Astro.site ?? new URL(FALLBACK_SITE_URL);
+const [page, content, destinations] = await Promise.all([createHomePage({ locale, site }), getSiteContent(), getSiteSections(locale)]);
+const home = content.pages.find(({ data }) => data.locale === locale && data.translationKey === 'home')?.data;
+const destination = (key: string) => destinations.find((item) => item.key === key);
+const seo = home ? { ...page.seo, title: home.seo?.title ?? home.title, description: home.seo?.description ?? home.description, image: home.media[0]?.path } : page.seo;
+const contact = destination('contact');
+const primary = destination('consultation') ?? contact;
+const demo = destination('demo');
+const bim = destination('bim');
+const bimIntro = home?.sections.find(({ key }) => key === 'bim');
+const otherSections = home?.sections.filter(({ key }) => key !== 'bim') ?? [];
+const intro = destination('about');
+const commercial = ['solutions', 'services', 'industries', 'projects'].flatMap((key) => destination(key) ?? []);
+const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواصل معنا' } : { explore: 'Explore', getInTouch: 'Get in touch' };
+---
+
+<WebsiteLayout {locale} {seo} alternates={page.alternates} alternatePath={page.alternatePath} jsonLd={page.jsonLd}>
+	{
+		home ? (
+			<>
+				<Section labelledBy="home-title">
+					<div class:list={['grid items-center gap-grid-gutter', home.media[0] && 'md:grid-cols-2']}>
+						<Stack spacing="relaxed">
+							<Heading id="home-title" size="display">
+								{home.title}
+							</Heading>
+							<ProseText>{home.description}</ProseText>
+							{primary && (
+								<div>
+									<CallToAction href={primary.href} label={primary.title} />
+								</div>
+							)}
+						</Stack>
+						{home.media[0] && <CorporateMedia image={home.media[0]} priority />}
+					</div>
+				</Section>
+				{(bim || bimIntro) && (
+					<Section id="bim" labelledBy="home-bim-title" tone="muted">
+						<div class:list={['grid items-center gap-grid-gutter', bim?.media[0] && 'md:grid-cols-2']}>
+							<Stack spacing="relaxed">
+								<Heading id="home-bim-title" level={2} class="text-2xl wrap-anywhere">
+									<bdi>{bimIntro?.title ?? bim?.title}</bdi>
+								</Heading>
+								<ProseText>{bimIntro?.body ?? bim?.description}</ProseText>
+								{(bim || demo) && (
+									<div class="flex flex-wrap gap-3">
+										{bim && <CallToAction href={bim.href} label={bim.title} />}
+										{demo && <CallToAction href={demo.href} label={demo.title} variant="outline" />}
+									</div>
+								)}
+							</Stack>
+							{bim?.media[0] && <CorporateMedia image={bim.media[0]} />}
+						</div>
+					</Section>
+				)}
+				{intro && (
+					<Section labelledBy="home-intro-title">
+						<Stack>
+							<Heading id="home-intro-title" level={2} class="text-2xl wrap-anywhere">
+								{intro.title}
+							</Heading>
+							<ProseText>{intro.description}</ProseText>
+							<div>
+								<CallToAction href={intro.href} label={intro.title} variant="outline" />
+							</div>
+						</Stack>
+					</Section>
+				)}
+				{otherSections.map((section, index) => (
+					<Section labelledBy={`home-section-${index}`} tone={index % 2 === 0 ? 'muted' : 'plain'}>
+						<Stack>
+							<Heading id={`home-section-${index}`} level={2} class="text-2xl wrap-anywhere">
+								{section.title}
+							</Heading>
+							<ProseText class="whitespace-pre-line">{section.body}</ProseText>
+						</Stack>
+					</Section>
+				))}
+				{commercial.length > 0 && (
+					<Section labelledBy="home-explore-title">
+						<Stack spacing="relaxed">
+							<Heading id="home-explore-title" level={2} class="text-2xl">
+								{copy.explore}
+							</Heading>
+							<ul class="grid gap-grid-gutter sm:grid-cols-2">
+								{commercial.map((item) => (
+									<li>
+										<Card class="h-full">
+											<Stack>
+												<Heading level={3} class="text-xl wrap-anywhere">
+													<a class="text-primary-link underline" href={item.href}>
+														{item.title}
+													</a>
+												</Heading>
+												{item.description && <ProseText>{item.description}</ProseText>}
+											</Stack>
+										</Card>
+									</li>
+								))}
+							</ul>
+						</Stack>
+					</Section>
+				)}
+			</>
+		) : ENV === 'local' ? (
+			<HomeHero {locale} />
+		) : (
+			<Section labelledBy="home-title">
+				<Heading id="home-title" size="display">
+					{page.dictionary.common.brand}
+				</Heading>
+			</Section>
+		)
+	}
+	<HomeArticles {locale} articles={page.articles} />
+	{
+		home && contact && (
+			<Section tone="muted" labelledBy="home-contact-title">
+				<Stack>
+					<Heading id="home-contact-title" level={2} class="text-2xl">
+						{copy.getInTouch}
+					</Heading>
+					<div>
+						<CallToAction href={contact.href} label={contact.title} />
+					</div>
+				</Stack>
+			</Section>
+		)
+	}
+</WebsiteLayout>

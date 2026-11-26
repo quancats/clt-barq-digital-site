@@ -1,0 +1,12 @@
+---
+import SitePage from '@/components/astro/pages/SitePage.astro';
+import { getSitePagePaths, type SitePageProps } from '@/lib/content/queries/getSitePagePaths';
+
+type Props = SitePageProps;
+
+export async function getStaticPaths() {
+	return getSitePagePaths('en');
+}
+---
+
+<SitePage {...Astro.props} />

@@ -10,6 +10,7 @@ import { parseAnalyticsMode, shouldShowAnalyticsPreferenceUi } from '@/lib/analy
 import { isGoogleAnalyticsEnabled } from '@/lib/analytics/googleAnalytics';
 import { PRIMARY_NAV_PREFETCH_ATTRS } from '@/lib/navigation/prefetch';
 import { getRouteAvailability } from '@/lib/navigation/getRouteAvailability';
+import { getSiteSections } from '@/lib/content/queries/getSiteRoutes';
 import { cn } from '@/lib/utils';
 import { PUBLIC_GOOGLE_ANALYTICS_ENABLED, PUBLIC_GOOGLE_ANALYTICS_MODE } from 'astro:env/client';
 
@@ -21,7 +22,17 @@ interface Props {
 const { locale, class: className } = Astro.props;
 const dictionary = getDictionary(locale);
 const availability = await getRouteAvailability(locale);
-const columns = dictionary.layout.footer_columns.map((column) => ({ ...column, links: column.links.filter((link) => availability.preview || link.path === '/' || (link.path === '/articles' && availability.articles)) })).filter((column) => column.links.length);
+const siteLinks = await getSiteSections(locale);
+const columns = dictionary.layout.footer_columns
+	.map((column) => ({
+		...column,
+		links: column.links.filter(({ path }) => {
+			if (path === '/articles') return availability.articles;
+			if (path.startsWith('/articles/')) return availability.articlePaths.includes(path);
+			return availability.preview || path === '/';
+		}),
+	}))
+	.filter((column) => column.links.length);
 const year = new Date().getFullYear();
 const homeHref = localizePath(locale, '/');
 const social = dictionary.layout.footer_social;
@@ -64,6 +75,19 @@ function resolveFooterHref(path: string): string {
 			</div>
 
 			<nav aria-label={dictionary.layout.footer_nav_label} class="grid grid-cols-2 gap-4 wrap-anywhere sm:grid-cols-4 sm:gap-8">
+				{
+					siteLinks.length > 0 && (
+						<ul class="col-span-full flex flex-wrap gap-x-4">
+							{siteLinks.map(({ href, title }) => (
+								<li>
+									<a {href} class="flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2">
+										{title}
+									</a>
+								</li>
+							))}
+						</ul>
+					)
+				}
 				{
 					columns.map((column) => (
 						<div>

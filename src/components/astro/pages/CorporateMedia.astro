@@ -1,0 +1,23 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+	image: CollectionEntry<'pages'>['data']['media'][number];
+	priority?: boolean;
+}
+
+const { image, priority = false } = Astro.props;
+const sources = new Map(image.variants?.map(({ path, width }) => [width, path]));
+if (image.width) sources.set(image.width, image.path);
+const srcset = image.variants?.length
+	? [...sources]
+			.sort(([a], [b]) => a - b)
+			.map(([width, path]) => `${path} ${width}w`)
+			.join(', ')
+	: undefined;
+---
+
+<figure>
+	<img src={image.path} alt={image.alt} {srcset} sizes={srcset ? '(min-width: 48rem) min(50vw, 42rem), 100vw' : undefined} width={image.width} height={image.height} loading={priority ? undefined : 'lazy'} fetchpriority={priority ? 'high' : undefined} decoding="async" class="h-auto w-full rounded-lg" />
+	{image.caption && <figcaption class="mt-2 text-sm wrap-anywhere text-muted-foreground">{image.caption}</figcaption>}
+</figure>

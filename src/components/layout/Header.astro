@@ -8,6 +8,7 @@ import { primaryNavPaths } from '@/data/navigation';
 import { localizePath, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/helpers';
 import { getRouteAvailability } from '@/lib/navigation/getRouteAvailability';
+import { getSiteSections } from '@/lib/content/queries/getSiteRoutes';
 import { cn } from '@/lib/utils';
 import { resolveStoredTheme } from '@/scripts/theme';
 import { PUBLIC_DEFAULT_THEME } from 'astro:env/client';
@@ -24,6 +25,7 @@ const logoWidth = 56;
 const logo = await getImage({ src: brandLogo, width: logoWidth * 2 });
 const brand = { src: logo.src, width: logoWidth, height: Math.round((brandLogo.height / brandLogo.width) * logoWidth), label: dictionary.common.brand };
 const availability = await getRouteAvailability(locale);
+const siteLinks = (await getSiteSections(locale)).filter(({ key }) => ['about', 'products', 'services', 'solutions', 'industries', 'projects', 'contact'].includes(key)).map(({ href, title }) => ({ href, title }));
 const homeHref = localizePath(locale, primaryNavPaths.home);
 const articlesHref = localizePath(locale, primaryNavPaths.articles);
 const componentsHref = localizePath(locale, primaryNavPaths.components);
@@ -55,6 +57,7 @@ const chromePaths = {
 	articles: availability.articles ? articlesHref : undefined,
 	components: availability.preview ? componentsHref : undefined,
 	alternateHref: alternatePath,
+	siteLinks,
 } as const;
 
 const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
@@ -75,6 +78,13 @@ function isCurrentPath(href: string): boolean {
 						<img src={brand.src} alt="" width={brand.width} height={brand.height} />
 						<span class="sr-only">{dictionary.layout.nav_home}</span>
 					</a>
+					{
+						siteLinks.map(({ href, title }) => (
+							<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" {href} data-astro-prefetch aria-current={isCurrentPath(href) ? 'page' : undefined}>
+								{title}
+							</a>
+						))
+					}
 					{
 						availability.articles && (
 							<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" href={articlesHref} data-astro-prefetch aria-current={isCurrentPath(articlesHref) ? 'page' : undefined}>

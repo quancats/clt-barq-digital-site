@@ -1,0 +1,201 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { render } from 'astro:content';
+import Breadcrumbs from '@/components/astro/content/Breadcrumbs.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Card from '@/components/astro/content/Card.astro';
+import Disclosure from '@/components/astro/content/Disclosure.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import ProseText from '@/components/astro/content/ProseText.astro';
+import Section from '@/components/astro/content/Section.astro';
+import Stack from '@/components/astro/content/Stack.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import { localizePath } from '@/i18n/config';
+import { getAlternateLocale, getDictionary } from '@/i18n/helpers';
+import LegalLayout from '@/layouts/LegalLayout.astro';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
+import { createLocaleAlternates } from '@/lib/seo/createLocaleAlternates';
+import { createPageSeo } from '@/lib/seo/createPageSeo';
+
+type Link = { href: string; label: string };
+type LinkKey = 'home' | 'about' | 'projects' | 'contact' | 'consultation' | 'demo' | 'partners' | 'faq' | 'privacy' | 'terms' | 'bim' | 'products' | 'services' | 'solutions' | 'industries' | 'articles';
+type ProjectCard = { entry: CollectionEntry<'projects'>; href?: string | undefined };
+
+type Props = {
+	path: string;
+	alternatePath?: string | undefined;
+	links?: Partial<Record<LinkKey, string>> | undefined;
+	related?: Link[] | undefined;
+} & ({ kind: 'page'; entry: CollectionEntry<'pages'> } | { kind: 'projects'; entry: CollectionEntry<'pages'>; projects: ProjectCard[] } | { kind: 'project'; entry: CollectionEntry<'projects'> } | { kind: 'legal'; entry: CollectionEntry<'legal'> });
+
+const props = Astro.props;
+const { entry, path, alternatePath, links = {}, related = [] } = props;
+const { locale, title, description, media, seo: overrides } = entry.data;
+const dictionary = getDictionary(locale);
+const copy = locale === 'ar' ? { work: 'الأعمال', ownedProduct: 'منتج مملوك', clientProject: 'مشروع عميل', caseStudy: 'دراسة حالة', role: 'الدور', scope: 'النطاق', results: 'النتائج', related: 'محتوى ذو صلة', contact: 'تواصل معنا', privacy: 'الخصوصية', effective: 'تاريخ السريان', product: 'صفحة المنتج', readCase: 'عرض المشروع' } : { work: 'Work', ownedProduct: 'Owned product', clientProject: 'Client project', caseStudy: 'Case study', role: 'Role', scope: 'Scope', results: 'Results', related: 'Related content', contact: 'Contact us', privacy: 'Privacy', effective: 'Effective date', product: 'Product page', readCase: 'View project' };
+const workKind = { 'owned-product': copy.ownedProduct, 'client-project': copy.clientProject, 'case-study': copy.caseStudy };
+const seo = createPageSeo({ title: `${overrides?.title ?? title} | ${dictionary.common.brand}`, description: overrides?.description ?? description, canonicalPath: path, image: media[0]?.path });
+const alternates = createLocaleAlternates({ site: Astro.site ?? FALLBACK_SITE_URL, pathsByLocale: { [locale]: path, [getAlternateLocale(locale)]: alternatePath } });
+const crumbs = [{ href: localizePath(locale), label: dictionary.layout.nav_home }, ...(props.kind === 'project' && links.projects ? [{ href: links.projects, label: copy.work }] : []), { label: title }];
+const details = props.kind === 'project' ? props.entry.data : undefined;
+const page = props.kind === 'page' || props.kind === 'projects' ? props.entry.data : undefined;
+const isContact = page && ['contact', 'consultation', 'demo', 'partners'].includes(page.translationKey);
+const Content = (props.kind === 'legal' || props.kind === 'project') && props.entry.body?.trim() ? (await render(props.entry)).Content : undefined;
+---
+
+{
+	props.kind === 'legal' ? (
+		<LegalLayout {locale} {seo} {title} {alternatePath} {alternates} effective={{ label: copy.effective, date: props.entry.data.effectiveDate }}>
+			<Breadcrumbs items={crumbs} label={dictionary.layout.breadcrumbs_label} class="mb-6" />
+			{Content && <Content />}
+		</LegalLayout>
+	) : (
+		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+			<Section labelledBy="corporate-title">
+				<Stack spacing="relaxed">
+					<Breadcrumbs items={crumbs} label={dictionary.layout.breadcrumbs_label} />
+					{details && <ProseText variant="eyebrow">{workKind[details.kind]}</ProseText>}
+					<Heading id="corporate-title" size="display">
+						{title}
+					</Heading>
+					<ProseText>{description}</ProseText>
+					{isContact && page.contactLinks?.length ? (
+						<ul class="flex flex-wrap gap-4">
+							{page.contactLinks.map((link) => (
+								<li>
+									<a class="font-semibold wrap-anywhere text-primary-link underline" href={link.href}>
+										{link.label}
+									</a>
+								</li>
+							))}
+						</ul>
+					) : null}
+					{isContact && links.privacy && (
+						<a class="w-fit text-primary-link underline" href={links.privacy}>
+							{copy.privacy}
+						</a>
+					)}
+					{isContact && <slot name="lead-form" />}
+				</Stack>
+			</Section>
+			{page?.translationKey === 'faq' ? (
+				<Section class="pt-0">
+					<Stack>
+						{page.sections.map((section) => (
+							<Disclosure label={section.title}>
+								<ProseText>{section.body}</ProseText>
+							</Disclosure>
+						))}
+					</Stack>
+				</Section>
+			) : (
+				page?.sections.map((section, index) => (
+					<Section labelledBy={`content-${index}`} tone={index % 2 === 0 ? 'muted' : 'plain'}>
+						<Stack>
+							<Heading level={2} id={`content-${index}`} class="text-2xl wrap-anywhere">
+								{section.title}
+							</Heading>
+							<ProseText class="whitespace-pre-line">{section.body}</ProseText>
+						</Stack>
+					</Section>
+				))
+			)}
+			{props.kind === 'projects' && props.projects.length > 0 && (
+				<Section labelledBy="work-heading">
+					<Stack spacing="relaxed">
+						<Heading level={2} id="work-heading" class="text-2xl">
+							{copy.work}
+						</Heading>
+						<ul class="grid gap-grid-gutter md:grid-cols-2">
+							{props.projects.map(({ entry: { data }, href }) => (
+								<li>
+									<Card as="article" class="h-full">
+										<Stack>
+											<ProseText variant="eyebrow">{workKind[data.kind]}</ProseText>
+											<Heading level={3} class="text-xl wrap-anywhere">
+												<bdi>{data.title}</bdi>
+											</Heading>
+											<ProseText>{data.description}</ProseText>
+											{href && (
+												<div>
+													<CallToAction {href} label={data.kind === 'owned-product' ? copy.product : copy.readCase} variant="outline" />
+												</div>
+											)}
+										</Stack>
+									</Card>
+								</li>
+							))}
+						</ul>
+					</Stack>
+				</Section>
+			)}
+			{details && (
+				<Section tone="muted">
+					<Stack spacing="relaxed">
+						<Heading level={2} class="text-xl">
+							{copy.role}
+						</Heading>
+						<ProseText>{details.role}</ProseText>
+						<Heading level={2} class="text-xl">
+							{copy.scope}
+						</Heading>
+						<ProseText>{details.scope}</ProseText>
+						{details.results.length > 0 && (
+							<Heading level={2} class="text-xl">
+								{copy.results}
+							</Heading>
+						)}
+						{details.results.length > 0 && (
+							<ul class="list-inside list-disc">
+								{details.results.map((result) => (
+									<li>{result}</li>
+								))}
+							</ul>
+						)}
+						{Content && (
+							<ProseText variant="rich">
+								<Content />
+							</ProseText>
+						)}
+					</Stack>
+				</Section>
+			)}
+			{media.length > 0 && (
+				<Section>
+					<div class="grid gap-grid-gutter md:grid-cols-2">
+						{media.map((image) => (
+							<CorporateMedia {image} />
+						))}
+					</div>
+				</Section>
+			)}
+			{(related.length > 0 || (page?.translationKey === 'about' && (page.profile || links.contact))) && (
+				<Section labelledBy="related-heading">
+					<Stack>
+						<Heading level={2} id="related-heading" class="text-xl">
+							{copy.related}
+						</Heading>
+						<ul class="flex flex-wrap gap-4">
+							{related.map((link) => (
+								<li>
+									<CallToAction {...link} variant="outline" />
+								</li>
+							))}
+							{page?.translationKey === 'about' && page.profile && (
+								<li>
+									<CallToAction href={page.profile.path} label={page.profile.label} variant="outline" />
+								</li>
+							)}
+							{page?.translationKey === 'about' && links.contact && (
+								<li>
+									<CallToAction href={links.contact} label={copy.contact} />
+								</li>
+							)}
+						</ul>
+					</Stack>
+				</Section>
+			)}
+		</WebsiteLayout>
+	)
+}

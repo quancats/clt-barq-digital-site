@@ -1,0 +1,65 @@
+---
+import Card from '@/components/astro/content/Card.astro';
+import Grid from '@/components/astro/content/Grid.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import ProseText from '@/components/astro/content/ProseText.astro';
+import Section from '@/components/astro/content/Section.astro';
+import Stack from '@/components/astro/content/Stack.astro';
+import TextLink from '@/components/astro/content/TextLink.astro';
+import type { Locale } from '@/i18n/config';
+
+interface CatalogEntry {
+	title: string;
+	description: string;
+	href: string;
+	featured: boolean;
+	category?: string;
+}
+
+interface Props {
+	locale: Locale;
+	family: 'products' | 'services' | 'solutions' | 'industries';
+	entries: readonly CatalogEntry[];
+}
+
+const { locale, family, entries } = Astro.props;
+const titles = {
+	ar: { products: 'المنتجات', services: 'الخدمات', solutions: 'الحلول', industries: 'القطاعات' },
+	en: { products: 'Products', services: 'Services', solutions: 'Solutions', industries: 'Industries' },
+};
+const ordered = [...entries].sort((left, right) => Number(right.featured) - Number(left.featured));
+const groups = Map.groupBy(ordered, ({ category }) => (family === 'services' ? category : undefined));
+---
+
+<Section labelledBy="catalog-heading">
+	<Stack spacing="relaxed">
+		<Heading id="catalog-heading" size="display">{titles[locale][family]}</Heading>
+		{
+			Array.from(groups, ([category, items]) => (
+				<Stack>
+					{category && (
+						<Heading level={2} class="text-2xl wrap-anywhere">
+							{category}
+						</Heading>
+					)}
+					<Grid as="ul">
+						{items.map((item) => (
+							<li class="min-w-0">
+								<Card class:list={['h-full', item.featured && 'border-primary-link']}>
+									<Stack>
+										<Heading level={category ? 3 : 2} class="text-xl wrap-anywhere">
+											<TextLink href={item.href} class="focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-link">
+												{item.title}
+											</TextLink>
+										</Heading>
+										<ProseText>{item.description}</ProseText>
+									</Stack>
+								</Card>
+							</li>
+						))}
+					</Grid>
+				</Stack>
+			))
+		}
+	</Stack>
+</Section>
