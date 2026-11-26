@@ -15,12 +15,15 @@ This document defines who owns data structures across applications and repositor
 
 ## Data ownership table
 
-| Data object           | Type                     | Owner application | Owner domain | Read by                   | Written by         | Notes                                       |
-| --------------------- | ------------------------ | ----------------- | ------------ | ------------------------- | ------------------ | ------------------------------------------- |
-| articles              | content collection files | site              | Content      | site build / public HTML  | repository authors | `src/content/articles/{ar,en}`              |
-| ui_dictionaries       | typed modules            | site              | LocaleSeo    | site pages/components     | repository authors | `src/i18n/dictionaries/**`                  |
-| site_config           | env / constants          | site              | Platform     | site build and theme init | deploy config      | Includes `SITE_URL`, `PUBLIC_DEFAULT_THEME` |
-| ui_component_registry | typed module             | site              | Platform     | catalog page / island     | repository authors | `src/lib/ui/componentCatalog.ts`            |
+| Data object           | Type                     | Owner application | Owner domain    | Read by                                        | Written by         | Notes                                                              |
+| --------------------- | ------------------------ | ----------------- | --------------- | ---------------------------------------------- | ------------------ | ------------------------------------------------------------------ |
+| articles              | content collection files | site              | Content         | site build / public HTML                       | repository authors | `src/content/articles/{ar,en}`                                     |
+| ui_dictionaries       | typed modules            | site              | LocaleSeo       | site pages/components                          | repository authors | `src/i18n/dictionaries/**`                                         |
+| site_config           | env / constants          | site              | Platform        | site build and theme init                      | deploy config      | Includes `SITE_URL`, `PUBLIC_DEFAULT_THEME`                        |
+| ui_component_registry | typed module             | site              | Platform        | catalog page / island                          | repository authors | `src/lib/ui/componentCatalog.ts`                                   |
+| lead submission       | transient request        | lead-worker       | Lead operations | Worker and configured private delivery adapter | Site form visitor  | Provider retention, location and recipient access require approval |
+
+The intake Worker keeps no lead records. Application logs emit a random correlation ID and an outcome code. The raw challenge token goes only to Cloudflare Siteverify. The provider adapter receives normalized fields and opaque deduplication keys. Review hosting and provider logging, retention, access and deletion obligations before controlled delivery. [Lead intake contract](API-CONTRACTS.md#lead-intake)
 
 ## Data object template
 

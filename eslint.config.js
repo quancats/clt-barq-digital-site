@@ -6,7 +6,7 @@ import vueParser from 'vue-eslint-parser';
 
 export default [
 	{
-		ignores: ['dist/**', '.astro/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'],
+		ignores: ['dist/**', '.astro/**', '.wrangler/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'],
 	},
 	...eslintPluginAstro.configs.recommended,
 	...pluginVue.configs['flat/recommended'],

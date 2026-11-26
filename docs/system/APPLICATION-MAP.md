@@ -6,9 +6,10 @@ This document defines all repositories/applications that make up the system and 
 
 ## Applications
 
-| Application | Repository     | Type                               | Purpose                                  | Deployment        | Owner    |
-| ----------- | -------------- | ---------------------------------- | ---------------------------------------- | ----------------- | -------- |
-| site        | astro-template | Astro informational / content site | Public bilingual static website template | Static host / CDN | Frontend |
+| Application | Repository            | Type                               | Purpose                                    | Deployment                                | Owner           |
+| ----------- | --------------------- | ---------------------------------- | ------------------------------------------ | ----------------------------------------- | --------------- |
+| site        | clt-barq-digital-site | Astro informational / content site | Public bilingual static website            | Static host / CDN                         | Frontend        |
+| lead-worker | clt-barq-digital-site | Cloudflare Worker                  | Validated lead intake and delivery handoff | Worker API route, local profile available | Lead operations |
 
 Applications below are not part of this repository baseline and must not be invented here:
 
@@ -19,7 +20,7 @@ Applications below are not part of this repository baseline and must not be inve
 
 ## Ownership rules
 
-### site (`astro-template`)
+### site (`clt-barq-digital-site`)
 
 Owns:
 
@@ -57,13 +58,17 @@ Exposes:
 
 Consumes:
 
-- No external APIs in baseline
+- Lead intake through the same-origin Worker API
+
+### lead-worker (`clt-barq-digital-site`)
+
+Owns lead request validation, Turnstile verification, intake rate limiting and the provider adapter contract. The Worker hands off an accepted request to the configured private delivery adapter and has no lead database. The site build and static assets remain independently served.
 
 ## Cross-application dependencies
 
-| From | To  | Dependency       | Contract | Notes                                         |
-| ---- | --- | ---------------- | -------- | --------------------------------------------- |
-| —    | —   | None in baseline | —        | CMS/API integrations require future contracts |
+| From | To          | Dependency                  | Contract                                    | Notes                                                         |
+| ---- | ----------- | --------------------------- | ------------------------------------------- | ------------------------------------------------------------- |
+| site | lead-worker | Same-origin lead submission | [Lead intake](API-CONTRACTS.md#lead-intake) | Real provider integration pending approval and receipt checks |
 
 ## Implementation rule
 

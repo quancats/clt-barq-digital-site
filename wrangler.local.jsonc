@@ -1,0 +1,26 @@
+{
+	"name": "barq-digital-local",
+	"main": "./worker/index.ts",
+	"compatibility_date": "2026-11-26",
+	"workers_dev": false,
+	"preview_urls": false,
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS",
+		"html_handling": "force-trailing-slash",
+		"not_found_handling": "404-page",
+		"run_worker_first": ["/api", "/api/*"],
+	},
+	"ratelimits": [
+		{
+			"name": "LEAD_RATE_LIMIT",
+			"namespace_id": "102701",
+			"simple": { "limit": 12, "period": 60 },
+		},
+		{
+			"name": "LEAD_REPLAY_LIMIT",
+			"namespace_id": "102702",
+			"simple": { "limit": 1, "period": 60 },
+		},
+	],
+}

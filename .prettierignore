@@ -1,5 +1,7 @@
 build
 dist
+.astro
+.wrangler
 .env*
 .cursor/command/astro/
 .cursor/rules/
