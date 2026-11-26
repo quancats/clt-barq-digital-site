@@ -35,7 +35,11 @@ export async function getSitePagePaths(locale: Locale) {
 							href: (project.data.kind === 'owned-product' && project.data.translationKey === 'bim' ? section('bim')?.href : undefined) ?? localPath(`projects/${project.data.slug}`),
 						})),
 					}
-				: { ...common, kind: 'page' as const };
+				: {
+						...common,
+						kind: 'page' as const,
+						services: key === 'consultation' ? content.services.filter(({ data }) => data.locale === locale).map(({ data }) => ({ key: data.translationKey, label: data.title })) : [],
+					};
 		return [{ params: { barq: route }, props }];
 	});
 	const legal = content.legal.flatMap((entry) => {

@@ -1,0 +1,94 @@
+---
+import FormField from '@/components/core/FormField.astro';
+import type { Locale } from '@/i18n/config';
+import { LEAD_ENDPOINT, LEAD_LIMITS, LEAD_PARTNERSHIP_TYPES, LEAD_USER_RANGES, type LeadType } from '@/lib/leads/contract';
+import { buttonLinkVariants } from '@/lib/ui/astroVariants';
+import { leadCopy } from './leadCopy';
+
+interface Props {
+	locale: Locale;
+	type: LeadType;
+	privacyPath?: string;
+	services: { key: string; label: string }[];
+}
+
+const { locale, type, privacyPath, services } = Astro.props;
+const copy = leadCopy[locale];
+const siteKey = String(import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '').trim();
+const active = Boolean(siteKey && privacyPath && (type !== 'consultation' || services.length > 0));
+const control = 'block min-h-11 w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-link';
+const organizationRequired = type === 'demo' || type === 'partnership';
+const messageField = { general: 'message', consultation: 'need', demo: 'deploymentNeeds', partnership: 'proposal' }[type] as 'message' | 'need' | 'deploymentNeeds' | 'proposal';
+const fields = [
+	{ name: 'name', label: copy.name, inputType: 'text', autocomplete: 'name', ...LEAD_LIMITS.name, required: true },
+	{ name: 'email', label: copy.email, inputType: 'email', autocomplete: 'email', min: 1, ...LEAD_LIMITS.email, required: true },
+	{ name: 'organization', label: `${type === 'demo' ? copy.demoOrganization : copy.organization}${organizationRequired ? '' : ` ${copy.optional}`}`, inputType: 'text', autocomplete: 'organization', ...LEAD_LIMITS.organization, required: organizationRequired },
+] as const;
+const chooser = type === 'consultation' ? { name: 'service', options: services } : type === 'demo' ? { name: 'userRange', options: LEAD_USER_RANGES.map((key) => ({ key, label: key })) } : type === 'partnership' ? { name: 'partnershipType', options: LEAD_PARTNERSHIP_TYPES.map((key) => ({ key, label: copy.partnerships[key] })) } : undefined;
+const chooserLabel = chooser?.name === 'service' ? copy.service : chooser?.name === 'userRange' ? copy.userRange : copy.partnershipType;
+---
+
+{
+	active ? (
+		<form method="post" action={LEAD_ENDPOINT} data-lead-form data-lead-type={type} data-locale={locale} data-site-key={siteKey} class="w-full max-w-2xl">
+			<fieldset disabled class="grid min-w-0 gap-5">
+				{fields.map(({ name, label, inputType, autocomplete, min, max, required }) => (
+					<FormField name={`lead-${name}`} {label} {required}>
+						<input id={`lead-${name}`} {name} type={inputType} {autocomplete} minlength={min} maxlength={max} {required} dir={inputType === 'email' ? 'ltr' : 'auto'} class={control} aria-describedby={`lead-${name}-error`} />
+						<p id={`lead-${name}-error`} class="text-sm text-destructive" hidden>
+							{copy.fieldError}
+						</p>
+					</FormField>
+				))}
+				{chooser && (
+					<FormField name={`lead-${chooser.name}`} label={chooserLabel} required>
+						<select id={`lead-${chooser.name}`} name={chooser.name} required class={control} dir={chooser.name === 'userRange' ? 'ltr' : undefined} aria-describedby={`lead-${chooser.name}-error`}>
+							<option value="">{copy.select}</option>
+							{chooser.options.map(({ key, label }) => (
+								<option value={key}>{label}</option>
+							))}
+						</select>
+						<p id={`lead-${chooser.name}-error`} class="text-sm text-destructive" hidden>
+							{copy.fieldError}
+						</p>
+					</FormField>
+				)}
+				<FormField name={`lead-${messageField}`} label={copy[messageField]} required>
+					<textarea id={`lead-${messageField}`} name={messageField} minlength={LEAD_LIMITS.details.min} maxlength={LEAD_LIMITS.details.max} required dir="auto" rows="5" class={control} aria-describedby={`lead-sensitive lead-${messageField}-error`} />
+					<p id="lead-sensitive" class="text-sm text-muted-foreground">
+						{copy.sensitive}
+					</p>
+					<p id={`lead-${messageField}-error`} class="text-sm text-destructive" hidden>
+						{copy.fieldError}
+					</p>
+				</FormField>
+				<div class="space-y-2">
+					<label class="flex min-h-11 w-fit items-center gap-3">
+						<input type="checkbox" name="privacyAccepted" required class="size-5 shrink-0" aria-describedby="lead-privacyAccepted-error" />
+						{copy.privacy}
+					</label>
+					<p id="lead-privacyAccepted-error" class="text-sm text-destructive" hidden>
+						{copy.fieldError}
+					</p>
+				</div>
+				<div data-lead-challenge />
+				<button type="submit" class:list={[buttonLinkVariants({ size: 'lg' }), 'w-fit']} disabled>
+					{copy.submit}
+				</button>
+			</fieldset>
+			<p data-lead-status role="status" tabindex="-1" class="mt-4 text-sm font-medium">
+				{copy.preparing}
+			</p>
+			<noscript>
+				<p>{copy.noScript}</p>
+			</noscript>
+		</form>
+	) : (
+		<p class="text-muted-foreground">{copy.unavailable}</p>
+	)
+}
+
+<script>
+	import { initLeadForm } from './leadForm';
+	document.querySelectorAll<HTMLFormElement>('[data-lead-form]').forEach(initLeadForm);
+</script>

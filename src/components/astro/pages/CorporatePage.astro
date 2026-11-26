@@ -10,6 +10,8 @@ import ProseText from '@/components/astro/content/ProseText.astro';
 import Section from '@/components/astro/content/Section.astro';
 import Stack from '@/components/astro/content/Stack.astro';
 import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import LeadForm from '@/components/astro/forms/LeadForm.astro';
+import { leadPageTypes } from '@/components/astro/forms/leadCopy';
 import { localizePath } from '@/i18n/config';
 import { getAlternateLocale, getDictionary } from '@/i18n/helpers';
 import LegalLayout from '@/layouts/LegalLayout.astro';
@@ -27,7 +29,7 @@ type Props = {
 	alternatePath?: string | undefined;
 	links?: Partial<Record<LinkKey, string>> | undefined;
 	related?: Link[] | undefined;
-} & ({ kind: 'page'; entry: CollectionEntry<'pages'> } | { kind: 'projects'; entry: CollectionEntry<'pages'>; projects: ProjectCard[] } | { kind: 'project'; entry: CollectionEntry<'projects'> } | { kind: 'legal'; entry: CollectionEntry<'legal'> });
+} & ({ kind: 'page'; entry: CollectionEntry<'pages'>; services?: { key: string; label: string }[] } | { kind: 'projects'; entry: CollectionEntry<'pages'>; projects: ProjectCard[] } | { kind: 'project'; entry: CollectionEntry<'projects'> } | { kind: 'legal'; entry: CollectionEntry<'legal'> });
 
 const props = Astro.props;
 const { entry, path, alternatePath, links = {}, related = [] } = props;
@@ -40,7 +42,8 @@ const alternates = createLocaleAlternates({ site: Astro.site ?? FALLBACK_SITE_UR
 const crumbs = [{ href: localizePath(locale), label: dictionary.layout.nav_home }, ...(props.kind === 'project' && links.projects ? [{ href: links.projects, label: copy.work }] : []), { label: title }];
 const details = props.kind === 'project' ? props.entry.data : undefined;
 const page = props.kind === 'page' || props.kind === 'projects' ? props.entry.data : undefined;
-const isContact = page && ['contact', 'consultation', 'demo', 'partners'].includes(page.translationKey);
+const leadType = page && Object.hasOwn(leadPageTypes, page.translationKey) ? leadPageTypes[page.translationKey as keyof typeof leadPageTypes] : undefined;
+const isContact = Boolean(leadType);
 const Content = (props.kind === 'legal' || props.kind === 'project') && props.entry.body?.trim() ? (await render(props.entry)).Content : undefined;
 ---
 
@@ -60,7 +63,7 @@ const Content = (props.kind === 'legal' || props.kind === 'project') && props.en
 						{title}
 					</Heading>
 					<ProseText>{description}</ProseText>
-					{isContact && page.contactLinks?.length ? (
+					{isContact && page?.contactLinks?.length ? (
 						<ul class="flex flex-wrap gap-4">
 							{page.contactLinks.map((link) => (
 								<li>
@@ -76,7 +79,7 @@ const Content = (props.kind === 'legal' || props.kind === 'project') && props.en
 							{copy.privacy}
 						</a>
 					)}
-					{isContact && <slot name="lead-form" />}
+					{leadType && props.kind === 'page' && <LeadForm {locale} type={leadType} {...(links.privacy ? { privacyPath: links.privacy } : {})} services={props.services ?? []} />}
 				</Stack>
 			</Section>
 			{page?.translationKey === 'faq' ? (
