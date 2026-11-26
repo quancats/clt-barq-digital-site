@@ -30,7 +30,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
 <template>
 	<AlertDialogPortal>
 		<AlertDialogOverlay data-slot="alert-dialog-overlay" class="fixed inset-0 z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
-		<AlertDialogContent data-slot="alert-dialog-content" :data-size="size" v-bind="{ ...$attrs, ...forwarded }" :class="cn('group/alert-dialog-content fixed start-1/2 top-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-sm rtl:translate-x-1/2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95', props.class)">
+		<AlertDialogContent data-slot="alert-dialog-content" :data-size="size" v-bind="{ ...$attrs, ...forwarded }" :class="cn('group/alert-dialog-content fixed start-1/2 top-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-sm rtl:translate-x-1/2 motion-safe:data-open:animate-in motion-safe:data-open:zoom-in-95 motion-safe:data-closed:animate-out motion-safe:data-closed:zoom-out-95', props.class)">
 			<slot />
 		</AlertDialogContent>
 	</AlertDialogPortal>

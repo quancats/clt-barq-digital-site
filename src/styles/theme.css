@@ -16,7 +16,7 @@
 	--card-foreground: var(--color-slate-950);
 	--popover: var(--color-white);
 	--popover-foreground: var(--color-slate-950);
-	--primary: var(--color-primary-600);
+	--primary: var(--color-primary-700);
 	--primary-foreground: var(--color-white);
 	--secondary: var(--color-secondary-400);
 	--secondary-foreground: var(--color-slate-950);
@@ -59,7 +59,7 @@
 	--text-muted: var(--muted-foreground);
 	--border-default: var(--border);
 	--action-primary: var(--primary);
-	--action-primary-hover: var(--color-primary-700);
+	--action-primary-hover: var(--color-primary-800);
 	--primary-link: var(--color-primary-600);
 	--radius-control: var(--radius);
 	--radius-card: calc(var(--radius) * 1.4);
@@ -75,7 +75,7 @@
 	--card-foreground: var(--color-slate-50);
 	--popover: var(--color-slate-900);
 	--popover-foreground: var(--color-slate-50);
-	--primary: var(--color-primary-600);
+	--primary: var(--color-primary-700);
 	--primary-foreground: var(--color-white);
 	--secondary: var(--color-secondary-400);
 	--secondary-foreground: var(--color-slate-950);

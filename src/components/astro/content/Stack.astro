@@ -1,0 +1,15 @@
+---
+import { cn } from '@/lib/utils';
+
+interface Props {
+	spacing?: 'compact' | 'standard' | 'relaxed';
+	class?: string;
+}
+
+const { spacing = 'standard', class: className } = Astro.props;
+const gaps = { compact: 'gap-2', standard: 'gap-4', relaxed: 'gap-8' };
+---
+
+<div class={cn('flex min-w-0 flex-col', gaps[spacing], className)}>
+	<slot />
+</div>

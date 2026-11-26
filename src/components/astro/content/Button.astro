@@ -1,0 +1,17 @@
+---
+import { Icon } from 'astro-icon/components';
+import { cn } from '@/lib/utils';
+import { buttonLinkVariants, type ButtonLinkVariants } from '@/lib/ui/astroVariants';
+import type { HTMLAttributes } from 'astro/types';
+
+type Props = Omit<HTMLAttributes<'button'>, 'aria-label' | 'class'> & {
+	variant?: ButtonLinkVariants['variant'];
+	class?: string;
+} & ({ icon?: never; label?: never } | { icon: string; label: string });
+
+const { class: className, variant = 'default', type = 'button', icon, label, ...attributes } = Astro.props;
+---
+
+<button {type} aria-label={label} class={cn(buttonLinkVariants({ variant, size: 'lg' }), 'min-h-11 disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-link', icon && 'min-w-11 px-2', className)} {...attributes}>
+	{icon ? <Icon name={icon} size={18} aria-hidden="true" /> : <slot />}
+</button>

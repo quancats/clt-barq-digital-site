@@ -1,0 +1,34 @@
+---
+import { Icon } from 'astro-icon/components';
+import { cn } from '@/lib/utils';
+
+interface Props {
+	tone?: 'info' | 'success' | 'error' | 'empty';
+	title: string;
+	announce?: boolean;
+	class?: string;
+}
+
+const { tone = 'info', title, announce = false, class: className } = Astro.props;
+const appearances = {
+	info: { icon: 'lucide:info', accent: 'border-s-info' },
+	success: { icon: 'lucide:circle-check', accent: 'border-s-success' },
+	error: { icon: 'lucide:circle-alert', accent: 'border-s-danger' },
+	empty: { icon: 'lucide:inbox', accent: 'border-s-muted-foreground' },
+};
+const appearance = appearances[tone];
+---
+
+<div role={announce ? (tone === 'error' ? 'alert' : 'status') : undefined} class={cn('flex min-w-0 gap-3 rounded-xl border border-s-4 bg-muted p-4 text-foreground', appearance.accent, className)}>
+	<Icon name={appearance.icon} size={20} class="mt-0.5 shrink-0" aria-hidden="true" />
+	<div class="min-w-0 wrap-anywhere">
+		<p class="font-semibold">{title}</p>
+		{
+			Astro.slots.has('default') && (
+				<div class="mt-1">
+					<slot />
+				</div>
+			)
+		}
+	</div>
+</div>

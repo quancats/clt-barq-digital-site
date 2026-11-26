@@ -1,0 +1,79 @@
+---
+import { cn } from '@/lib/utils';
+
+type InputType = 'text' | 'email' | 'tel' | 'url' | 'number' | 'search';
+
+interface CommonProps {
+	id: string;
+	name: string;
+	label: string;
+	hint?: string;
+	error?: string;
+	required?: boolean;
+	disabled?: boolean;
+	value?: string;
+	class?: string;
+}
+
+type Props = CommonProps & ({ control?: 'input'; type?: InputType; autocomplete?: string } | { control: 'textarea'; rows?: number } | { control: 'select'; options: { value: string; label: string; disabled?: boolean }[] });
+
+const props = Astro.props;
+const { id, name, label, hint, error, required, disabled, value, class: className } = props;
+const hintId = `${id}-hint`;
+const errorId = `${id}-error`;
+const describedBy = [hint && hintId, error && errorId].filter(Boolean).join(' ') || undefined;
+const controlClass = cn('min-h-11 w-full min-w-0 rounded-lg border bg-background px-3 py-2 text-base text-foreground disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-link', error ? 'border-danger' : 'border-muted-foreground');
+const attributes = {
+	id,
+	name,
+	required,
+	disabled,
+	'aria-describedby': describedBy,
+	'aria-invalid': error ? ('true' as const) : undefined,
+	class: controlClass,
+};
+---
+
+<div class={cn('grid min-w-0 gap-2', className)}>
+	<label for={id} class="text-sm font-semibold wrap-anywhere text-foreground">
+		{label}
+		{
+			required && (
+				<span aria-hidden="true" class="text-danger">
+					*
+				</span>
+			)
+		}
+	</label>
+	{
+		hint && (
+			<p id={hintId} class="text-sm wrap-anywhere text-muted-foreground">
+				{hint}
+			</p>
+		)
+	}
+	{
+		props.control === 'select' ? (
+			<select {...attributes}>
+				{props.options.map((option) => (
+					<option value={option.value} disabled={option.disabled} selected={option.value === value}>
+						{option.label}
+					</option>
+				))}
+			</select>
+		) : props.control === 'textarea' ? (
+			<textarea {...attributes} rows={props.rows ?? 4}>
+				{value ?? ''}
+			</textarea>
+		) : (
+			<input {...attributes} type={props.type ?? 'text'} autocomplete={props.autocomplete} {value} />
+		)
+	}
+	{
+		error && (
+			<p id={errorId} class="text-sm wrap-anywhere text-danger">
+				{error}
+			</p>
+		)
+	}
+</div>

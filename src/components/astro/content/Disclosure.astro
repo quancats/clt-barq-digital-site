@@ -1,0 +1,22 @@
+---
+import { Icon } from 'astro-icon/components';
+import { cn } from '@/lib/utils';
+
+interface Props {
+	label: string;
+	open?: boolean;
+	class?: string;
+}
+
+const { label, open = false, class: className } = Astro.props;
+---
+
+<details {open} class={cn('group min-w-0 rounded-xl border bg-card text-card-foreground', className)}>
+	<summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl p-4 font-semibold wrap-anywhere focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-link [&::-webkit-details-marker]:hidden">
+		<span class="min-w-0">{label}</span>
+		<Icon name="lucide:chevron-down" size={18} class="shrink-0 group-open:rotate-180" aria-hidden="true" />
+	</summary>
+	<div class="px-4 pb-4">
+		<slot />
+	</div>
+</details>

@@ -1,0 +1,20 @@
+---
+import { cn } from '@/lib/utils';
+
+interface Props {
+	variant?: 'body' | 'eyebrow' | 'rich';
+	class?: string;
+}
+
+const { variant = 'body', class: className } = Astro.props;
+const Tag = variant === 'rich' ? 'div' : 'p';
+const styles = {
+	body: 'max-w-prose leading-relaxed text-foreground',
+	eyebrow: 'text-sm font-semibold text-primary-link',
+	rich: 'prose max-w-prose',
+};
+---
+
+<Tag class={cn('min-w-0 wrap-anywhere', styles[variant], className)}>
+	<slot />
+</Tag>
