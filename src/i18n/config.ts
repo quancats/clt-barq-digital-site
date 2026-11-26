@@ -18,8 +18,6 @@ export function getLocaleDirection(locale: Locale): 'rtl' | 'ltr' {
 
 export function localizePath(locale: Locale, path = '/'): string {
 	const trimmed = path.replace(/^\/+|\/+$/g, '');
-	if (!trimmed) {
-		return `/${locale}/`;
-	}
-	return `/${locale}/${trimmed}/`;
+	const prefix = locale === defaultLocale ? '' : `/${locale}`;
+	return trimmed ? `${prefix}/${trimmed}/` : `${prefix}/`;
 }

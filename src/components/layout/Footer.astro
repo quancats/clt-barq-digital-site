@@ -1,5 +1,7 @@
 ---
 import { Icon } from 'astro-icon/components';
+import { Image } from 'astro:assets';
+import brandLogo from '@/assets/images/brand/logo.png';
 import Container from '@/components/layout/Container.astro';
 import { socialLinks } from '@/data/social';
 import { localizePath, type Locale } from '@/i18n/config';
@@ -7,6 +9,7 @@ import { getDictionary } from '@/i18n/helpers';
 import { parseAnalyticsMode, shouldShowAnalyticsPreferenceUi } from '@/lib/analytics/consent';
 import { isGoogleAnalyticsEnabled } from '@/lib/analytics/googleAnalytics';
 import { PRIMARY_NAV_PREFETCH_ATTRS } from '@/lib/navigation/prefetch';
+import { getRouteAvailability } from '@/lib/navigation/getRouteAvailability';
 import { cn } from '@/lib/utils';
 import { PUBLIC_GOOGLE_ANALYTICS_ENABLED, PUBLIC_GOOGLE_ANALYTICS_MODE } from 'astro:env/client';
 
@@ -17,6 +20,8 @@ interface Props {
 
 const { locale, class: className } = Astro.props;
 const dictionary = getDictionary(locale);
+const availability = await getRouteAvailability(locale);
+const columns = dictionary.layout.footer_columns.map((column) => ({ ...column, links: column.links.filter((link) => availability.preview || link.path === '/' || (link.path === '/articles' && availability.articles)) })).filter((column) => column.links.length);
 const year = new Date().getFullYear();
 const homeHref = localizePath(locale, '/');
 const social = dictionary.layout.footer_social;
@@ -40,28 +45,27 @@ function resolveFooterHref(path: string): string {
 		<div class="space-y-12">
 			<div class="max-w-sm space-y-4">
 				<a href={homeHref} class="inline-flex items-center text-primary-link transition-opacity hover:opacity-80" {...PRIMARY_NAV_PREFETCH_ATTRS}>
-					<Icon name="simple-icons:astro" size={28} aria-hidden="true" />
-					<span class="sr-only">{dictionary.common.brand}</span>
+					<Image src={brandLogo} alt={dictionary.common.brand} width={96} densities={[1, 2]} />
 				</a>
-				<p class="text-sm leading-relaxed text-muted-foreground">
-					{dictionary.layout.footer_note}
-				</p>
-				<ul class="flex flex-wrap items-center gap-5" aria-label={dictionary.layout.footer_social_label}>
-					{
-						socialLinks.map((link, index) => (
-							<li>
-								<a href={social[index]?.href ?? link.href} class="inline-flex size-11 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2" aria-label={social[index]?.label ?? link.label}>
-									<Icon name={link.icon} size={20} aria-hidden="true" />
-								</a>
-							</li>
-						))
-					}
-				</ul>
+				{availability.preview && <p class="text-sm leading-relaxed text-muted-foreground">{dictionary.layout.footer_note}</p>}
+				{
+					availability.preview && (
+						<ul class="flex flex-wrap items-center gap-5" aria-label={dictionary.layout.footer_social_label}>
+							{socialLinks.map((link, index) => (
+								<li>
+									<a href={social[index]?.href ?? link.href} class="inline-flex size-11 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2" aria-label={social[index]?.label ?? link.label}>
+										<Icon name={link.icon} size={20} aria-hidden="true" />
+									</a>
+								</li>
+							))}
+						</ul>
+					)
+				}
 			</div>
 
 			<nav aria-label={dictionary.layout.footer_nav_label} class="grid grid-cols-2 gap-4 wrap-anywhere sm:grid-cols-4 sm:gap-8">
 				{
-					dictionary.layout.footer_columns.map((column) => (
+					columns.map((column) => (
 						<div>
 							<h2 class="text-sm font-semibold text-foreground">{column.title}</h2>
 							<ul class="mt-2">
@@ -89,12 +93,16 @@ function resolveFooterHref(path: string): string {
 						</button>
 					) : null
 				}
-				<p class="text-sm text-muted-foreground">
-					{dictionary.layout.footer_made_with}{' '}
-					<a href="https://quancats.com" class="font-medium text-primary-link underline-offset-4 hover:underline" rel="noopener noreferrer" target="_blank">
-						{dictionary.layout.footer_made_with_brand}
-					</a>
-				</p>
+				{
+					availability.preview && (
+						<p class="text-sm text-muted-foreground">
+							{dictionary.layout.footer_made_with}{' '}
+							<a href="https://quancats.com" class="font-medium text-primary-link underline-offset-4 hover:underline" rel="noopener noreferrer" target="_blank">
+								{dictionary.layout.footer_made_with_brand}
+							</a>
+						</p>
+					)
+				}
 			</div>
 		</div>
 	</Container>

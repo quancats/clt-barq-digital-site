@@ -9,10 +9,10 @@ const VIEWPORTS = [
 ] as const;
 
 const ROUTES = [
-	{ path: '/ar/', dir: 'rtl', lang: 'ar' },
+	{ path: '/', dir: 'rtl', lang: 'ar' },
 	{ path: '/en/', dir: 'ltr', lang: 'en' },
-	{ path: '/ar/articles/', dir: 'rtl', lang: 'ar' },
-	{ path: '/ar/components/', dir: 'rtl', lang: 'ar' },
+	{ path: '/articles/', dir: 'rtl', lang: 'ar' },
+	{ path: '/components/', dir: 'rtl', lang: 'ar' },
 	{ path: '/en/articles/', dir: 'ltr', lang: 'en' },
 	{ path: '/en/components/', dir: 'ltr', lang: 'en' },
 ] as const;
@@ -34,7 +34,7 @@ for (const viewport of VIEWPORTS) {
 for (const locale of ['ar', 'en']) {
 	test(`scrolls a short ${locale} drawer and follows its last link by keyboard`, async ({ page }) => {
 		await page.setViewportSize({ width: 320, height: 180 });
-		await expectHttpOk(page, `/${locale}/articles/welcome/`);
+		await expectHttpOk(page, `${locale === 'en' ? '/en/' : '/'}articles/welcome/`);
 		const menu = page.locator('astro-island:not([ssr]) [data-header-chrome] button[aria-controls="site-mobile-nav"]');
 		await menu.focus();
 		await page.keyboard.press('Enter');
@@ -59,13 +59,13 @@ for (const locale of ['ar', 'en']) {
 		await expect(last).toBeFocused();
 		await expect.poll(() => nav.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
 		await page.keyboard.press('Enter');
-		await expect(page).toHaveURL(new RegExp(`/${locale}/components/$`));
+		await expect(page).toHaveURL(`${locale === 'en' ? '/en/' : '/'}components/`);
 		await expect(drawer).toHaveCount(0);
 	});
 
 	test(`wraps long ${locale} content and link text at 320px`, async ({ page }) => {
 		await page.setViewportSize({ width: 320, height: 640 });
-		await expectHttpOk(page, `/${locale}/articles/welcome/`);
+		await expectHttpOk(page, `${locale === 'en' ? '/en/' : '/'}articles/welcome/`);
 		await page.locator('main').evaluate((main, language) => {
 			const word = (language === 'ar' ? 'اختبارعنوانطويل' : 'UnbrokenArticleTitle').repeat(12);
 			const heading = main.querySelector('h1')!;
@@ -100,14 +100,14 @@ for (const locale of ['ar', 'en']) {
 					});
 					await page.route('**/ComponentCatalog.*.js', (route) => route.abort());
 				}
-				await page.goto(`/${locale}/components/`, { waitUntil: 'commit' });
+				await page.goto(`${locale === 'en' ? '/en/' : '/'}components/`, { waitUntil: 'commit' });
 				const fallback = page.locator('[data-header-fallback]');
-				await expect(fallback.locator(`a[href="/${locale}/articles/"]`)).toBeVisible();
+				await expect(fallback.locator(`a[href="${locale === 'en' ? '/en/' : '/'}articles/"]`)).toBeVisible();
 				await expect(page.locator('[data-catalog-fallback] a[href="#combobox"]')).toBeVisible();
 				await fallback.locator(`a[hreflang="${other}"]`).click();
-				await expect(page).toHaveURL(new RegExp(`/${other}/components/$`));
-				await fallback.locator(`a[href="/${other}/articles/"]`).click();
-				await expect(page).toHaveURL(new RegExp(`/${other}/articles/$`));
+				await expect(page).toHaveURL(`${other === 'en' ? '/en/' : '/'}components/`);
+				await fallback.locator(`a[href="${other === 'en' ? '/en/' : '/'}articles/"]`).click();
+				await expect(page).toHaveURL(`${other === 'en' ? '/en/' : '/'}articles/`);
 				release();
 				if (mode === 'delayed') await expect(fallback).toBeHidden();
 			} finally {
@@ -120,7 +120,7 @@ for (const locale of ['ar', 'en']) {
 	test(`restores focus from the ${locale} drawer and reaches footer privacy controls`, async ({ page }) => {
 		await page.setViewportSize({ width: 320, height: 220 });
 		await page.emulateMedia({ reducedMotion: 'reduce' });
-		await expectHttpOk(page, `/${locale}/`);
+		await expectHttpOk(page, `${locale === 'en' ? '/en/' : '/'}`);
 		const menu = page.locator('astro-island:not([ssr]) [data-header-chrome] button[aria-controls="site-mobile-nav"]');
 		await menu.press('Enter');
 		await expect(page.getByRole('dialog')).toBeVisible();
@@ -130,7 +130,7 @@ for (const locale of ['ar', 'en']) {
 		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(menu).toBeFocused();
 		const footer = page.locator('footer');
-		const link = footer.locator(`nav a[href="/${locale}/articles/"]`).first();
+		const link = footer.locator(`nav a[href="${locale === 'en' ? '/en/' : '/'}articles/"]`).first();
 		await link.focus();
 		await expect(link).toBeFocused();
 		const settings = footer.locator('[data-privacy-settings]');
@@ -140,7 +140,7 @@ for (const locale of ['ar', 'en']) {
 
 	test(`wraps ${locale} article cards and verifies CTA contracts`, async ({ page }) => {
 		await page.setViewportSize({ width: 320, height: 640 });
-		await expectHttpOk(page, `/${locale}/articles/`);
+		await expectHttpOk(page, `${locale === 'en' ? '/en/' : '/'}articles/`);
 		const card = page.locator('main article').first();
 		await card.evaluate((element, language) => {
 			const word = (language === 'ar' ? 'عنوانطويل' : 'UnbrokenTitle').repeat(20);
@@ -151,10 +151,10 @@ for (const locale of ['ar', 'en']) {
 		}, locale);
 		await expectNoHorizontalOverflow(page);
 		await expect(card.locator('a a')).toHaveCount(0);
-		await expectHttpOk(page, `/${locale}/components/`);
+		await expectHttpOk(page, `${locale === 'en' ? '/en/' : '/'}components/`);
 		const internal = page.locator('[data-catalog-cta] a[data-astro-prefetch]');
 		const external = page.locator('[data-catalog-cta] a[target="_blank"]');
-		await expect(internal).toHaveAttribute('href', `/${locale}/articles/`);
+		await expect(internal).toHaveAttribute('href', `${locale === 'en' ? '/en/' : '/'}articles/`);
 		await expect(external).toHaveAttribute('href', 'https://docs.astro.build/');
 		await expect(external).toHaveAttribute('rel', 'noopener noreferrer');
 		await expect(external).not.toHaveAttribute('data-astro-prefetch');
@@ -162,6 +162,6 @@ for (const locale of ['ar', 'en']) {
 		await expect(internal).toBeFocused();
 		await expect.poll(() => internal.evaluate((element) => getComputedStyle(element).boxShadow)).not.toBe('none');
 		await internal.press('Enter');
-		await expect(page).toHaveURL(new RegExp(`/${locale}/articles/$`));
+		await expect(page).toHaveURL(`${locale === 'en' ? '/en/' : '/'}articles/`);
 	});
 }

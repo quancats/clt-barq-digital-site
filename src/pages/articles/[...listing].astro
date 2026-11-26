@@ -7,6 +7,14 @@ import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
 import { createArticlesIndexPage } from '@/lib/content/queries/createArticlesIndexPage';
 import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
 
+import { ENV } from 'astro:env/server';
+import { getPublishedArticles } from '@/lib/content/queries/getPublishedArticles';
+
+export async function getStaticPaths() {
+	const articles = await getPublishedArticles('ar');
+	return ENV !== 'production' || articles.length > 0 ? [{ params: { listing: undefined } }] : [];
+}
+
 const locale = 'ar' as const;
 const site = Astro.site ?? new URL(FALLBACK_SITE_URL);
 const page = await createArticlesIndexPage({ locale, site });

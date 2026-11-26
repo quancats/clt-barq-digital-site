@@ -5,6 +5,12 @@ import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
 import { createComponentsPage } from '@/lib/content/queries/createComponentsPage';
 import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
 
+import { ENV } from 'astro:env/server';
+
+export function getStaticPaths() {
+	return ENV === 'production' ? [] : [{ params: { preview: undefined } }];
+}
+
 const locale = 'ar' as const;
 const site = Astro.site ?? new URL(FALLBACK_SITE_URL);
 const page = createComponentsPage({ locale, site });

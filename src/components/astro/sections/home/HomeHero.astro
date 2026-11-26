@@ -5,6 +5,7 @@ import Heading from '@/components/astro/content/Heading.astro';
 import Container from '@/components/layout/Container.astro';
 import { localizePath, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/helpers';
+import { getRouteAvailability } from '@/lib/navigation/getRouteAvailability';
 
 interface Props {
 	locale: Locale;
@@ -12,6 +13,7 @@ interface Props {
 
 const { locale } = Astro.props;
 const dictionary = getDictionary(locale);
+const availability = await getRouteAvailability(locale);
 ---
 
 <section class="pt-10">
@@ -24,8 +26,8 @@ const dictionary = getDictionary(locale);
 				{dictionary.home.hero_body}
 			</p>
 			<div class="mt-6 flex flex-wrap gap-3">
-				<CallToAction href={localizePath(locale, '/articles')} label={dictionary.home.cta_articles} prefetch />
-				<CallToAction href={localizePath(locale, '/components')} label={dictionary.home.cta_components} variant="outline" prefetch />
+				{availability.articles && <CallToAction href={localizePath(locale, '/articles')} label={dictionary.home.cta_articles} prefetch />}
+				{availability.preview && <CallToAction href={localizePath(locale, '/components')} label={dictionary.home.cta_components} variant="outline" prefetch />}
 			</div>
 		</Card>
 	</Container>

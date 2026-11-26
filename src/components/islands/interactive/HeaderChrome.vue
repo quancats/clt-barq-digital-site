@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils';
 import type { ThemeMode } from '@/scripts/theme';
 
 export interface HeaderChromeCopy {
-	brand: string;
 	navLabel: string;
 	navMobileLabel: string;
 	navMenu: string;
@@ -22,6 +21,7 @@ export interface HeaderChromeCopy {
 	navArticles: string;
 	navComponents: string;
 	switchLanguage: string;
+	translationUnavailable: string;
 	languageNameAr: string;
 	languageNameEn: string;
 	themeLabel: string;
@@ -34,15 +34,15 @@ export interface HeaderChromeCopy {
 
 export interface HeaderChromePaths {
 	home: string;
-	articles: string;
-	components: string;
-	cta: string;
-	alternateHref: string;
+	articles: string | undefined;
+	components: string | undefined;
+	alternateHref: string | undefined;
 }
 
 const props = defineProps<{
 	locale: Locale;
 	defaultTheme: ThemeMode;
+	brand: { src: string; width: number; height: number; label: string };
 	copy: HeaderChromeCopy;
 	paths: HeaderChromePaths;
 	currentPath: string;
@@ -51,7 +51,7 @@ const props = defineProps<{
 const mobileOpen = ref(false);
 const exploreOpen = ref(false);
 
-const brandClass = 'inline-flex h-10 items-center justify-center rounded-lg px-2.5 text-lg font-bold transition-colors hover:bg-muted hover:text-foreground';
+const brandClass = 'inline-flex w-fit items-center rounded-lg px-2 transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2';
 const mobileNavLinkClass = 'min-h-11 rounded-lg wrap-anywhere px-3 py-2.5 text-base font-medium text-foreground transition-colors hover:bg-muted';
 const mobileSubLinkClass = 'block min-h-11 rounded-lg wrap-anywhere px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground';
 
@@ -59,8 +59,8 @@ function normalizePath(path: string): string {
 	return path.replace(/\/$/, '') || '/';
 }
 
-function isCurrent(href: string): boolean {
-	return normalizePath(props.currentPath) === normalizePath(href);
+function isCurrent(href: string | undefined): boolean {
+	return Boolean(href && normalizePath(props.currentPath) === normalizePath(href));
 }
 
 const homeCurrent = computed(() => isCurrent(props.paths.home));
@@ -68,6 +68,7 @@ const articlesCurrent = computed(() => isCurrent(props.paths.articles));
 const componentsCurrent = computed(() => isCurrent(props.paths.components));
 const exploreCurrent = computed(() =>
 	[props.paths.articles, props.paths.components].some((href) => {
+		if (!href) return false;
 		const section = normalizePath(href);
 		const current = normalizePath(props.currentPath);
 		return current === section || current.startsWith(section + '/');
@@ -85,8 +86,8 @@ function onMobileOpenChange(open: boolean) {
 <template>
 	<RekaLocaleProvider :locale="locale">
 		<div class="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-3 md:grid-cols-[1fr_auto_1fr] md:gap-x-4" data-header-chrome>
-			<a :href="paths.home" :class="cn(brandClass, 'h-auto min-h-10 min-w-0 justify-self-start wrap-anywhere')" :aria-current="homeCurrent ? 'page' : undefined" data-astro-prefetch>
-				{{ copy.brand }}
+			<a :href="paths.home" :class="brandClass" :aria-current="homeCurrent ? 'page' : undefined" data-astro-prefetch>
+				<img :src="brand.src" :alt="brand.label" :width="brand.width" :height="brand.height" />
 			</a>
 
 			<NavigationMenu :aria-label="copy.navLabel" :viewport="false" class="col-span-2 hidden max-w-none justify-self-center md:col-span-1 md:col-start-2 md:row-start-1 md:flex">
@@ -96,19 +97,19 @@ function onMobileOpenChange(open: boolean) {
 							{{ copy.navHome }}
 						</NavigationMenuLink>
 					</NavigationMenuItem>
-					<NavigationMenuItem value="explore">
+					<NavigationMenuItem v-if="paths.articles || paths.components" value="explore">
 						<NavigationMenuTrigger class="h-10" :data-active="exploreCurrent ? '' : undefined">
 							{{ copy.navExplore }}
 						</NavigationMenuTrigger>
 						<NavigationMenuContent>
 							<ul class="grid w-48 gap-1 p-1">
 								<li>
-									<NavigationMenuLink :href="paths.articles" :active="articlesCurrent" data-astro-prefetch>
+									<NavigationMenuLink v-if="paths.articles" :href="paths.articles" :active="articlesCurrent" data-astro-prefetch>
 										{{ copy.navArticles }}
 									</NavigationMenuLink>
 								</li>
 								<li>
-									<NavigationMenuLink :href="paths.components" :active="componentsCurrent" data-astro-prefetch>
+									<NavigationMenuLink v-if="paths.components" :href="paths.components" :active="componentsCurrent" data-astro-prefetch>
 										{{ copy.navComponents }}
 									</NavigationMenuLink>
 								</li>
@@ -119,11 +120,12 @@ function onMobileOpenChange(open: boolean) {
 			</NavigationMenu>
 
 			<div class="flex items-center justify-end gap-1.5 justify-self-end md:col-start-3 md:row-start-1">
-				<LanguageSwitcher :locale="locale" :alternate-href="paths.alternateHref" :switch-language="copy.switchLanguage" :language-name-ar="copy.languageNameAr" :language-name-en="copy.languageNameEn" />
+				<LanguageSwitcher v-if="paths.alternateHref" :locale="locale" :alternate-href="paths.alternateHref" :switch-language="copy.switchLanguage" :language-name-ar="copy.languageNameAr" :language-name-en="copy.languageNameEn" />
+				<span v-else class="text-xs text-muted-foreground">{{ copy.translationUnavailable }}</span>
 
 				<ThemeToggle :default-theme="defaultTheme" :theme-label="copy.themeLabel" :theme-light="copy.themeLight" :theme-dark="copy.themeDark" :theme-auto="copy.themeAuto" />
 
-				<Button as="a" size="sm" class="hidden h-8 min-h-8 px-3 sm:inline-flex" :href="paths.cta" :aria-current="articlesCurrent ? 'page' : undefined" data-astro-prefetch>
+				<Button v-if="paths.articles" as="a" size="sm" class="hidden h-8 min-h-8 px-3 sm:inline-flex" :href="paths.articles" :aria-current="articlesCurrent ? 'page' : undefined" data-astro-prefetch>
 					{{ copy.ctaLabel }}
 				</Button>
 
@@ -135,8 +137,8 @@ function onMobileOpenChange(open: boolean) {
 					</SheetTrigger>
 					<SheetContent side="end" :show-close-button="false" class="w-full max-w-sm gap-0 p-0">
 						<SheetHeader class="shrink-0 flex-row items-center justify-between space-y-0 border-b border-border p-4 text-start">
-							<a :href="paths.home" :class="cn(brandClass, 'text-base')" :aria-current="homeCurrent ? 'page' : undefined" data-astro-prefetch @click="onMobileOpenChange(false)">
-								{{ copy.brand }}
+							<a :href="paths.home" :class="brandClass" :aria-current="homeCurrent ? 'page' : undefined" data-astro-prefetch @click="onMobileOpenChange(false)">
+								<img :src="brand.src" :alt="brand.label" :width="brand.width" :height="brand.height" />
 							</a>
 							<SheetClose as-child>
 								<Button variant="ghost" size="icon" class="size-11" :aria-label="copy.close">
@@ -153,7 +155,7 @@ function onMobileOpenChange(open: boolean) {
 								{{ copy.navHome }}
 							</a>
 
-							<Collapsible v-model:open="exploreOpen">
+							<Collapsible v-if="paths.articles || paths.components" v-model:open="exploreOpen">
 								<CollapsibleTrigger :class="cn(mobileNavLinkClass, 'flex w-full items-center justify-between gap-2 data-[state=open]:bg-muted', exploreCurrent && 'bg-muted')">
 									<span>{{ copy.navExplore }}</span>
 									<ChevronDownIcon class="size-4 shrink-0 text-muted-foreground transition-transform duration-200" :class="exploreOpen ? 'rotate-180' : ''" aria-hidden="true" />
@@ -161,12 +163,12 @@ function onMobileOpenChange(open: boolean) {
 								<CollapsibleContent>
 									<ul class="ms-3 mt-1 flex flex-col gap-0.5 border-s border-border ps-3">
 										<li>
-											<a :href="paths.articles" :class="mobileSubLinkClass" :aria-current="articlesCurrent ? 'page' : undefined" data-astro-prefetch @click="onMobileOpenChange(false)">
+											<a v-if="paths.articles" :href="paths.articles" :class="mobileSubLinkClass" :aria-current="articlesCurrent ? 'page' : undefined" data-astro-prefetch @click="onMobileOpenChange(false)">
 												{{ copy.navArticles }}
 											</a>
 										</li>
 										<li>
-											<a :href="paths.components" :class="mobileSubLinkClass" :aria-current="componentsCurrent ? 'page' : undefined" data-astro-prefetch @click="onMobileOpenChange(false)">
+											<a v-if="paths.components" :href="paths.components" :class="mobileSubLinkClass" :aria-current="componentsCurrent ? 'page' : undefined" data-astro-prefetch @click="onMobileOpenChange(false)">
 												{{ copy.navComponents }}
 											</a>
 										</li>

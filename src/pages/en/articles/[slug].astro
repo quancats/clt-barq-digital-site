@@ -24,7 +24,7 @@ const { Content } = await render(entry);
 
 <ContentLayout locale={locale} seo={page.seo} alternates={page.alternates} alternatePath={page.alternatePath} jsonLd={page.jsonLd}>
 	<Breadcrumbs class="mb-6" label={page.dictionary.layout.breadcrumbs_label} items={page.breadcrumbItems} />
-	<ArticleBody title={entry.data.title} description={entry.data.description} publishedAt={entry.data.publishedAt}>
+	<ArticleBody locale={locale} title={entry.data.title} description={entry.data.description} publishedAt={entry.data.publishedAt}>
 		<Content />
 	</ArticleBody>
 </ContentLayout>

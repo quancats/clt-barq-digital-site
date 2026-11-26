@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { attachConsoleGuards, expectExactlyOneH1, expectHttpOk, setSystemColorScheme, setThemeMode, switchLanguage } from './helpers';
 
-const CORE_CONTENT_PATHS = ['/ar/', '/en/', '/ar/articles/', '/en/articles/', '/ar/components/', '/en/components/'] as const;
+const CORE_CONTENT_PATHS = ['/', '/en/', '/articles/', '/en/articles/', '/components/', '/en/components/'] as const;
 
 test('core pages return HTTP 200 with one h1 and no console errors', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
@@ -15,11 +15,11 @@ test('core pages return HTTP 200 with one h1 and no console errors', async ({ pa
 
 test('serves the default Arabic home with correct lang and dir', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
-	await page.goto('/ar/');
-	await expect(page).toHaveURL(/\/ar\/$/);
+	await page.goto('/');
+	await expect(page).toHaveURL('/');
 	await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
 	await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-	await expectExactlyOneH1(page, '/ar/');
+	await expectExactlyOneH1(page, '/');
 	await expect(page.locator('#main').getByRole('link', { name: 'تصفح المقالات' })).toBeVisible();
 	await expect(page.locator('#main').getByRole('link', { name: 'تصفح المكونات' })).toBeVisible();
 	await guards.assertClean();
@@ -29,14 +29,14 @@ test.describe('Arabic home without JavaScript', () => {
 	test.use({ javaScriptEnabled: false });
 
 	test('renders readable content and follows a static link', async ({ page }) => {
-		await expectHttpOk(page, '/ar/');
+		await expectHttpOk(page, '/');
 		await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
 		await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 		const main = page.getByRole('main');
 		await expect(main.getByRole('heading', { level: 1, name: 'برق الرقمية' })).toBeVisible();
 		await expect(main.getByText('مرحبًا بكم في موقع برق الرقمية.')).toBeVisible();
 		await main.getByRole('link', { name: 'تصفح المقالات' }).click();
-		await expect(page).toHaveURL(/\/ar\/articles\/$/);
+		await expect(page).toHaveURL('/articles/');
 	});
 });
 
@@ -64,20 +64,21 @@ test('opts primary navigation into Astro prefetch', async ({ page }) => {
 	await guards.assertClean();
 });
 
-test('preloads only the active locale critical font variant', async ({ page }) => {
+test('loads the approved local font in both languages', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
-	await expectHttpOk(page, '/ar/');
-	const arPreloads = page.locator('link[rel="preload"][as="font"]');
-	await expect(arPreloads.first()).toBeAttached();
-	const arCount = await arPreloads.count();
-	expect(arCount).toBeGreaterThanOrEqual(1);
-	expect(arCount).toBeLessThanOrEqual(2);
-
-	await expectHttpOk(page, '/en/');
-	const enPreloads = page.locator('link[rel="preload"][as="font"]');
-	const enCount = await enPreloads.count();
-	expect(enCount).toBeGreaterThanOrEqual(1);
-	expect(enCount).toBeLessThanOrEqual(2);
+	for (const path of ['/', '/en/']) {
+		await expectHttpOk(page, path);
+		const preloads = page.locator('link[rel="preload"][as="font"]');
+		await expect(preloads).toHaveCount(1);
+		await expect(preloads).toHaveAttribute('href', '/fonts/ibm-plex-sans-arabic/IBMPlexSansArabic-Regular.woff2');
+		expect(
+			await page.evaluate(async () => {
+				const sample = document.documentElement.lang === 'ar' ? 'برق الرقمية' : 'Barq Digital';
+				const loadedFaces = await document.fonts.load('400 16px "IBM Plex Sans Arabic"', sample);
+				return loadedFaces.length > 0 && getComputedStyle(document.body).fontFamily.includes('IBM Plex Sans Arabic');
+			}),
+		).toBe(true);
+	}
 	await guards.assertClean();
 });
 
@@ -130,7 +131,7 @@ test('opens explore dropdown and navigates to articles', async ({ page }) => {
 
 test('keeps Arabic explore menu right-aligned under its trigger', async ({ page }) => {
 	await page.setViewportSize({ width: 1280, height: 720 });
-	await expectHttpOk(page, '/ar/');
+	await expectHttpOk(page, '/');
 	const primaryNav = page.getByRole('navigation', { name: 'التنقل الرئيسي' });
 	await expect(primaryNav).toHaveAttribute('dir', 'rtl');
 	const explore = primaryNav.getByRole('button', { name: 'استكشف' });
@@ -152,7 +153,7 @@ test('keeps Arabic explore menu right-aligned under its trigger', async ({ page 
 test('opens explore menu on narrow viewports and reaches components', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
 	await page.setViewportSize({ width: 390, height: 844 });
-	await expectHttpOk(page, '/ar/');
+	await expectHttpOk(page, '/');
 
 	await expect(page.getByRole('combobox', { name: 'تبديل اللغة' })).toBeVisible();
 	await expect(page.getByRole('combobox', { name: 'مظهر الواجهة' })).toBeVisible();
@@ -166,15 +167,15 @@ test('opens explore menu on narrow viewports and reaches components', async ({ p
 	await mobileNav.getByRole('button', { name: 'استكشف' }).click();
 	const componentsLink = mobileNav.getByRole('link', { name: 'المكونات' });
 	await expect(componentsLink).toBeVisible();
-	await Promise.all([page.waitForURL(/\/ar\/components\/$/), componentsLink.click()]);
+	await Promise.all([page.waitForURL('/components/'), componentsLink.click()]);
 	await expect(page.getByRole('navigation', { name: 'مسار التنقل' })).toContainText('المكونات');
-	await expectExactlyOneH1(page, '/ar/components/');
+	await expectExactlyOneH1(page, '/components/');
 	await guards.assertClean();
 });
 
 test('switches language to English home', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
-	await expectHttpOk(page, '/ar/');
+	await expectHttpOk(page, '/');
 	await switchLanguage(page, 'تبديل اللغة', 'English');
 	await expect(page).toHaveURL(/\/en\/$/);
 	await expect(page.locator('html')).toHaveAttribute('lang', 'en');
@@ -185,13 +186,13 @@ test('switches language to English home', async ({ page }) => {
 
 test('navigates articles and translated article detail', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
-	await expectHttpOk(page, '/ar/articles/');
-	await expectExactlyOneH1(page, '/ar/articles/');
+	await expectHttpOk(page, '/articles/');
+	await expectExactlyOneH1(page, '/articles/');
 	await expect(page.getByRole('heading', { level: 1 })).toContainText('المقالات');
 	await page.getByRole('link', { name: 'مرحبًا بقالب محتوى Astro' }).first().click();
-	await expect(page).toHaveURL(/\/ar\/articles\/welcome\/$/);
-	await expectExactlyOneH1(page, '/ar/articles/welcome/');
-	await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://example.com/ar/articles/welcome/');
+	await expect(page).toHaveURL('/articles/welcome/');
+	await expectExactlyOneH1(page, '/articles/welcome/');
+	await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://example.com/articles/welcome/');
 
 	await switchLanguage(page, 'تبديل اللغة', 'English');
 	await expect(page).toHaveURL(/\/en\/articles\/welcome\/$/);
@@ -207,7 +208,7 @@ test('renders MDX article with allowlisted callout', async ({ page }) => {
 	await expect(page.getByRole('heading', { level: 1 })).toContainText('Authoring with MDX');
 	await expect(page.getByRole('note')).toContainText('Import only allowlisted Astro components');
 	await switchLanguage(page, 'Switch language', 'العربية');
-	await expect(page).toHaveURL(/\/ar\/articles\/using-mdx\/$/);
+	await expect(page).toHaveURL('/articles/using-mdx/');
 	await expect(page.getByRole('note')).toContainText('استورد مكوّنات Astro المعتمدة فقط');
 	await guards.assertClean();
 });
@@ -231,7 +232,7 @@ test('applies auto theme from system preference and persists manual theme', asyn
 	await expect(page.getByRole('combobox', { name: 'Color theme' })).toBeVisible();
 
 	await switchLanguage(page, 'Switch language', 'العربية');
-	await expect(page).toHaveURL(/\/ar\/$/);
+	await expect(page).toHaveURL('/');
 	await expect(page.locator('html')).toHaveAttribute('data-theme-mode', 'light');
 	await expect(page.getByRole('combobox', { name: 'مظهر الواجهة' })).toBeVisible();
 
@@ -249,9 +250,9 @@ test('applies auto theme from system preference and persists manual theme', asyn
 
 test('serves localized 404 metadata and RSS feed', async ({ page, request }) => {
 	const guards = await attachConsoleGuards(page);
-	const response = await page.goto('/ar/missing-page/');
+	const response = await page.goto('/missing-page/');
 	expect(response?.status()).toBe(404);
-	await expectExactlyOneH1(page, '/ar/missing-page/');
+	await expectExactlyOneH1(page, '/missing-page/');
 	await expect(page.getByRole('heading', { level: 1 })).toContainText('الصفحة غير موجودة');
 	await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex, nofollow');
 
@@ -266,9 +267,9 @@ test('serves localized 404 metadata and RSS feed', async ({ page, request }) => 
 
 test('renders bilingual component catalog with interactive demos', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
-	await expectHttpOk(page, '/ar/components/');
+	await expectHttpOk(page, '/components/');
 	await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-	await expectExactlyOneH1(page, '/ar/components/');
+	await expectExactlyOneH1(page, '/components/');
 	await expect(page.getByRole('heading', { level: 1 })).toContainText('كتالوج المكونات');
 	await expect(page.locator('[data-catalog-component]')).toHaveCount(35);
 
@@ -354,7 +355,7 @@ test('opts into native cross-document view transitions without ClientRouter', as
 	await expect(page.locator('html')).toHaveClass(/dark/);
 
 	await switchLanguage(page, 'Switch language', 'العربية');
-	await expect(page).toHaveURL(/\/ar\/articles\/$/);
+	await expect(page).toHaveURL('/articles/');
 	await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
 	await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 	await expect(page.locator('html')).toHaveAttribute('data-theme-mode', 'dark');
@@ -366,7 +367,7 @@ test('opts into native cross-document view transitions without ClientRouter', as
 test('navigates under reduced motion with view-transition animations disabled', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
 	await page.emulateMedia({ reducedMotion: 'reduce' });
-	await expectHttpOk(page, '/ar/');
+	await expectHttpOk(page, '/');
 
 	const stylesheetHref = await page.locator('link[rel="stylesheet"]').first().getAttribute('href');
 	expect(stylesheetHref).toBeTruthy();
@@ -375,8 +376,8 @@ test('navigates under reduced motion with view-transition animations disabled', 
 	expect(cssText).toMatch(/prefers-reduced-motion\s*:\s*reduce[\s\S]*?::view-transition-(?:group|old|new)\([\s\S]*?animation\s*:\s*none/);
 
 	await page.locator('#main').getByRole('link', { name: 'تصفح المقالات' }).click();
-	await expect(page).toHaveURL(/\/ar\/articles\/$/);
-	await expectExactlyOneH1(page, '/ar/articles/');
+	await expect(page).toHaveURL('/articles/');
+	await expectExactlyOneH1(page, '/articles/');
 	await expect(page.getByRole('heading', { level: 1 })).toContainText('المقالات');
 	await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
 	await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
@@ -385,7 +386,7 @@ test('navigates under reduced motion with view-transition animations disabled', 
 
 test('has no automatically detectable accessibility violations in both locales', async ({ page }) => {
 	const guards = await attachConsoleGuards(page);
-	for (const path of ['/ar/', '/en/articles/using-mdx/', '/en/articles/']) {
+	for (const path of ['/', '/en/articles/using-mdx/', '/en/articles/']) {
 		await expectHttpOk(page, path);
 		await expectExactlyOneH1(page, path);
 		// Scope to main: header CTA uses small primary text that sits near AA with brand tokens.
@@ -396,7 +397,7 @@ test('has no automatically detectable accessibility violations in both locales',
 	for (const locale of ['ar', 'en']) {
 		for (const colorScheme of ['light', 'dark'] as const) {
 			await page.emulateMedia({ colorScheme });
-			await expectHttpOk(page, '/' + locale + '/components/');
+			await expectHttpOk(page, locale === 'en' ? '/en/components/' : '/components/');
 			const results = await new AxeBuilder({ page }).analyze();
 			expect(results.violations, locale + ' ' + colorScheme + ' catalog').toEqual([]);
 			await page.locator('[data-catalog-component="alert-dialog"]').getByRole('button').click();
@@ -467,7 +468,7 @@ for (const [locale, messages] of [
 	['en', ['Enter at least 2 characters.', 'Enter a valid email address.', 'Enter at least 8 characters.']],
 ] as const) {
 	test(`validates, submits and resets the ${locale} catalog form`, async ({ page }) => {
-		await expectHttpOk(page, `/${locale}/components/`);
+		await expectHttpOk(page, `${locale === 'en' ? '/en/' : '/'}components/`);
 		const form = page.locator('astro-island:not([ssr]) [data-catalog-component="form"] form');
 		const submit = form.getByRole('button');
 		const fields = form.getByRole('textbox');
@@ -497,7 +498,7 @@ for (const locale of ['ar', 'en']) {
 		const context = await browser.newContext({ baseURL: baseURL!, hasTouch: true, viewport: { width: 390, height: 720 } });
 		try {
 			const page = await context.newPage();
-			await expectHttpOk(page, `/${locale}/components/`);
+			await expectHttpOk(page, `${locale === 'en' ? '/en/' : '/'}components/`);
 			const trigger = page.locator('astro-island:not([ssr]) [data-catalog-component="combobox"] button').first();
 			await trigger.tap();
 			const input = page.locator('[data-slot="combobox-input"]');

@@ -3,7 +3,6 @@
  * Fail closed on invalid absolute URLs.
  *
  * Excludes:
- * - locale-less `/` (template redirects to the default locale)
  * - error pages (`404`, `500`)
  * - `robots.txt`, RSS feeds
  * - `.well-known` resources
@@ -19,10 +18,6 @@ export function isIndexableSitemapPage(page: string): boolean {
 	}
 
 	const pathname = url.pathname.replace(/\/+$/, '') || '/';
-
-	if (pathname === '/') {
-		return false;
-	}
 
 	if (pathname === '/404' || pathname === '/500' || pathname.endsWith('/404') || pathname.endsWith('/500')) {
 		return false;

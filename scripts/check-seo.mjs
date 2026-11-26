@@ -44,7 +44,7 @@ if (production) {
 }
 
 check(pages.size > 0, 'missing HTML pages');
-check(!pages.has('/'), 'Cloudflare owns the root redirect; dist/index.html must be absent');
+check(pages.has('/'), 'Arabic home must be rendered at the root');
 check(assets.has('/_redirects') && (await readFile(path.join(directory, '_redirects'), 'utf8')) === renderHostRedirects(), 'missing or outdated Cloudflare redirect rules');
 for (const [route, page] of pages) {
 	const excluded = page.noindex || page.error || page.redirect || isHostRedirectSource(route);

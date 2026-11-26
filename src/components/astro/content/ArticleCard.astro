@@ -5,6 +5,7 @@ import ButtonLink from '@/components/astro/content/ButtonLink.astro';
 import Card from '@/components/astro/content/Card.astro';
 import Heading from '@/components/astro/content/Heading.astro';
 import type { ArticleCardModel } from '@/lib/mappers/mapArticleEntryToCard';
+import { formatDate } from '@/i18n/format';
 
 interface Props {
 	article: ArticleCardModel;
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const { article, readMoreLabel, badgeLabel, headingLevel = 3 } = Astro.props;
-const published = article.publishedAt.toISOString().slice(0, 10);
+const published = formatDate(article.locale, article.publishedAt);
 ---
 
 <Card as="article" class="wrap-anywhere">

@@ -31,6 +31,7 @@ export const common = {
 	previous_slide: 'الشريحة السابقة',
 	next_slide: 'الشريحة التالية',
 	switch_language: 'تبديل اللغة',
+	translation_unavailable: 'الترجمة غير متاحة',
 	theme_label: 'مظهر الواجهة',
 	theme_light: 'فاتح',
 	theme_dark: 'داكن',

@@ -85,8 +85,7 @@ export default defineConfig({
 		locales: [...locales],
 		defaultLocale,
 		routing: {
-			prefixDefaultLocale: true,
-			redirectToDefaultLocale: false,
+			prefixDefaultLocale: false,
 		},
 	},
 	prefetch: {

@@ -15,7 +15,7 @@ export async function createArticlePage(options: { locale: Locale; site: URL; en
 	const canonicalPath = localizePath(locale, `/articles/${slug}`);
 	const homePath = localizePath(locale, '/');
 	const articlesPath = localizePath(locale, '/articles');
-	const alternatePath = translation ? localizePath(alternateLocale, `/articles/${getArticleSlug(translation)}`) : localizePath(alternateLocale, '/');
+	const alternatePath = translation ? localizePath(alternateLocale, `/articles/${getArticleSlug(translation)}`) : undefined;
 	const image = 'media' in entry.data ? entry.data.media[0]?.path : entry.data.image;
 
 	const breadcrumbItems = [{ label: dictionary.layout.nav_home, href: homePath }, { label: dictionary.common.articles, href: articlesPath }, { label: entry.data.title }];
@@ -39,11 +39,7 @@ export async function createArticlePage(options: { locale: Locale; site: URL; en
 			site,
 			pathsByLocale: {
 				[locale]: canonicalPath,
-				...(translation
-					? {
-							[alternateLocale]: localizePath(alternateLocale, `/articles/${getArticleSlug(translation)}`),
-						}
-					: {}),
+				[alternateLocale]: alternatePath,
 			},
 		}),
 		jsonLd: [

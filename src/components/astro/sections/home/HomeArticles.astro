@@ -6,6 +6,7 @@ import Container from '@/components/layout/Container.astro';
 import { localizePath, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/helpers';
 import type { ArticleCardModel } from '@/lib/mappers/mapArticleEntryToCard';
+import { ENV } from 'astro:env/server';
 
 interface Props {
 	locale: Locale;
@@ -16,29 +17,31 @@ const { locale, articles } = Astro.props;
 const dictionary = getDictionary(locale);
 ---
 
-<section class="mt-10 pb-10">
-	<Container>
-		<div class="mb-4 flex items-end justify-between gap-4">
-			<Heading level={2} class="text-2xl">
-				{dictionary.common.latest_articles}
-			</Heading>
-			<ButtonLink href={localizePath(locale, '/articles')} variant="link" size="sm">
-				{dictionary.common.articles}
-			</ButtonLink>
-		</div>
+{
+	(ENV !== 'production' || articles.length > 0) && (
+		<section class="mt-10 pb-10">
+			<Container>
+				<div class="mb-4 flex items-end justify-between gap-4">
+					<Heading level={2} class="text-2xl">
+						{dictionary.common.latest_articles}
+					</Heading>
+					<ButtonLink href={localizePath(locale, '/articles')} variant="link" size="sm">
+						{dictionary.common.articles}
+					</ButtonLink>
+				</div>
 
-		{
-			articles.length === 0 ? (
-				<p class="text-muted-foreground">{dictionary.common.no_articles}</p>
-			) : (
-				<ul class="grid gap-4">
-					{articles.map((article) => (
-						<li>
-							<ArticleCard article={article} readMoreLabel={dictionary.common.read_more} badgeLabel={dictionary.common.articles} />
-						</li>
-					))}
-				</ul>
-			)
-		}
-	</Container>
-</section>
+				{articles.length === 0 ? (
+					<p class="text-muted-foreground">{dictionary.common.no_articles}</p>
+				) : (
+					<ul class="grid gap-4">
+						{articles.map((article) => (
+							<li>
+								<ArticleCard article={article} readMoreLabel={dictionary.common.read_more} badgeLabel={dictionary.common.articles} />
+							</li>
+						))}
+					</ul>
+				)}
+			</Container>
+		</section>
+	)
+}

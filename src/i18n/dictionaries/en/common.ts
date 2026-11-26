@@ -31,6 +31,7 @@ export const common = {
 	previous_slide: 'Previous slide',
 	next_slide: 'Next slide',
 	switch_language: 'Switch language',
+	translation_unavailable: 'Translation unavailable',
 	theme_label: 'Color theme',
 	theme_light: 'Light',
 	theme_dark: 'Dark',

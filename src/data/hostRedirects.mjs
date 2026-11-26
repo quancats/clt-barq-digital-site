@@ -1,6 +1,6 @@
 import { defaultLocale, localizePath } from '../i18n/config.ts';
 
-export const hostRedirects = [{ from: '/', to: localizePath(defaultLocale), status: 302 }];
+export const hostRedirects = [{ from: '/ar/', to: localizePath(defaultLocale), status: 301 }];
 
 export function isHostRedirectSource(pathname) {
 	return hostRedirects.some(({ from }) => from.replace(/\/$/, '') === pathname.replace(/\/$/, ''));

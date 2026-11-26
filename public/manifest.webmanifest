@@ -2,7 +2,7 @@
 	"name": "برق الرقمية",
 	"short_name": "برق الرقمية",
 	"description": "الموقع الإلكتروني لبرق الرقمية.",
-	"start_url": "/ar/",
+	"start_url": "/",
 	"display": "standalone",
 	"background_color": "#ffffff",
 	"theme_color": "#ffffff",

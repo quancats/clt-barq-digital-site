@@ -1,0 +1,45 @@
+---
+import { getDictionary } from '@/i18n/helpers';
+import type { Locale } from '@/i18n/config';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getDictionary(locale).common;
+---
+
+<select data-native-theme-picker aria-label={copy.theme_label} class="min-h-11 max-w-full rounded-md border border-border bg-background px-2 text-sm focus-visible:outline-2" hidden>
+	<option value="light">{copy.theme_light}</option>
+	<option value="dark">{copy.theme_dark}</option>
+	<option value="auto">{copy.theme_auto}</option>
+</select>
+
+<script>
+	import { applyResolvedTheme, isThemeMode, persistThemePreference, resolveStoredTheme, resolveThemeMode } from '@/scripts/theme';
+
+	const picker = document.querySelector<HTMLSelectElement>('[data-native-theme-picker]');
+	if (picker) {
+		const root = document.documentElement;
+		const system = window.matchMedia('(prefers-color-scheme: dark)');
+		picker.value = resolveStoredTheme(root.dataset.themeMode);
+
+		picker.addEventListener('change', () => {
+			const mode = picker.value;
+			if (!isThemeMode(mode)) return;
+			root.dataset.themeMode = mode;
+			applyResolvedTheme(resolveThemeMode(mode, system.matches));
+			try {
+				persistThemePreference(mode, window.localStorage);
+			} catch {
+				// Keep the selection for the current page if storage is unavailable.
+			}
+		});
+
+		system.addEventListener('change', () => {
+			if (picker.value === 'auto') applyResolvedTheme(resolveThemeMode('auto', system.matches));
+		});
+		picker.hidden = false;
+	}
+</script>

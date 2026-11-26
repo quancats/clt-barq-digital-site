@@ -4,7 +4,7 @@
 
 The `clt-barq-digital-site` repository owns the Barq Digital corporate site. Astro builds directory-format static HTML into `dist/`. Tailwind CSS 4 runs through its Vite integration. Astro layouts and components render the content and navigation. Existing Vue 3 and Reka UI islands cover header interactions and the inherited component catalog. Review any new island for hydration, accessibility and client bundle impact.
 
-The Arabic-first public route contract has Arabic at the root and English under `/en/`. The current starter uses `/ar/` and `/en/` with a 302 from `/` to `/ar/`, as defined in `src/data/hostRedirects.mjs`. MS-004 owns the route transition, alternate mappings and redirect reconciliation.
+The Arabic-first public route contract has Arabic at the root and English under `/en/`. MS-004 implements this policy in the route tree and generation helpers. The legacy preview home `/ar/` has a static host redirect rule to `/`. Broader migration redirects belong to MS-036.
 
 BIM is an externally operated product showcased by this website. The site owns approved copy, screenshots and outbound links. BIM product engineering, accounts, stores, administration and legal changes belong to its external owners.
 
