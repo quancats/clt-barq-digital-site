@@ -1,6 +1,6 @@
 # Barq Digital v1.0 | Engineering preparation
 
-Draft handoff dated 2026-11-25. The execution plan §5.1 permits discovery and drafting before milestone entry. The following checks and decisions apply to implementation after dependencies pass.
+Planning draft dated 2026-11-25. The execution register records the subsequent implementation and verification. The execution plan §5.1 permits discovery and drafting before milestone entry. The following checks and decisions apply to implementation after dependencies pass.
 
 ## MS-004 route contract
 
