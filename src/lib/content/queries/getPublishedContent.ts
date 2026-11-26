@@ -21,7 +21,7 @@ function asCandidate(entry: CollectionEntry<CollectionName>): PublicationCandida
 			locale: data.locale,
 			slug: data.slug,
 			governance: data.governance,
-			assets: [...data.media.map(({ path }) => path), ...('file' in data ? [data.file.path] : [])],
+			assets: [...data.media.flatMap(({ path, variants }) => [path, ...(variants?.map((variant) => variant.path) ?? [])]), ...('file' in data ? [data.file.path] : []), ...('profile' in data && data.profile ? [data.profile.path] : [])],
 			relations: [...('products' in data ? data.products.map((translationKey) => ({ collection: 'products', translationKey })) : []), ...('services' in data ? data.services.map((translationKey) => ({ collection: 'services', translationKey })) : []), ...('solutions' in data ? data.solutions.map((translationKey) => ({ collection: 'solutions', translationKey })) : []), ...('projects' in data ? data.projects.map((translationKey) => ({ collection: 'projects', translationKey })) : []), ...('author' in data && data.author ? [{ collection: 'authors', translationKey: data.author }] : [])],
 		},
 	];

@@ -57,6 +57,9 @@ export function validatePublication(entries: readonly PublicationCandidate[], as
 			continue;
 		}
 
+		if (entry.collection === 'products' && (entry.translationKey === 'bim') !== (entry.slug === 'bim')) {
+			errors.push(`${source}: the BIM flagship must use the reserved bim product slug`);
+		}
 		const requiredLocales = bilingualCollections.includes(entry.collection) ? locales : [];
 		const translations = published.get(`${entry.collection}/${entry.translationKey}`);
 		for (const locale of requiredLocales) {

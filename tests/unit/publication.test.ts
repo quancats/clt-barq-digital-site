@@ -36,6 +36,19 @@ describe('content publication', () => {
 		expect(() => validatePublication([arabic, english, { ...english, sourceId: 'en/another.md' }], assetExists)).toThrow(/duplicate content ID safe-en[\s\S]*duplicate services\/en slug secure[\s\S]*duplicate services\/en translation key safe/);
 	});
 
+	it('reserves the same BIM flagship slug in both locales', () => {
+		const product = (entry: PublicationCandidate) => ({ ...entry, collection: 'products', translationKey: 'bim', slug: 'bim' });
+		const products = [product(arabic), product(english)];
+		expect(() => validatePublication(products, assetExists)).not.toThrow();
+		expect(() => validatePublication([{ ...product(arabic), slug: 'flagship' }, product(english)], assetExists)).toThrow(/reserved bim product slug/);
+		expect(() =>
+			validatePublication(
+				products.map((entry) => ({ ...entry, translationKey: 'other' })),
+				assetExists,
+			),
+		).toThrow(/reserved bim product slug/);
+	});
+
 	it('rejects required translations and relations when the target locale is unapproved', () => {
 		const entries = [
 			{ ...arabic, relations: [{ collection: 'projects', translationKey: 'case' }] },

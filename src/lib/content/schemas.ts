@@ -15,6 +15,10 @@ const editorAsset = z.strictObject({
 	path: imagesPath,
 	alt: text,
 	usageRef: key,
+	caption: text.optional(),
+	width: z.number().int().positive().optional(),
+	height: z.number().int().positive().optional(),
+	variants: z.array(z.strictObject({ path: imagesPath, width: z.number().int().positive() })).optional(),
 });
 const resourceFile = z.strictObject({
 	path: downloadPath,
@@ -39,6 +43,10 @@ const common = {
 	media: z.array(editorAsset).default([]),
 };
 const references = z.array(key).default([]);
+const faq = z.array(z.strictObject({ question: text, answer: text })).optional();
+const httpsUrl = z.url({ protocol: /^https$/ });
+const availability = z.enum(['released', 'conditional', 'roadmap']);
+const sections = z.array(z.strictObject({ key, title: text, body: text }));
 const editorial = {
 	publishedAt: date,
 	updatedAt: date.optional(),
@@ -65,18 +73,32 @@ const previewArticle = z.strictObject({
 export const contentSchemas = {
 	pages: z.strictObject({
 		...common,
-		sections: z.array(z.strictObject({ key, title: text, body: text })).min(1),
+		sections: sections.min(1),
+		contactLinks: z.array(z.strictObject({ label: text, href: z.string().regex(/^(?:mailto:[^\s?<>@]+@[^\s?<>@]+|tel:\+?[0-9][0-9()-]*)$/) })).optional(),
+		profile: resourceFile.optional(),
 	}),
 	products: z.strictObject({
 		...common,
-		features: z.array(z.strictObject({ key, title: text, description: text, availability: z.enum(['released', 'conditional', 'roadmap']) })).min(1),
-		availability: z.enum(['released', 'conditional', 'roadmap']),
+		features: z.array(z.strictObject({ key, title: text, description: text, availability })).min(1),
+		availability,
 		solutions: references,
+		officialUrl: httpsUrl.optional(),
+		brand: text.optional(),
+		platforms: z.array(z.strictObject({ name: text, availability, url: httpsUrl.optional() })).optional(),
+		useCases: z.array(text).optional(),
+		sections: sections.optional(),
+		externalLinks: z.array(z.strictObject({ label: text, href: httpsUrl })).optional(),
+		faq,
 	}),
 	services: z.strictObject({
 		...common,
 		scope: z.array(text).min(1),
 		deliverables: z.array(text).min(1),
+		category: text.optional(),
+		faq,
+		solutions: references,
+		products: references,
+		sections: sections.optional(),
 	}),
 	solutions: z.strictObject({
 		...common,
@@ -84,12 +106,17 @@ export const contentSchemas = {
 		products: references,
 		services: references,
 		projects: references,
+		sections: sections.optional(),
 	}),
 	industries: z.strictObject({
 		...common,
 		needs: z.array(text).min(1),
 		limitations: z.array(text).default([]),
 		solutions: references,
+		services: references,
+		products: references,
+		projects: references,
+		sections: sections.optional(),
 	}),
 	projects: z.strictObject({
 		...common,
@@ -97,6 +124,9 @@ export const contentSchemas = {
 		role: text,
 		scope: text,
 		results: z.array(text).default([]),
+		services: references,
+		solutions: references,
+		products: references,
 	}),
 	articles: z.union([article, previewArticle]),
 	news: z.strictObject({ ...common, ...editorial }),
