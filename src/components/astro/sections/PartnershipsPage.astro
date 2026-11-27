@@ -1,0 +1,252 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+import ButtonLink from '@/components/astro/content/ButtonLink.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import LeadForm from '@/components/astro/forms/LeadForm.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+import { getDictionary } from '@/i18n/helpers';
+
+interface Props {
+	page: CollectionEntry<'pages'>['data'];
+	breadcrumbs: { label: string; href?: string }[];
+	privacyPath: string | undefined;
+	hasProse: boolean;
+}
+
+const { page, breadcrumbs, privacyPath, hasProse } = Astro.props;
+const { locale, sections, media } = page;
+const copy = locale === 'ar' ? { areas: 'مجالات التعاون المحتملة', cta: 'ناقش فرصة شراكة', request: 'طلب شراكة', privacy: 'إشعار الخصوصية' } : { areas: 'Potential areas of collaboration', cta: 'Discuss a partnership', request: 'Partnership inquiry', privacy: 'Privacy notice' };
+const icons = new Map([
+	['integration', 'lucide:plug'],
+	['solutions', 'lucide:layers'],
+	['products', 'lucide:box'],
+	['delivery', 'lucide:clipboard-list'],
+	['expertise', 'lucide:book-open'],
+]);
+const conversation = sections.find(({ key }) => key === 'conversation');
+const assessment = sections.find(({ key }) => key === 'assessment');
+const areas = sections.filter(({ key }) => key !== 'conversation' && key !== 'assessment');
+---
+
+<div class="partnerships-page">
+	<PageHeading id="partners-title" title={page.title} description={page.description} {breadcrumbs} breadcrumbLabel={getDictionary(locale).layout.breadcrumbs_label}>
+		<ButtonLink href="#partnership-inquiry" size="lg" analyticsAction="partnership_cta">
+			{copy.cta}
+			<Icon name="lucide:arrow-down" size={18} aria-hidden="true" />
+		</ButtonLink>
+	</PageHeading>
+
+	{
+		areas.length > 0 && (
+			<section class="py-section" aria-labelledby="partnership-areas">
+				<Container>
+					<div class="partnership-directory">
+						<div class="directory-intro">
+							<span class="directory-mark">
+								<Icon name="lucide:handshake" size={31} aria-hidden="true" />
+							</span>
+							<Heading level={2} id="partnership-areas" class="partnership-heading">
+								{copy.areas}
+							</Heading>
+						</div>
+						<ul class="directory-list" role="list">
+							{areas.map(({ key, title, body }) => (
+								<li>
+									<span class="area-mark">
+										<Icon name={icons.get(key) ?? 'lucide:network'} size={21} aria-hidden="true" />
+									</span>
+									<div>
+										<Heading level={3} class="area-title">
+											{title}
+										</Heading>
+										<p>{body}</p>
+									</div>
+								</li>
+							))}
+						</ul>
+					</div>
+				</Container>
+			</section>
+		)
+	}
+
+	{
+		(hasProse || media.length > 0) && (
+			<Container class="py-section">
+				{hasProse && (
+					<div class="prose">
+						<slot />
+					</div>
+				)}
+				{media.length > 0 && (
+					<div class="grid gap-grid-gutter md:grid-cols-2">
+						{media.map((image) => (
+							<CorporateMedia {image} />
+						))}
+					</div>
+				)}
+			</Container>
+		)
+	}
+
+	<section class="partnership-request section-wash py-section" id="partnership-inquiry" aria-labelledby="partnership-request-title">
+		<Container>
+			<div class="request-layout">
+				<div class="request-intro">
+					<Heading level={2} id="partnership-request-title" class="partnership-heading">{conversation?.title ?? copy.request}</Heading>
+					{conversation && <p>{conversation.body}</p>}
+					{
+						assessment && (
+							<div class="assessment-note">
+								<Heading level={3} class="area-title">
+									{assessment.title}
+								</Heading>
+								<p>{assessment.body}</p>
+							</div>
+						)
+					}
+				</div>
+				<div class="request-card">
+					{
+						(conversation || privacyPath) && (
+							<div class="request-card-heading">
+								{conversation && (
+									<Heading level={3} class="area-title">
+										{copy.request}
+									</Heading>
+								)}
+								{privacyPath && <a href={privacyPath}>{copy.privacy}</a>}
+							</div>
+						)
+					}
+					<LeadForm {locale} type="partnership" services={[]} {...privacyPath ? { privacyPath } : {}} />
+				</div>
+			</div>
+		</Container>
+	</section>
+</div>
+
+<style>
+	.partnerships-page {
+		--partnership-border: var(--section-rule);
+	}
+	.partnerships-page :global(.partnership-heading) {
+		font-size: clamp(1.65rem, 1.22rem + 1.65vi, 2.6rem);
+		line-height: 1.23;
+		text-wrap: balance;
+	}
+	.partnerships-page :global(.area-title) {
+		font-size: clamp(1.05rem, 1rem + 0.3vi, 1.25rem);
+		line-height: 1.35;
+	}
+	.partnership-directory {
+		display: grid;
+		border: 1px solid var(--partnership-border);
+		border-radius: 1rem;
+		overflow: clip;
+		background: var(--card);
+	}
+	.directory-intro {
+		display: grid;
+		align-content: start;
+		justify-items: start;
+		gap: clamp(0.8rem, 2vi, 1.6rem);
+		padding: clamp(1.35rem, 3.8vi, 3.15rem);
+		background: repeating-linear-gradient(90deg, transparent 0 43px, color-mix(in oklab, var(--brand-accent) 6%, transparent) 43px 44px), radial-gradient(ellipse at top, var(--brand-panel-glow), transparent 83%), var(--brand-panel-surface);
+		color: var(--color-white);
+	}
+	.directory-intro :global(.partnership-heading) {
+		color: inherit;
+	}
+	.directory-mark,
+	.area-mark {
+		display: grid;
+		place-items: center;
+		border: 1px solid;
+	}
+	.directory-mark {
+		inline-size: 3.5rem;
+		block-size: 3.5rem;
+		border-color: color-mix(in oklab, var(--brand-accent) 33%, transparent);
+		border-radius: 0.7rem;
+		color: var(--brand-on-panel);
+	}
+	.directory-list {
+		padding-inline: clamp(1rem, 3.25vi, 2.6rem);
+	}
+	.directory-list li {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: start;
+		gap: clamp(0.75rem, 2vi, 1.15rem);
+		padding-block: clamp(1rem, 2.3vi, 1.35rem);
+	}
+	.directory-list li + li {
+		border-block-start: 1px solid var(--partnership-border);
+	}
+	.area-mark {
+		inline-size: 2.6rem;
+		block-size: 2.6rem;
+		border-color: var(--partnership-border);
+		border-radius: 0.55rem;
+		background: color-mix(in oklab, var(--primary-link) 6%, var(--card));
+		color: var(--primary-link);
+	}
+	.directory-list p,
+	.request-intro p {
+		margin-block-start: 0.25rem;
+		color: var(--muted-foreground);
+		line-height: 1.65;
+	}
+	.partnership-request {
+		scroll-margin-block-start: 5.5rem;
+		border-block-start: 1px solid var(--partnership-border);
+	}
+	.request-layout {
+		display: grid;
+		align-items: start;
+		gap: clamp(1.4rem, 4vi, 3.5rem);
+	}
+	.request-intro > p {
+		margin-block-start: 0.75rem;
+		max-inline-size: 58ch;
+	}
+	.assessment-note {
+		margin-block-start: clamp(1rem, 3vi, 2rem);
+		padding-block: 0.25rem;
+		padding-inline-start: 1rem;
+		border-inline-start: 2px solid var(--primary-link);
+	}
+	.request-card {
+		min-inline-size: 0;
+		padding: clamp(1rem, 3vi, 2rem);
+		border: 1px solid var(--partnership-border);
+		border-radius: 0.85rem;
+		background: var(--card);
+	}
+	.request-card-heading {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.35rem 1rem;
+		margin-block-end: 0.9rem;
+	}
+	.request-card-heading a {
+		color: var(--primary-link);
+		font-size: 0.9rem;
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+	@media (min-width: 52rem) {
+		.partnership-directory {
+			grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+		}
+		.request-layout {
+			grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+		}
+	}
+</style>

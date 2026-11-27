@@ -1,0 +1,280 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { CollectionEntry } from 'astro:content';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Disclosure from '@/components/astro/content/Disclosure.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+import { getDictionary } from '@/i18n/helpers';
+
+type FaqLinks = Partial<Record<'services' | 'solutions' | 'bim' | 'demo' | 'contact' | 'partners', string>>;
+
+interface Props {
+	page: CollectionEntry<'pages'>['data'];
+	breadcrumbs: { label: string; href?: string }[];
+	links: FaqLinks;
+	hasProse: boolean;
+}
+
+const { page, breadcrumbs, links, hasProse } = Astro.props;
+const { locale, sections, media } = page;
+const ar = locale === 'ar';
+const copy = ar ? { topics: 'المواضيع', services: 'الخدمات والحلول', bim: 'منتج BIM والنشر', support: 'الدعم والشراكات', browseServices: 'استكشف الخدمات', browseSolutions: 'استكشف الحلول', product: 'صفحة منتج BIM', demo: 'اطلب عرض BIM', contact: 'تواصل معنا', partners: 'صفحة الشراكات' } : { topics: 'Topics', services: 'Services and solutions', bim: 'BIM and deployment', support: 'Support and partnerships', browseServices: 'Explore services', browseSolutions: 'Explore solutions', product: 'Visit the BIM product page', demo: 'Request a BIM demo', contact: 'Contact us', partners: 'Visit the partnerships page' };
+const categories = [
+	{ key: 'services', label: copy.services, icon: 'lucide:layers' },
+	{ key: 'bim', label: copy.bim, icon: 'lucide:box' },
+	{ key: 'support', label: copy.support, icon: 'lucide:messages-square' },
+];
+const questions = sections.filter(({ key }) => key !== 'contact');
+const groups = categories
+	.map((category) => ({
+		...category,
+		questions: questions.filter(({ key }) => key.startsWith(category.key + '-') || (category.key === 'services' && !categories.some((item) => key.startsWith(item.key + '-')))),
+	}))
+	.filter((group) => group.questions.length > 0);
+const contact = sections.find(({ key }) => key === 'contact');
+const answerLinks = new Map([
+	['services-offering', { href: links.services, label: copy.browseServices }],
+	['services-custom', { href: links.solutions, label: copy.browseSolutions }],
+	['bim-ownership', { href: links.bim, label: copy.product }],
+	['bim-demo', { href: links.demo, label: copy.demo }],
+	['support-request', { href: links.contact, label: copy.contact }],
+	['support-partner', { href: links.partners, label: copy.partners }],
+]);
+---
+
+<div class="faq-page">
+	<PageHeading id="faq-title" title={page.title} description={page.description} {breadcrumbs} breadcrumbLabel={getDictionary(locale).layout.breadcrumbs_label} />
+
+	{
+		groups.length > 0 && (
+			<Container class="py-section">
+				<div class="faq-layout">
+					<nav class="faq-topics" aria-label={copy.topics}>
+						<p>{copy.topics}</p>
+						<ul role="list">
+							{groups.map(({ key, label, icon }) => (
+								<li>
+									<a href={`#faq-${key}`}>
+										<Icon name={icon} size={19} aria-hidden="true" />
+										<span>{label}</span>
+										<Icon name="lucide:arrow-down" size={16} aria-hidden="true" />
+									</a>
+								</li>
+							))}
+						</ul>
+					</nav>
+					<div class="faq-groups">
+						{groups.map(({ key, label, icon, questions }) => (
+							<section class="faq-group" id={`faq-${key}`} aria-labelledby={`faq-${key}-title`}>
+								<div class="faq-group-heading">
+									<span class="faq-icon">
+										<Icon name={icon} size={22} aria-hidden="true" />
+									</span>
+									<Heading id={`faq-${key}-title`} level={2} class="faq-heading">
+										{label}
+									</Heading>
+								</div>
+								<div class="faq-questions">
+									{questions.map(({ key, title, body }) => {
+										const link = answerLinks.get(key);
+										return (
+											<Disclosure label={title} class="faq-question">
+												<p class="faq-answer">{body}</p>
+												{link?.href && (
+													<a class="faq-answer-link" href={link.href}>
+														{link.label}
+														<Icon name="lucide:arrow-right" size={16} class="rtl:rotate-180" aria-hidden="true" />
+													</a>
+												)}
+											</Disclosure>
+										);
+									})}
+								</div>
+							</section>
+						))}
+					</div>
+				</div>
+			</Container>
+		)
+	}
+
+	{
+		(hasProse || media.length > 0) && (
+			<Container class="py-section">
+				{hasProse && (
+					<div class="prose">
+						<slot />
+					</div>
+				)}
+				{media.length > 0 && (
+					<div class="grid gap-grid-gutter md:grid-cols-2">
+						{media.map((image) => (
+							<CorporateMedia {image} />
+						))}
+					</div>
+				)}
+			</Container>
+		)
+	}
+
+	{
+		contact && links.contact && (
+			<section class="faq-contact section-wash py-section" aria-labelledby="faq-contact-title">
+				<Container>
+					<div class="faq-contact-card">
+						<span class="faq-icon">
+							<Icon name="lucide:message-circle" size={23} aria-hidden="true" />
+						</span>
+						<Heading id="faq-contact-title" level={2} class="faq-heading">
+							{contact.title}
+						</Heading>
+						<CallToAction href={links.contact} label={contact.body} analyticsAction="contact_action" />
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.faq-page {
+		--faq-border: var(--section-rule);
+		--faq-tint: var(--brand-section-tint);
+	}
+	.faq-layout {
+		display: grid;
+		align-items: start;
+		gap: clamp(1.5rem, 4.5vi, 4rem);
+	}
+	.faq-topics {
+		min-inline-size: 0;
+		padding: clamp(0.85rem, 2vi, 1.35rem);
+		border: 1px solid var(--faq-border);
+		border-radius: 0.85rem;
+		background: var(--faq-tint);
+	}
+	.faq-topics p {
+		margin-block-end: 0.6rem;
+		font-weight: 700;
+	}
+	.faq-topics ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+	.faq-topics a {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		min-block-size: 2.75rem;
+		padding: 0.35rem 0.65rem;
+		border-radius: 0.45rem;
+		font-size: 0.925rem;
+		font-weight: 650;
+	}
+	.faq-topics a:is(:hover, :focus-visible) {
+		background: var(--card);
+		color: var(--primary-link);
+	}
+	.faq-topics a > svg {
+		flex: none;
+		color: var(--primary-link);
+	}
+	.faq-topics a > svg:last-child {
+		margin-inline-start: auto;
+	}
+	.faq-groups {
+		display: grid;
+		gap: clamp(1.75rem, 4.5vi, 3.5rem);
+		min-inline-size: 0;
+	}
+	.faq-group {
+		scroll-margin-block-start: 6rem;
+	}
+	.faq-group + .faq-group {
+		padding-block-start: clamp(1rem, 3vi, 2rem);
+		border-block-start: 1px solid var(--section-rule);
+	}
+	.faq-group-heading {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-block-end: 1rem;
+	}
+	.faq-icon {
+		display: grid;
+		flex: none;
+		place-items: center;
+		inline-size: 2.6rem;
+		block-size: 2.6rem;
+		border: 1px solid var(--faq-border);
+		border-radius: 0.55rem;
+		background: var(--faq-tint);
+		color: var(--primary-link);
+	}
+	.faq-page :global(.faq-heading) {
+		font-size: clamp(1.25rem, 1rem + 1.1vi, 1.95rem);
+		line-height: 1.25;
+	}
+	.faq-questions {
+		display: grid;
+		gap: 0.45rem;
+	}
+	.faq-questions :global(.faq-question) {
+		border-color: var(--faq-border);
+	}
+	.faq-questions :global(.faq-question[open]),
+	.faq-questions :global(.faq-question:hover) {
+		background: var(--faq-tint);
+	}
+	.faq-questions :global(.faq-question > summary svg) {
+		color: var(--primary-link);
+	}
+	.faq-answer {
+		max-inline-size: 75ch;
+		color: var(--muted-foreground);
+		line-height: 1.7;
+	}
+	.faq-answer-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		min-block-size: 2.75rem;
+		color: var(--primary-link);
+		font-weight: 650;
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+	.faq-contact {
+		border-block-start: 1px solid var(--faq-border);
+	}
+	.faq-contact-card {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.95rem;
+		padding: clamp(1rem, 3.3vi, 2.3rem);
+		border: 1px solid var(--faq-border);
+		border-inline-start: 0.24rem solid var(--primary-link);
+		border-radius: 0.85rem;
+		background: var(--card);
+	}
+	.faq-contact-card :global(.faq-heading) {
+		flex: 1 1 14rem;
+	}
+	@media (min-width: 57rem) {
+		.faq-layout {
+			grid-template-columns: minmax(14rem, 0.34fr) minmax(0, 1fr);
+		}
+		.faq-topics {
+			position: sticky;
+			inset-block-start: 6rem;
+		}
+		.faq-topics ul {
+			display: grid;
+		}
+	}
+</style>

@@ -1,0 +1,296 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import type { CollectionEntry } from 'astro:content';
+import adminAr from '@/assets/images/projects/bim-previews/admin-ar.jpg';
+import adminEn from '@/assets/images/projects/bim-previews/admin-en.jpg';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import Container from '@/components/layout/Container.astro';
+import BimLogo from './BimLogo.astro';
+
+interface Props {
+	page: CollectionEntry<'pages'>['data'];
+	projects: { entry: CollectionEntry<'projects'>; href: string }[];
+	breadcrumbs: { label: string; href?: string }[];
+	bimHref: string | undefined;
+	consultationHref: string | undefined;
+}
+
+const { page, projects, breadcrumbs, bimHref, consultationHref } = Astro.props;
+const ar = page.locale === 'ar';
+const copy = ar ? { breadcrumbs: 'مسار التنقل', owned: 'منتج مملوك لبرق', role: 'دور برق', scope: 'نطاق المشروع', story: 'قصة تطوير BIM', product: 'صفحة المنتج', preview: 'لوحة إدارة BIM', other: 'مشاريع أخرى', project: 'عرض المشروع', discuss: 'ناقش مشروعك' } : { breadcrumbs: 'Breadcrumb', owned: 'A Barq-owned product', role: 'Barq’s role', scope: 'Project scope', story: 'Read the BIM development story', product: 'View the product', preview: 'BIM administration console', other: 'Other projects', project: 'View project', discuss: 'Discuss your project' };
+const featured = projects.find(({ entry: { data } }) => data.kind === 'owned-product' && data.translationKey === 'bim');
+const other = projects.filter((item) => item !== featured);
+const consultation = page.sections.find(({ key }) => key === 'consultation');
+---
+
+<div class="work-overview">
+	<PageHeading id="work-overview-title" title={page.title} description={page.description} {breadcrumbs} breadcrumbLabel={copy.breadcrumbs} />
+
+	{
+		featured && (
+			<article class="work-case py-section" aria-labelledby="work-bim-title">
+				<Container>
+					<div class="case-layout">
+						<div class="case-body">
+							<p class="case-label">
+								<span class="case-mark">
+									<BimLogo markOnly onDarkSurface />
+								</span>
+								{copy.owned}
+							</p>
+							<Heading level={2} id="work-bim-title" class="work-title">
+								{featured.entry.data.title}
+							</Heading>
+							<p>{featured.entry.data.description}</p>
+							<div class="case-actions">
+								<CallToAction href={featured.href} label={copy.story} />
+								{bimHref && (
+									<a href={bimHref} class="work-text-link">
+										{copy.product}
+										<Icon name="lucide:arrow-right" size={18} class="rtl:rotate-180" aria-hidden="true" />
+									</a>
+								)}
+							</div>
+						</div>
+						<figure class="case-cover">
+							<div class="case-logo">
+								<BimLogo onDarkSurface />
+							</div>
+							<Image src={ar ? adminAr : adminEn} widths={[360, 540, 720, 1080]} width={720} sizes="(min-width: 60rem) 46vw, 92vw" alt="" class="case-preview" />
+							<figcaption>{copy.preview}</figcaption>
+						</figure>
+						<dl class="project-facts">
+							<div>
+								<dt>
+									<Icon name="lucide:building-2" size={20} aria-hidden="true" />
+									{copy.role}
+								</dt>
+								<dd>{featured.entry.data.role}</dd>
+							</div>
+							<div>
+								<dt>
+									<Icon name="lucide:layers" size={20} aria-hidden="true" />
+									{copy.scope}
+								</dt>
+								<dd>{featured.entry.data.scope}</dd>
+							</div>
+						</dl>
+					</div>
+				</Container>
+			</article>
+		)
+	}
+
+	{
+		other.length > 0 && (
+			<section class="py-section" aria-labelledby={featured ? 'other-work' : 'work-overview-title'}>
+				<Container>
+					{featured && (
+						<Heading level={2} id="other-work" class="work-title">
+							{copy.other}
+						</Heading>
+					)}
+					<ul class="work-index" role="list">
+						{other.map(({ entry: { data }, href }) => (
+							<li>
+								<div>
+									<Heading level={featured ? 3 : 2} class="text-xl">
+										{data.title}
+									</Heading>
+									<p>{data.description}</p>
+								</div>
+								<a href={href} class="work-text-link" aria-label={`${copy.project} — ${data.title}`}>
+									{copy.project}
+									<Icon name="lucide:arrow-right" size={18} class="rtl:rotate-180" aria-hidden="true" />
+								</a>
+							</li>
+						))}
+					</ul>
+				</Container>
+			</section>
+		)
+	}
+
+	{
+		consultation && consultationHref && (
+			<section class="section-wash py-section" aria-labelledby="work-consultation">
+				<Container>
+					<div class="work-closing-body">
+						<div>
+							<Heading level={2} id="work-consultation" class="work-title">
+								{consultation.title}
+							</Heading>
+							<p>{consultation.body}</p>
+						</div>
+						<CallToAction href={consultationHref} label={copy.discuss} analyticsAction="consultation_cta" />
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.work-overview {
+		--work-line: var(--section-rule);
+	}
+	.case-body > p:not(.case-label),
+	.work-closing p,
+	.work-index p {
+		max-inline-size: 62ch;
+		color: var(--muted-foreground);
+		line-height: 1.72;
+	}
+	.case-layout {
+		display: grid;
+		gap: clamp(1.5rem, 4vi, 3rem);
+	}
+	.case-cover {
+		display: grid;
+		align-content: center;
+		gap: clamp(0.8rem, 2vi, 1.25rem);
+		min-inline-size: 0;
+		padding: clamp(1rem, 3.5vi, 2.5rem);
+		border: 1px solid var(--brand-navy-border);
+		border-radius: 1rem;
+		background: repeating-linear-gradient(90deg, transparent 0 31px, color-mix(in oklab, var(--brand-accent) 6%, transparent) 31px 32px), radial-gradient(ellipse at top, var(--brand-panel-glow), transparent 75%), var(--brand-panel-surface);
+		color: var(--color-slate-100);
+	}
+	.case-logo {
+		inline-size: clamp(5rem, 12vi, 8rem);
+	}
+	.case-preview {
+		display: block;
+		inline-size: 100%;
+		block-size: auto;
+		border: 1px solid color-mix(in oklab, var(--brand-accent) 30%, transparent);
+		border-radius: 0.5rem;
+		box-shadow: 0 12px 30px var(--brand-panel-shadow);
+	}
+	.case-cover figcaption {
+		font-size: 0.875rem;
+	}
+	.case-body {
+		align-self: center;
+		min-inline-size: 0;
+	}
+	.case-label {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		margin-block-end: 0.85rem;
+		color: var(--primary-link);
+		font-size: 0.875rem;
+		font-weight: 700;
+	}
+	.case-mark {
+		display: grid;
+		flex-shrink: 0;
+		place-items: center;
+		inline-size: 1.9rem;
+		block-size: 1.9rem;
+		border-radius: 0.4rem;
+		background: var(--brand-navy);
+	}
+	.case-mark :global(.bim-logo-mark) {
+		inline-size: 0.9rem;
+	}
+	.work-overview :global(.work-title) {
+		font-size: clamp(1.45rem, 1.02rem + 1.65vi, 2.55rem);
+		line-height: 1.24;
+		text-wrap: balance;
+	}
+	.case-body > p:not(.case-label),
+	.work-closing p,
+	.work-index p {
+		margin-block-start: 0.75rem;
+	}
+	.project-facts {
+		display: grid;
+		grid-column: 1 / -1;
+		overflow: clip;
+		border: 1px solid var(--work-line);
+		border-radius: 0.8rem;
+		background: var(--card);
+	}
+	.project-facts div {
+		padding: clamp(1rem, 2.75vi, 1.65rem);
+	}
+	.project-facts div + div {
+		border-block-start: 1px solid var(--work-line);
+	}
+	.project-facts dt {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		margin-block-end: 0.45rem;
+		font-weight: 700;
+	}
+	.project-facts dt svg {
+		flex-shrink: 0;
+		color: var(--primary-link);
+	}
+	.project-facts dd {
+		color: var(--muted-foreground);
+		line-height: 1.6;
+	}
+	.case-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.65rem 1.05rem;
+		margin-block-start: clamp(1.15rem, 2.6vi, 1.75rem);
+	}
+	.work-text-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-block-size: 2.75rem;
+		color: var(--primary-link);
+		font-weight: 650;
+	}
+	.work-text-link:is(:hover, :focus-visible) {
+		text-decoration: underline;
+		text-underline-offset: 0.22em;
+	}
+	.work-closing-body,
+	.work-index li {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem 2rem;
+		padding-block: 1.4rem;
+		border-block-start: 1px solid var(--work-line);
+	}
+	.work-index {
+		margin-block-start: 1rem;
+	}
+	.work-closing-body {
+		padding: clamp(1.15rem, 3.5vi, 2.5rem);
+		border: 1px solid var(--work-line);
+		border-inline-start: 0.25rem solid var(--primary-link);
+		border-radius: 0.8rem;
+		background: var(--card);
+	}
+	.work-closing-body :global(.work-title) {
+		font-size: clamp(1.35rem, 1.1rem + 1.2vi, 2.1rem);
+	}
+	@media (min-width: 43rem) {
+		.project-facts {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+		}
+		.project-facts div + div {
+			border-block-start: 0;
+			border-inline-start: 1px solid var(--work-line);
+		}
+	}
+	@media (min-width: 60rem) {
+		.case-layout {
+			grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
+		}
+	}
+</style>

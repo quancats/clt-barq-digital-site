@@ -1,0 +1,206 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { CollectionEntry } from 'astro:content';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import LeadForm from '@/components/astro/forms/LeadForm.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+import { getDictionary } from '@/i18n/helpers';
+
+interface Props {
+	page: CollectionEntry<'pages'>['data'];
+	breadcrumbs: { label: string; href?: string }[];
+	services: { key: string; label: string }[];
+	links: Partial<Record<'privacy' | 'services', string>>;
+	hasProse: boolean;
+}
+
+const { page, breadcrumbs, services, links, hasProse } = Astro.props;
+const { locale, sections, media } = page;
+const copy = locale === 'ar' ? { request: 'أخبرنا عن مشروعك', process: 'ماذا يحدث بعد الطلب؟', services: 'استكشف الخدمات', privacy: 'إشعار الخصوصية' } : { request: 'Tell us about your project', process: 'What happens next?', services: 'Explore services', privacy: 'Privacy notice' };
+const request = sections.find(({ key }) => key === 'request');
+const steps = sections.filter(({ key }) => key !== 'request');
+const stepNumber = new Intl.NumberFormat(locale);
+---
+
+<div class="consultation-page">
+	<PageHeading id="consultation-title" title={page.title} description={page.description} {breadcrumbs} breadcrumbLabel={getDictionary(locale).layout.breadcrumbs_label} />
+
+	<Container class="py-section">
+		<div class:list={['consultation-layout', { 'has-steps': steps.length > 0 }]}>
+			<section class="consultation-request" aria-labelledby="consultation-request-title">
+				<div class="consultation-request-heading">
+					<span class="consultation-icon"><Icon name="lucide:clipboard-list" size={24} aria-hidden="true" /></span>
+					<Heading level={2} id="consultation-request-title" class="consultation-heading">{request?.title ?? copy.request}</Heading>
+				</div>
+				{request && <p class="consultation-intro">{request.body}</p>}
+				{
+					links.privacy && (
+						<a class="consultation-privacy" href={links.privacy}>
+							{copy.privacy}
+						</a>
+					)
+				}
+				<div class="consultation-form">
+					<LeadForm {locale} type="consultation" {services} {...links.privacy ? { privacyPath: links.privacy } : {}} />
+				</div>
+			</section>
+			{
+				steps.length > 0 && (
+					<section class="consultation-process" aria-labelledby="consultation-process-title">
+						<Heading level={2} id="consultation-process-title" class="consultation-heading">
+							{copy.process}
+						</Heading>
+						<ol class="consultation-steps" role="list">
+							{steps.map(({ title, body }, index) => (
+								<li>
+									<span class="step-number" aria-hidden="true">
+										{stepNumber.format(index + 1)}
+									</span>
+									<div>
+										<Heading level={3} class="step-heading">
+											{title}
+										</Heading>
+										<p>{body}</p>
+									</div>
+								</li>
+							))}
+						</ol>
+						{links.services && (
+							<a class="consultation-catalog" href={links.services}>
+								{copy.services}
+								<Icon name="lucide:arrow-right" size={17} class="rtl:rotate-180" aria-hidden="true" />
+							</a>
+						)}
+					</section>
+				)
+			}
+		</div>
+	</Container>
+
+	{
+		(hasProse || media.length > 0) && (
+			<Container class="py-section">
+				{hasProse && (
+					<div class="prose">
+						<slot />
+					</div>
+				)}
+				{media.length > 0 && (
+					<div class="grid gap-grid-gutter md:grid-cols-2">
+						{media.map((image) => (
+							<CorporateMedia {image} />
+						))}
+					</div>
+				)}
+			</Container>
+		)
+	}
+</div>
+
+<style>
+	.consultation-page {
+		--consultation-line: var(--section-rule);
+		--consultation-tint: var(--brand-section-tint);
+	}
+	.consultation-layout {
+		display: grid;
+		align-items: start;
+		gap: clamp(1rem, 3.5vi, 2.5rem);
+	}
+	.consultation-request,
+	.consultation-process {
+		min-inline-size: 0;
+		padding: clamp(1rem, 3.1vi, 2.45rem);
+		border: 1px solid var(--consultation-line);
+		border-radius: 0.85rem;
+	}
+	.consultation-request {
+		border-block-start: 0.23rem solid var(--primary-link);
+		background: var(--card);
+	}
+	.consultation-request-heading {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+	}
+	.consultation-icon,
+	.step-number {
+		display: grid;
+		flex: none;
+		place-items: center;
+		border: 1px solid var(--consultation-line);
+		color: var(--primary-link);
+	}
+	.consultation-icon {
+		inline-size: 2.8rem;
+		block-size: 2.8rem;
+		border-radius: 0.6rem;
+		background: var(--consultation-tint);
+	}
+	.consultation-page :global(.consultation-heading) {
+		font-size: clamp(1.4rem, 1.12rem + 1.15vi, 2.13rem);
+		line-height: 1.27;
+	}
+	.consultation-intro,
+	.consultation-steps p {
+		margin-block-start: 0.5rem;
+		color: var(--muted-foreground);
+		line-height: 1.65;
+	}
+	.consultation-form {
+		margin-block-start: 1.15rem;
+		padding-block-start: 1.15rem;
+		border-block-start: 1px solid var(--consultation-line);
+	}
+	.consultation-privacy,
+	.consultation-catalog {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		min-block-size: 2.75rem;
+		color: var(--primary-link);
+		font-weight: 650;
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+	.consultation-process {
+		background: var(--consultation-tint);
+	}
+	.consultation-steps {
+		margin-block-start: 1.2rem;
+	}
+	.consultation-steps li {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: start;
+		gap: 0.85rem;
+		padding-block: 0.8rem;
+	}
+	.consultation-steps li + li {
+		border-block-start: 1px solid var(--consultation-line);
+	}
+	.step-number {
+		inline-size: 2rem;
+		block-size: 2rem;
+		border-radius: 50%;
+		background: var(--card);
+		font-weight: 700;
+	}
+	.consultation-steps :global(.step-heading) {
+		font-size: 1.05rem;
+		line-height: 1.4;
+	}
+	.consultation-steps p {
+		margin-block-start: 0.25rem;
+	}
+	.consultation-catalog {
+		margin-block-start: 0.55rem;
+	}
+	@media (min-width: 52rem) {
+		.consultation-layout.has-steps {
+			grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr);
+		}
+	}
+</style>

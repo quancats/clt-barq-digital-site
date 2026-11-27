@@ -1,0 +1,241 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+import mobileAr from '@/assets/images/projects/bim-previews/mobile-ar.jpg';
+import mobileEn from '@/assets/images/projects/bim-previews/mobile-en.jpg';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import LeadForm from '@/components/astro/forms/LeadForm.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+import { getDictionary } from '@/i18n/helpers';
+import BimLogo from './BimLogo.astro';
+
+interface Props {
+	page: CollectionEntry<'pages'>['data'];
+	breadcrumbs: { label: string; href?: string }[];
+	links: Partial<Record<'privacy' | 'bim', string>>;
+	hasProse: boolean;
+}
+
+const { page, breadcrumbs, links, hasProse } = Astro.props;
+const { locale, sections, media } = page;
+const ar = locale === 'ar';
+const copy = ar ? { request: 'أخبرنا عن مؤسستك', agenda: 'ماذا يتضمن العرض؟', product: 'استكشف منتج BIM', preview: 'معاينة تطبيق BIM ببيانات تجريبية', privacy: 'إشعار الخصوصية' } : { request: 'Tell us about your organization', agenda: 'What does the demo cover?', product: 'Explore the BIM product', preview: 'BIM app preview with sample data', privacy: 'Privacy notice' };
+const request = sections.find(({ key }) => key === 'request');
+const agenda = sections.filter(({ key }) => key !== 'request');
+---
+
+<div class="bim-demo-page">
+	<PageHeading id="bim-demo-title" title={page.title} description={page.description} {breadcrumbs} breadcrumbLabel={getDictionary(locale).layout.breadcrumbs_label} />
+	<Container class="py-section">
+		<div class="demo-layout">
+			<section class="demo-request" aria-labelledby="demo-request-title">
+				<div class="demo-request-heading">
+					<span class="demo-mark"><BimLogo markOnly onDarkSurface /></span>
+					<Heading level={2} id="demo-request-title" class="demo-heading">{request?.title ?? copy.request}</Heading>
+				</div>
+				{request && <p class="demo-intro">{request.body}</p>}
+				{
+					links.privacy && (
+						<a class="demo-privacy" href={links.privacy}>
+							{copy.privacy}
+						</a>
+					)
+				}
+				<div class="demo-form">
+					<LeadForm {locale} type="demo" services={[]} {...links.privacy ? { privacyPath: links.privacy } : {}} />
+				</div>
+			</section>
+			<div class="demo-guide">
+				<figure class="demo-preview">
+					<figcaption>
+						<div class="demo-logo"><BimLogo onDarkSurface /></div>
+						<p class="demo-caption">{copy.preview}</p>
+						{
+							links.bim && (
+								<a class="demo-product" href={links.bim}>
+									{copy.product}
+									<Icon name="lucide:arrow-right" size={17} class="rtl:rotate-180" aria-hidden="true" />
+								</a>
+							)
+						}
+					</figcaption>
+					<Image src={ar ? mobileAr : mobileEn} width={200} alt="" class="demo-phone" />
+				</figure>
+				{
+					agenda.length > 0 && (
+						<section class="demo-agenda" aria-labelledby="demo-agenda-title">
+							<Heading level={2} id="demo-agenda-title" class="demo-heading">
+								{copy.agenda}
+							</Heading>
+							<ul role="list">
+								{agenda.map(({ title, body }) => (
+									<li>
+										<Icon name="lucide:check" size={18} aria-hidden="true" />
+										<div>
+											<Heading level={3} class="demo-topic">
+												{title}
+											</Heading>
+											<p>{body}</p>
+										</div>
+									</li>
+								))}
+							</ul>
+						</section>
+					)
+				}
+			</div>
+		</div>
+	</Container>
+	{
+		(hasProse || media.length > 0) && (
+			<Container class="py-section">
+				{hasProse && (
+					<div class="prose">
+						<slot />
+					</div>
+				)}
+				{media.length > 0 && (
+					<div class="grid gap-grid-gutter md:grid-cols-2">
+						{media.map((image) => (
+							<CorporateMedia {image} />
+						))}
+					</div>
+				)}
+			</Container>
+		)
+	}
+</div>
+
+<style>
+	.bim-demo-page {
+		--demo-line: var(--section-rule);
+		--demo-tint: var(--brand-section-tint);
+	}
+	.demo-layout {
+		display: grid;
+		align-items: start;
+		gap: clamp(1rem, 3.5vi, 2.5rem);
+	}
+	.demo-request,
+	.demo-guide {
+		min-inline-size: 0;
+		border: 1px solid var(--demo-line);
+		border-radius: 0.9rem;
+		background: var(--card);
+	}
+	.demo-request {
+		padding: clamp(1rem, 3.1vi, 2.45rem);
+		border-block-start: 0.23rem solid var(--primary-link);
+	}
+	.demo-request-heading {
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+	}
+	.demo-mark {
+		display: grid;
+		flex: none;
+		place-items: center;
+		inline-size: 2.75rem;
+		block-size: 2.75rem;
+		border-radius: 0.6rem;
+		background: var(--brand-navy);
+	}
+	.demo-mark :global(.bim-logo-mark) {
+		inline-size: 1.2rem;
+	}
+	.bim-demo-page :global(.demo-heading) {
+		font-size: clamp(1.35rem, 1.05rem + 1.2vi, 2.1rem);
+		line-height: 1.27;
+	}
+	.demo-intro,
+	.demo-agenda p {
+		margin-block-start: 0.5rem;
+		color: var(--muted-foreground);
+		line-height: 1.65;
+	}
+	.demo-form {
+		margin-block-start: 1.15rem;
+		padding-block-start: 1.15rem;
+		border-block-start: 1px solid var(--demo-line);
+	}
+	.demo-privacy,
+	.demo-product {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		min-block-size: 2.75rem;
+		color: var(--primary-link);
+		font-weight: 650;
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+	.demo-guide {
+		overflow: clip;
+	}
+	.demo-preview {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		align-items: center;
+		gap: clamp(0.8rem, 2.5vi, 1.6rem);
+		padding: clamp(1rem, 2.7vi, 2rem);
+		background: repeating-linear-gradient(90deg, transparent 0 31px, color-mix(in oklab, var(--brand-accent) 6%, transparent) 31px 32px), radial-gradient(ellipse at top, var(--brand-panel-glow), transparent 80%), var(--brand-panel-surface);
+		color: var(--color-white);
+	}
+	.demo-logo {
+		inline-size: min(100%, 9.5rem);
+		margin-block-end: 0.8rem;
+	}
+	.demo-caption {
+		color: var(--brand-panel-copy);
+		font-size: 0.875rem;
+	}
+	.demo-product {
+		color: var(--brand-on-panel);
+	}
+	.demo-product svg {
+		flex: none;
+	}
+	.demo-phone {
+		inline-size: clamp(4rem, 9vi, 5.65rem);
+		block-size: auto;
+		border: 1px solid var(--brand-navy-border);
+		border-radius: 0.6rem;
+	}
+	.demo-agenda {
+		padding: clamp(1rem, 2.7vi, 2rem);
+		background: var(--demo-tint);
+	}
+	.demo-agenda ul {
+		margin-block-start: 0.75rem;
+	}
+	.demo-agenda li {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: start;
+		gap: 0.7rem;
+		padding-block: 0.65rem;
+	}
+	.demo-agenda li + li {
+		border-block-start: 1px solid var(--demo-line);
+	}
+	.demo-agenda li svg {
+		margin-block-start: 0.15rem;
+		color: var(--primary-link);
+	}
+	.demo-agenda :global(.demo-topic) {
+		font-size: 1rem;
+		line-height: 1.4;
+	}
+	.demo-agenda p {
+		margin-block-start: 0.22rem;
+	}
+	@media (min-width: 52rem) {
+		.demo-layout {
+			grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+		}
+	}
+</style>

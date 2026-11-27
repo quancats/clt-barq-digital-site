@@ -1,0 +1,226 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Breadcrumbs from '@/components/astro/content/Breadcrumbs.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import Container from '@/components/layout/Container.astro';
+import BimLogo from './BimLogo.astro';
+
+interface Props {
+	project: CollectionEntry<'projects'>['data'];
+	breadcrumbs: { label: string; href?: string }[];
+	chapters: { slug: string; text: string }[];
+	productHref: string | undefined;
+	demoHref: string | undefined;
+}
+
+const { project, breadcrumbs, chapters, productHref, demoHref } = Astro.props;
+const ar = project.locale === 'ar';
+const copy = ar
+	? {
+			breadcrumbs: 'مسار التنقل',
+			label: 'قصة تطوير منتج',
+			role: 'دور برق',
+			scope: 'نطاق المشروع',
+			chapters: 'فصول القصة',
+			results: 'النتائج',
+			closing: 'تعرّف على BIM',
+			product: 'استكشف صفحة المنتج',
+			demo: 'اطلب عرضًا توضيحيًا',
+		}
+	: {
+			breadcrumbs: 'Breadcrumb',
+			label: 'Product development story',
+			role: 'Barq’s role',
+			scope: 'Project scope',
+			chapters: 'In this story',
+			results: 'Results',
+			closing: 'Get to know BIM',
+			product: 'Explore the product',
+			demo: 'Request a demo',
+		};
+---
+
+<div class="bim-story">
+	<section class="story-hero py-section" aria-labelledby="bim-story-title">
+		<Container>
+			<Breadcrumbs items={breadcrumbs} label={copy.breadcrumbs} />
+			<div class="story-opening">
+				<div class="story-logo"><BimLogo priority /></div>
+				<p class="story-label">{copy.label}</p>
+				<PageHeading id="bim-story-title" title={project.title} description={project.description} embedded />
+			</div>
+		</Container>
+	</section>
+
+	<Container>
+		<div class="story-layout py-section">
+			<aside class="story-aside" aria-labelledby="bim-project-scope">
+				<div class="aside-inner">
+					<div class="story-mark"><BimLogo markOnly /></div>
+					<Heading level={2} id="bim-project-scope" class="story-meta-title">{copy.scope}</Heading>
+					<p class="aside-scope">{project.scope}</p>
+					<dl class="aside-role">
+						<dt>{copy.role}</dt>
+						<dd>{project.role}</dd>
+					</dl>
+					{
+						chapters.length > 0 && (
+							<nav class="chapter-index" aria-label={copy.chapters}>
+								<p>{copy.chapters}</p>
+								<ul>
+									{chapters.map(({ slug, text }) => (
+										<li>
+											<a href={`#${slug}`}>{text}</a>
+										</li>
+									))}
+								</ul>
+							</nav>
+						)
+					}
+				</div>
+			</aside>
+
+			<article class="story-article prose" aria-labelledby="bim-story-title">
+				<slot />
+				{
+					project.results.length > 0 && (
+						<>
+							<Heading level={2}>{copy.results}</Heading>
+							<ul>
+								{project.results.map((result) => (
+									<li>{result}</li>
+								))}
+							</ul>
+						</>
+					)
+				}
+			</article>
+		</div>
+	</Container>
+
+	{
+		(productHref || demoHref) && (
+			<section class="story-end section-wash py-section" aria-labelledby="bim-story-end-title">
+				<Container>
+					<div class="story-cta">
+						<Heading level={2} id="bim-story-end-title" class="text-2xl">
+							{copy.closing}
+						</Heading>
+						<div class="story-actions">
+							{productHref && <CallToAction href={productHref} label={copy.product} />}
+							{demoHref && <CallToAction href={demoHref} label={copy.demo} variant="outline" analyticsAction="demo_cta" />}
+						</div>
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.bim-story {
+		--story-rule: var(--section-rule);
+		--story-tint: var(--brand-section-tint);
+	}
+	.story-hero {
+		border-block-end: 1px solid var(--story-rule);
+		background: var(--story-tint);
+	}
+	.story-opening {
+		max-inline-size: 60rem;
+		margin-block-start: clamp(1.5rem, 4vi, 3.2rem);
+		padding-inline-start: clamp(1rem, 3vi, 2rem);
+		border-inline-start: 3px solid var(--primary-link);
+	}
+	.story-logo {
+		inline-size: min(100%, 13rem);
+		margin-block-end: clamp(0.9rem, 2vi, 1.65rem);
+	}
+	.story-label {
+		margin-block-end: 0.55rem;
+		color: var(--primary-link);
+		font-weight: 700;
+	}
+	.story-layout {
+		display: grid;
+		align-items: start;
+		gap: clamp(1.4rem, 5vi, 4.5rem);
+	}
+	.story-aside {
+		min-inline-size: 0;
+	}
+	.aside-inner {
+		padding: clamp(1rem, 2.5vi, 1.6rem);
+		border: 1px solid var(--story-rule);
+		border-radius: 0.9rem;
+		background: var(--story-tint);
+	}
+	.story-mark {
+		margin-block-end: 0.75rem;
+	}
+	.story-aside :global(.story-meta-title) {
+		font-size: 1.15rem;
+	}
+	.aside-scope,
+	.aside-role dd {
+		margin-block-start: 0.45rem;
+		color: var(--muted-foreground);
+		line-height: 1.65;
+	}
+	.aside-role,
+	.chapter-index {
+		margin-block-start: 1rem;
+		padding-block-start: 1rem;
+		border-block-start: 1px solid var(--story-rule);
+	}
+	.aside-role dt,
+	.chapter-index p {
+		font-weight: 700;
+	}
+	.chapter-index ul {
+		margin-block-start: 0.45rem;
+	}
+	.chapter-index a {
+		display: inline-flex;
+		align-items: center;
+		min-block-size: 2.3rem;
+		color: var(--primary-link);
+		text-underline-offset: 0.22em;
+	}
+	.chapter-index a:is(:hover, :focus-visible) {
+		text-decoration: underline;
+	}
+	.story-article {
+		min-inline-size: 0;
+		max-inline-size: 49rem;
+	}
+	.story-article :global(h2) {
+		padding-block-start: 0.95rem;
+		border-block-start: 1px solid var(--story-rule);
+		scroll-margin-block-start: 6rem;
+	}
+	.story-article :global(h2:first-child) {
+		margin-block-start: 0;
+	}
+	.story-cta {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		padding: clamp(1rem, 3vi, 2.25rem);
+		border-block-start: 1px solid var(--story-rule);
+	}
+	.story-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+	}
+	@media (min-width: 56rem) {
+		.story-layout {
+			grid-template-columns: minmax(13.5rem, 0.7fr) minmax(0, 1.8fr);
+		}
+	}
+</style>

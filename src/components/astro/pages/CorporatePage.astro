@@ -1,15 +1,21 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { render } from 'astro:content';
-import Breadcrumbs from '@/components/astro/content/Breadcrumbs.astro';
 import CallToAction from '@/components/astro/content/CallToAction.astro';
-import Card from '@/components/astro/content/Card.astro';
-import Disclosure from '@/components/astro/content/Disclosure.astro';
 import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
 import ProseText from '@/components/astro/content/ProseText.astro';
 import Section from '@/components/astro/content/Section.astro';
 import Stack from '@/components/astro/content/Stack.astro';
 import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import BimProjectPage from '@/components/astro/sections/BimProjectPage.astro';
+import WorkOverview from '@/components/astro/sections/WorkOverview.astro';
+import AboutPage from '@/components/astro/sections/AboutPage.astro';
+import PartnershipsPage from '@/components/astro/sections/PartnershipsPage.astro';
+import FaqPage from '@/components/astro/sections/FaqPage.astro';
+import ContactPage from '@/components/astro/sections/ContactPage.astro';
+import ConsultationPage from '@/components/astro/sections/ConsultationPage.astro';
+import BimDemoPage from '@/components/astro/sections/BimDemoPage.astro';
 import LeadForm from '@/components/astro/forms/LeadForm.astro';
 import { leadPageTypes } from '@/components/astro/forms/leadCopy';
 import { localizePath } from '@/i18n/config';
@@ -22,7 +28,7 @@ import { createPageSeo } from '@/lib/seo/createPageSeo';
 
 type Link = { href: string; label: string };
 type LinkKey = 'home' | 'about' | 'projects' | 'contact' | 'consultation' | 'demo' | 'partners' | 'faq' | 'privacy' | 'terms' | 'bim' | 'products' | 'services' | 'solutions' | 'industries' | 'articles';
-type ProjectCard = { entry: CollectionEntry<'projects'>; href?: string | undefined };
+type ProjectCard = { entry: CollectionEntry<'projects'>; href: string };
 
 type Props = {
 	path: string;
@@ -35,64 +41,108 @@ const props = Astro.props;
 const { entry, path, alternatePath, links = {}, related = [] } = props;
 const { locale, title, description, media, seo: overrides } = entry.data;
 const dictionary = getDictionary(locale);
-const copy = locale === 'ar' ? { work: 'الأعمال', ownedProduct: 'منتج مملوك', clientProject: 'مشروع عميل', caseStudy: 'دراسة حالة', role: 'الدور', scope: 'النطاق', results: 'النتائج', related: 'محتوى ذو صلة', contact: 'تواصل معنا', privacy: 'الخصوصية', effective: 'تاريخ السريان', product: 'صفحة المنتج', readCase: 'عرض المشروع' } : { work: 'Work', ownedProduct: 'Owned product', clientProject: 'Client project', caseStudy: 'Case study', role: 'Role', scope: 'Scope', results: 'Results', related: 'Related content', contact: 'Contact us', privacy: 'Privacy', effective: 'Effective date', product: 'Product page', readCase: 'View project' };
+const copy = locale === 'ar' ? { work: 'الأعمال', ownedProduct: 'منتج مملوك', clientProject: 'مشروع عميل', caseStudy: 'دراسة حالة', role: 'الدور', scope: 'النطاق', results: 'النتائج', related: 'محتوى ذو صلة', privacy: 'الخصوصية', effective: 'تاريخ السريان' } : { work: 'Work', ownedProduct: 'Owned product', clientProject: 'Client project', caseStudy: 'Case study', role: 'Role', scope: 'Scope', results: 'Results', related: 'Related content', privacy: 'Privacy', effective: 'Effective date' };
 const workKind = { 'owned-product': copy.ownedProduct, 'client-project': copy.clientProject, 'case-study': copy.caseStudy };
-const seo = createPageSeo({ title: `${overrides?.title ?? title} | ${dictionary.common.brand}`, description: overrides?.description ?? description, canonicalPath: path, image: media[0]?.path });
+const seo = createPageSeo({ title: overrides?.title ?? `${title} | ${dictionary.common.brand}`, description: overrides?.description ?? description, canonicalPath: path, image: media[0]?.path });
 const alternates = createLocaleAlternates({ site: Astro.site ?? FALLBACK_SITE_URL, pathsByLocale: { [locale]: path, [getAlternateLocale(locale)]: alternatePath } });
 const crumbs = [{ href: localizePath(locale), label: dictionary.layout.nav_home }, ...(props.kind === 'project' && links.projects ? [{ href: links.projects, label: copy.work }] : []), { label: title }];
 const details = props.kind === 'project' ? props.entry.data : undefined;
-const page = props.kind === 'page' || props.kind === 'projects' ? props.entry.data : undefined;
+const isBimProject = details?.translationKey === 'bim' && details.kind === 'owned-product';
+const page = props.kind === 'page' ? props.entry.data : undefined;
 const leadType = page && Object.hasOwn(leadPageTypes, page.translationKey) ? leadPageTypes[page.translationKey as keyof typeof leadPageTypes] : undefined;
 const isContact = Boolean(leadType);
-const Content = (props.kind === 'legal' || props.kind === 'project') && props.entry.body?.trim() ? (await render(props.entry)).Content : undefined;
+const rendered = props.entry.body?.trim() ? await render(props.entry) : undefined;
+const Content = rendered?.Content;
+const relatedPolicyKey = entry.data.translationKey === 'privacy' ? 'terms' : 'privacy';
+const relatedPolicyHref = props.kind === 'legal' ? links[relatedPolicyKey] : undefined;
+const relatedPolicy = relatedPolicyHref ? { href: relatedPolicyHref, label: relatedPolicyKey === 'terms' ? (locale === 'ar' ? 'شروط الاستخدام' : 'Terms of use') : locale === 'ar' ? 'سياسة الخصوصية' : 'Privacy policy' } : undefined;
 ---
 
 {
 	props.kind === 'legal' ? (
-		<LegalLayout {locale} {seo} {title} {alternatePath} {alternates} effective={{ label: copy.effective, date: props.entry.data.effectiveDate }}>
-			<Breadcrumbs items={crumbs} label={dictionary.layout.breadcrumbs_label} class="mb-6" />
+		<LegalLayout {locale} {seo} {title} {description} {alternatePath} {alternates} breadcrumbs={crumbs} headings={rendered?.headings ?? []} {...(relatedPolicy ? { relatedPolicy } : {})} effective={{ label: copy.effective, date: props.entry.data.effectiveDate }}>
 			{Content && <Content />}
 		</LegalLayout>
+	) : props.kind === 'projects' ? (
+		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+			<WorkOverview page={props.entry.data} projects={props.projects} breadcrumbs={crumbs} bimHref={links.bim} consultationHref={links.consultation} />
+		</WebsiteLayout>
+	) : page?.translationKey === 'about' ? (
+		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+			<AboutPage {page} breadcrumbs={crumbs} {related} bimHref={links.bim} contactHref={links.contact} hasProse={Boolean(Content)}>
+				{Content && <Content />}
+			</AboutPage>
+		</WebsiteLayout>
+	) : page?.translationKey === 'partners' ? (
+		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+			<PartnershipsPage {page} breadcrumbs={crumbs} privacyPath={links.privacy} hasProse={Boolean(Content)}>
+				{Content && <Content />}
+			</PartnershipsPage>
+		</WebsiteLayout>
+	) : page?.translationKey === 'faq' ? (
+		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+			<FaqPage {page} breadcrumbs={crumbs} {links} hasProse={Boolean(Content)}>
+				{Content && <Content />}
+			</FaqPage>
+		</WebsiteLayout>
+	) : page?.translationKey === 'contact' ? (
+		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+			<ContactPage {page} breadcrumbs={crumbs} {links} hasProse={Boolean(Content)}>
+				{Content && <Content />}
+			</ContactPage>
+		</WebsiteLayout>
+	) : props.kind === 'page' && props.entry.data.translationKey === 'consultation' ? (
+		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+			<ConsultationPage page={props.entry.data} breadcrumbs={crumbs} {links} services={props.services ?? []} hasProse={Boolean(Content)}>
+				{Content && <Content />}
+			</ConsultationPage>
+		</WebsiteLayout>
+	) : page?.translationKey === 'demo' ? (
+		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+			<BimDemoPage {page} breadcrumbs={crumbs} {links} hasProse={Boolean(Content)}>
+				{Content && <Content />}
+			</BimDemoPage>
+		</WebsiteLayout>
+	) : isBimProject && details ? (
+		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+			<BimProjectPage project={details} breadcrumbs={crumbs} chapters={rendered?.headings.filter(({ depth }) => depth === 2) ?? []} productHref={links.bim} demoHref={links.demo}>
+				{Content && <Content />}
+			</BimProjectPage>
+		</WebsiteLayout>
 	) : (
 		<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
-			<Section labelledBy="corporate-title">
-				<Stack spacing="relaxed">
-					<Breadcrumbs items={crumbs} label={dictionary.layout.breadcrumbs_label} />
-					{details && <ProseText variant="eyebrow">{workKind[details.kind]}</ProseText>}
-					<Heading id="corporate-title" size="display">
-						{title}
-					</Heading>
-					<ProseText>{description}</ProseText>
-					{isContact && page?.contactLinks?.length ? (
-						<ul class="flex flex-wrap gap-4">
-							{page.contactLinks.map((link) => (
-								<li>
-									<a class="font-semibold wrap-anywhere text-primary-link underline" href={link.href} data-analytics-action="contact_action">
-										{link.label}
-									</a>
-								</li>
-							))}
-						</ul>
-					) : null}
-					{isContact && links.privacy && (
-						<a class="w-fit text-primary-link underline" href={links.privacy}>
-							{copy.privacy}
-						</a>
-					)}
-					{leadType && props.kind === 'page' && <LeadForm {locale} type={leadType} {...(links.privacy ? { privacyPath: links.privacy } : {})} services={props.services ?? []} />}
-				</Stack>
-			</Section>
-			{page?.translationKey === 'faq' ? (
-				<Section class="pt-0">
-					<Stack>
-						{page.sections.map((section) => (
-							<Disclosure label={section.title}>
-								<ProseText>{section.body}</ProseText>
-							</Disclosure>
-						))}
+			<PageHeading id="corporate-title" {title} {description} breadcrumbs={crumbs} breadcrumbLabel={dictionary.layout.breadcrumbs_label} eyebrow={details ? workKind[details.kind] : undefined} />
+			{isContact && (
+				<Section>
+					<Stack spacing="relaxed">
+						{!Content && page?.contactLinks?.length ? (
+							<ul class="flex flex-wrap gap-4">
+								{page.contactLinks.map((link) => (
+									<li>
+										<a class="font-semibold wrap-anywhere text-primary-link underline" href={link.href} data-analytics-action="contact_action">
+											{link.label}
+										</a>
+									</li>
+								))}
+							</ul>
+						) : null}
+						{links.privacy && (
+							<a class="w-fit text-primary-link underline" href={links.privacy}>
+								{copy.privacy}
+							</a>
+						)}
+						{leadType && props.kind === 'page' && <LeadForm {locale} type={leadType} {...(links.privacy ? { privacyPath: links.privacy } : {})} services={props.services ?? []} />}
 					</Stack>
 				</Section>
-			) : (
+			)}
+			{Content && page && (
+				<Section class={isContact ? 'pt-0' : ''}>
+					<div class="prose">
+						<Content />
+					</div>
+				</Section>
+			)}
+			{!Content &&
 				page?.sections.map((section, index) => (
 					<Section labelledBy={`content-${index}`} tone={index % 2 === 0 ? 'muted' : 'plain'}>
 						<Stack>
@@ -102,37 +152,7 @@ const Content = (props.kind === 'legal' || props.kind === 'project') && props.en
 							<ProseText class="whitespace-pre-line">{section.body}</ProseText>
 						</Stack>
 					</Section>
-				))
-			)}
-			{props.kind === 'projects' && props.projects.length > 0 && (
-				<Section labelledBy="work-heading">
-					<Stack spacing="relaxed">
-						<Heading level={2} id="work-heading" class="text-2xl">
-							{copy.work}
-						</Heading>
-						<ul class="grid gap-grid-gutter md:grid-cols-2">
-							{props.projects.map(({ entry: { data }, href }) => (
-								<li>
-									<Card as="article" class="h-full">
-										<Stack>
-											<ProseText variant="eyebrow">{workKind[data.kind]}</ProseText>
-											<Heading level={3} class="text-xl wrap-anywhere">
-												<bdi>{data.title}</bdi>
-											</Heading>
-											<ProseText>{data.description}</ProseText>
-											{href && (
-												<div>
-													<CallToAction {href} label={data.kind === 'owned-product' ? copy.product : copy.readCase} variant="outline" />
-												</div>
-											)}
-										</Stack>
-									</Card>
-								</li>
-							))}
-						</ul>
-					</Stack>
-				</Section>
-			)}
+				))}
 			{details && (
 				<Section tone="muted">
 					<Stack spacing="relaxed">
@@ -173,7 +193,7 @@ const Content = (props.kind === 'legal' || props.kind === 'project') && props.en
 					</div>
 				</Section>
 			)}
-			{(related.length > 0 || (page?.translationKey === 'about' && (page.profile || links.contact))) && (
+			{related.length > 0 && (
 				<Section labelledBy="related-heading">
 					<Stack>
 						<Heading level={2} id="related-heading" class="text-xl">
@@ -185,16 +205,6 @@ const Content = (props.kind === 'legal' || props.kind === 'project') && props.en
 									<CallToAction {...link} variant="outline" {...(link.href === links.consultation ? { analyticsAction: 'consultation_cta' as const } : link.href === links.demo ? { analyticsAction: 'demo_cta' as const } : link.href === links.partners ? { analyticsAction: 'partnership_cta' as const } : {})} />
 								</li>
 							))}
-							{page?.translationKey === 'about' && page.profile && (
-								<li>
-									<CallToAction href={page.profile.path} label={page.profile.label} variant="outline" />
-								</li>
-							)}
-							{page?.translationKey === 'about' && links.contact && (
-								<li>
-									<CallToAction href={links.contact} label={copy.contact} />
-								</li>
-							)}
 						</ul>
 					</Stack>
 				</Section>
