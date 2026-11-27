@@ -3,7 +3,7 @@
  * Brand + base radius live here; theme.css maps Tailwind palettes + brand into shadcn semantics.
  */
 @theme {
-	/* Font family utilities come from Astro Fonts via global.css @theme inline */
+	/* global.css maps font utilities to the local brand font and its fallbacks. */
 
 	/* shadcn radius preset: small */
 	--radius-base: 0.4rem;
@@ -15,27 +15,50 @@
 }
 
 @theme static {
-	--color-primary-50: oklch(96.78% 0.02 257.2);
-	--color-primary-100: oklch(92.61% 0.04 257.39);
-	--color-primary-200: oklch(87.12% 0.06 256.48);
-	--color-primary-300: oklch(79.28% 0.11 254.09);
-	--color-primary-400: oklch(69.48% 0.16 256.71);
-	--color-primary-500: oklch(60.51% 0.21 261.09);
-	--color-primary-600: oklch(55.03% 0.24 263.56);
-	--color-primary-700: oklch(47.9% 0.25 264.34);
-	--color-primary-800: oklch(41.44% 0.21 265.25);
-	--color-primary-900: oklch(36.9% 0.16 265.55);
-	--color-primary-950: oklch(27.47% 0.1 267.6);
+	--color-blue-ribbon-50: oklch(96.78% 0.02 257.2);
+	--color-blue-ribbon-100: oklch(92.61% 0.04 257.39);
+	--color-blue-ribbon-200: oklch(87.12% 0.06 256.48);
+	--color-blue-ribbon-300: oklch(79.28% 0.11 254.09);
+	--color-blue-ribbon-400: oklch(69.48% 0.16 256.71);
+	--color-blue-ribbon-500: oklch(60.51% 0.21 261.09);
+	--color-blue-ribbon-600: oklch(55.03% 0.24 263.56);
+	--color-blue-ribbon-700: oklch(47.9% 0.25 264.34);
+	--color-blue-ribbon-800: oklch(41.44% 0.21 265.25);
+	--color-blue-ribbon-900: oklch(36.9% 0.16 265.55);
+	--color-blue-ribbon-950: oklch(27.47% 0.1 267.6);
 
-	--color-secondary-50: oklch(98.34% 0.02 200.56);
-	--color-secondary-100: oklch(95.67% 0.05 202.74);
-	--color-secondary-200: oklch(92.11% 0.08 204.11);
-	--color-secondary-300: oklch(87.79% 0.12 206.05);
-	--color-secondary-400: oklch(84.83% 0.13 208.74);
-	--color-secondary-500: oklch(75.42% 0.13 213.85);
-	--color-secondary-600: oklch(63.82% 0.12 220.73);
-	--color-secondary-700: oklch(54.12% 0.1 222.93);
-	--color-secondary-800: oklch(46.51% 0.08 223.22);
-	--color-secondary-900: oklch(40.76% 0.07 227.5);
-	--color-secondary-950: oklch(31.17% 0.06 228.5);
+	--color-turquoise-blue-50: oklch(98.34% 0.02 200.56);
+	--color-turquoise-blue-100: oklch(95.67% 0.05 202.74);
+	--color-turquoise-blue-200: oklch(92.11% 0.08 204.11);
+	--color-turquoise-blue-300: oklch(87.79% 0.12 206.05);
+	--color-turquoise-blue-400: oklch(84.83% 0.13 208.74);
+	--color-turquoise-blue-500: oklch(75.42% 0.13 213.85);
+	--color-turquoise-blue-600: oklch(63.82% 0.12 220.73);
+	--color-turquoise-blue-700: oklch(54.12% 0.1 222.93);
+	--color-turquoise-blue-800: oklch(46.51% 0.08 223.22);
+	--color-turquoise-blue-900: oklch(40.76% 0.07 227.5);
+	--color-turquoise-blue-950: oklch(31.17% 0.06 228.5);
+
+	--color-primary-50: var(--color-blue-ribbon-50);
+	--color-primary-100: var(--color-blue-ribbon-100);
+	--color-primary-200: var(--color-blue-ribbon-200);
+	--color-primary-300: var(--color-blue-ribbon-300);
+	--color-primary-400: var(--color-blue-ribbon-400);
+	--color-primary-500: var(--color-blue-ribbon-500);
+	--color-primary-600: var(--color-blue-ribbon-600);
+	--color-primary-700: var(--color-blue-ribbon-700);
+	--color-primary-800: var(--color-blue-ribbon-800);
+	--color-primary-900: var(--color-blue-ribbon-900);
+	--color-primary-950: var(--color-blue-ribbon-950);
+	--color-secondary-50: var(--color-turquoise-blue-50);
+	--color-secondary-100: var(--color-turquoise-blue-100);
+	--color-secondary-200: var(--color-turquoise-blue-200);
+	--color-secondary-300: var(--color-turquoise-blue-300);
+	--color-secondary-400: var(--color-turquoise-blue-400);
+	--color-secondary-500: var(--color-turquoise-blue-500);
+	--color-secondary-600: var(--color-turquoise-blue-600);
+	--color-secondary-700: var(--color-turquoise-blue-700);
+	--color-secondary-800: var(--color-turquoise-blue-800);
+	--color-secondary-900: var(--color-turquoise-blue-900);
+	--color-secondary-950: var(--color-turquoise-blue-950);
 }

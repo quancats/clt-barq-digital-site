@@ -11,7 +11,7 @@ interface Props {
 const { id, labelledBy, tone = 'plain', class: className } = Astro.props;
 ---
 
-<section {id} aria-labelledby={labelledBy} class={cn('py-section', tone === 'muted' && 'bg-muted text-foreground', className)}>
+<section {id} aria-labelledby={labelledBy} class={cn('py-section', tone === 'muted' && 'section-wash text-foreground', className)}>
 	<div class="mx-auto w-full max-w-editorial px-grid-gutter">
 		<slot />
 	</div>

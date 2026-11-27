@@ -41,9 +41,11 @@
 	--color-card-foreground: var(--card-foreground);
 	--color-popover: var(--popover);
 	--color-popover-foreground: var(--popover-foreground);
-	--color-primary: var(--primary);
+	--color-primary: var(--brand-accent);
 	--color-primary-hover: var(--action-primary-hover);
+	--color-primary-pressed: var(--brand-request-pressed);
 	--color-primary-link: var(--primary-link);
+	--color-primary-link-hover: var(--primary-link-hover);
 	--color-primary-foreground: var(--primary-foreground);
 	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
@@ -63,6 +65,7 @@
 	--color-info-foreground: var(--info-foreground);
 	--color-border: var(--border);
 	--color-input: var(--input);
+	--color-field: var(--field-border);
 	--color-ring: var(--ring);
 	--color-chart-1: var(--chart-1);
 	--color-chart-2: var(--chart-2);
@@ -103,5 +106,62 @@
 
 	body {
 		@apply m-0 flex min-h-screen flex-col bg-background font-sans text-foreground;
+	}
+
+	::selection {
+		background: var(--brand-accent);
+		color: var(--primary-foreground);
+	}
+
+	/* Give each new page section a leading edge, including sections with a custom layout. */
+	:where(main, main > div, main > article) > :where(section, article[aria-labelledby]) ~ :where(section, article[aria-labelledby]),
+	.section-divider {
+		border-block-start: 1px solid var(--section-rule);
+	}
+
+	.section-wash {
+		background-image: var(--brand-section-wash);
+	}
+}
+
+@layer components {
+	.form-control {
+		border-color: var(--field-border);
+		background-color: var(--background);
+		color: var(--foreground);
+	}
+
+	.form-control::placeholder {
+		color: var(--muted-foreground);
+		opacity: 1;
+	}
+
+	.form-control:disabled {
+		background-color: var(--muted);
+		color: var(--muted-foreground);
+	}
+
+	.form-checkbox {
+		accent-color: var(--brand-accent);
+	}
+
+	:is(.form-control, .form-checkbox) {
+		scroll-margin-block-start: 6rem;
+	}
+
+	:is(.form-control, .form-checkbox):focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+
+	:is(.form-control, .form-checkbox)[aria-invalid='true'] {
+		border-color: var(--destructive);
+		outline: 1px solid var(--destructive);
+		outline-offset: 1px;
+	}
+
+	:is(.form-control, .form-checkbox)[aria-invalid='true']:focus-visible {
+		outline-width: 2px;
+		outline-offset: 2px;
 	}
 }

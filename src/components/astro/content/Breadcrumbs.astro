@@ -23,12 +23,12 @@ const { items, label, class: className } = Astro.props;
 				return (
 					<li class="inline-flex items-center gap-1.5">
 						{index > 0 ? (
-							<span aria-hidden="true" class="text-muted-foreground/70">
+							<span aria-hidden="true" class="text-muted-foreground">
 								›
 							</span>
 						) : null}
 						{item.href && !isLast ? (
-							<a href={item.href} class="font-medium text-foreground underline-offset-4 hover:text-primary-link hover:underline">
+							<a href={item.href} class="font-medium text-foreground underline-offset-4 hover:text-primary-link hover:underline focus-visible:text-primary-link focus-visible:underline focus-visible:outline-2 focus-visible:outline-offset-2">
 								{item.label}
 							</a>
 						) : (

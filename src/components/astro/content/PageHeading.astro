@@ -1,0 +1,87 @@
+---
+import Breadcrumbs, { type BreadcrumbItem } from './Breadcrumbs.astro';
+import Heading from './Heading.astro';
+import Container from '@/components/layout/Container.astro';
+
+interface Props {
+	id?: string;
+	title: string;
+	description?: string | undefined;
+	descriptionLabel?: string;
+	breadcrumbs?: BreadcrumbItem[];
+	breadcrumbLabel?: string;
+	eyebrow?: string | undefined;
+	embedded?: boolean;
+}
+
+const { id = 'page-title', title, description, descriptionLabel, breadcrumbs = [], breadcrumbLabel = 'Breadcrumb', eyebrow, embedded = false } = Astro.props;
+const Frame = embedded ? 'div' : Container;
+---
+
+<header class:list={['page-heading', !embedded && 'page-heading-banner']} aria-labelledby={id}>
+	<Frame>
+		{breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} label={breadcrumbLabel} class="page-heading-breadcrumbs" />}
+		{eyebrow && <p class="page-heading-eyebrow">{eyebrow}</p>}
+		<Heading {id} class="page-heading-title">{title}</Heading>
+		{
+			description && (
+				<p class="page-heading-description">
+					{descriptionLabel && <strong class="page-heading-description-label">{descriptionLabel}</strong>}
+					{description}
+				</p>
+			)
+		}
+		{
+			Astro.slots.has('default') && (
+				<div class="page-heading-extra">
+					<slot />
+				</div>
+			)
+		}
+	</Frame>
+</header>
+
+<style>
+	.page-heading-banner {
+		padding-block: clamp(1.65rem, 4.3vi, 3.65rem);
+		border-block-end: 1px solid var(--section-rule);
+		background: linear-gradient(var(--brand-section-tint), var(--background));
+	}
+
+	.page-heading :global(.page-heading-breadcrumbs) {
+		margin-block-end: clamp(0.85rem, 2.3vi, 1.55rem);
+	}
+
+	.page-heading :global(.page-heading-title) {
+		max-inline-size: 29ch;
+		overflow-wrap: anywhere;
+		font-size: clamp(2rem, 1.35rem + 2.7vi, 3.85rem);
+		line-height: 1.14;
+		text-wrap: balance;
+	}
+
+	.page-heading-description {
+		max-inline-size: 67ch;
+		margin-block-start: 0.75rem;
+		color: var(--muted-foreground);
+		line-height: 1.72;
+	}
+
+	.page-heading-description-label {
+		display: block;
+		margin-block-end: 0.2rem;
+		color: var(--foreground);
+		font-size: 0.875rem;
+	}
+
+	.page-heading-eyebrow {
+		margin-block-end: 0.45rem;
+		color: var(--primary-link);
+		font-size: 0.875rem;
+		font-weight: 650;
+	}
+
+	.page-heading-extra:has(> *) {
+		margin-block-start: 1.15rem;
+	}
+</style>
