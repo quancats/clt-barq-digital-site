@@ -10,38 +10,15 @@ Cloudflare Workers Static Assets returns the HTTP redirect before serving HTML. 
 
 ## Cloudflare Workers Static Assets
 
-Add this example as `wrangler.jsonc` in the adopting project, and set the Worker name and compatibility date for that project:
+The root `wrangler.jsonc` configures `clt-barq-digital-site` to serve `dist/` through Workers Static Assets. Cloudflare reads `dist/_redirects` as routing configuration during deploy.
 
-```jsonc
-{
-	"name": "example-static-site",
-	"compatibility_date": "2026-11-20",
-	"assets": {
-		"directory": "./dist",
-		"html_handling": "force-trailing-slash",
-		"not_found_handling": "404-page",
-	},
-}
-```
-
-Pin Wrangler in the adopting project's development dependencies. The following package scripts expose the local Workers preview and the adopting project's deployment command:
-
-```json
-{
-	"preview:cloudflare": "npm run build && wrangler dev",
-	"deploy": "npm run build && wrangler deploy"
-}
-```
-
-In Cloudflare Workers Builds, use `npm run build` as the build command and `npx wrangler deploy` as the deploy command for the built artifact.
-
-The assets-only configuration has no `main` or Astro adapter. If the project adds Worker code later, requests handled by the Worker need the equivalent routing behavior or must be forwarded to the asset binding.
+Cloudflare Workers Builds runs `npm run build` and then `npx wrangler deploy` from the repository root. Wrangler discovers `wrangler.jsonc` and uses the output of the build step directly. The lead Worker has a separate local profile in `wrangler.local.jsonc`.
 
 Set `ENV=production` and `PUBLIC_SITE_URL` to the deployed HTTP(S) origin for public builds. Use `ENV=staging` or `ENV=local` for previews. Preview HTML carries `noindex` and omits the sitemap. The default `PREVIEW_CRAWL_POLICY=public` lets crawlers read the directive. Use `PREVIEW_CRAWL_POLICY=private` after the host requires authentication. It additionally emits `Disallow: /`; a crawler blocked by that rule cannot read the page-level directive. Put non-public previews behind Cloudflare Access or another authenticated entry point and make sure every direct Worker/preview hostname is likewise protected or disabled. Check that an unauthenticated request cannot retrieve HTML or static assets.
 
 ## Verify locally and on the deployed host
 
-Run `npm run build`, then `npx wrangler dev --ip 127.0.0.1 --port 8787` with the adopting project's Wrangler version. Astro preview checks rendered HTML at the locale routes. Wrangler additionally interprets `_redirects`, serves directory indexes, and applies Cloudflare's 404 behavior. With this Wrangler configuration, `/ar/articles` returns 307 to `/ar/articles/`; the explicit root rule has its own status. Run the following in Node from the project root against Wrangler, then rerun with the deployed origin after adoption:
+Run `npm run build`, then `npx wrangler deploy --dry-run` to check the deploy configuration and assets. Use `npx wrangler dev --ip 127.0.0.1 --port 8787` to test redirect rules, trailing slashes, and localized 404 responses. Run the following in Node from the project root against Wrangler, then rerun with the deployed origin:
 
 ```js
 import assert from 'node:assert/strict';
