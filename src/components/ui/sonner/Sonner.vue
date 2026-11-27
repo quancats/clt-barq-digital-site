@@ -13,16 +13,18 @@ const delegatedProps = reactiveOmit(props, 'class', 'toastOptions');
 
 <template>
 	<Sonner
-		:class="cn('toaster group', props.class)"
+		:class="cn('toaster barq-toaster group', props.class)"
 		:style="{
 			'--normal-bg': 'var(--popover)',
 			'--normal-text': 'var(--popover-foreground)',
-			'--normal-border': 'var(--border)',
+			'--normal-border': 'var(--section-rule)',
+			'--normal-bg-hover': 'var(--accent)',
+			'--normal-border-hover': 'var(--field-border)',
 			'--border-radius': 'var(--radius)',
-			'--gray2': 'hsl(var(--popover) / 0.9)',
-			'--gray3': 'var(--border)',
-			'--gray4': 'var(--border)',
-			'--gray5': 'var(--border)',
+			'--gray2': 'var(--accent)',
+			'--gray3': 'var(--section-rule)',
+			'--gray4': 'var(--field-border)',
+			'--gray5': 'var(--field-border)',
 			'--gray12': 'var(--popover-foreground)',
 		}"
 		:toast-options="
@@ -55,3 +57,53 @@ const delegatedProps = reactiveOmit(props, 'class', 'toastOptions');
 		</template>
 	</Sonner>
 </template>
+
+<style>
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'] {
+	--toast-accent: var(--primary-link);
+}
+
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'][data-type='success'] {
+	--toast-accent: var(--success);
+}
+
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'][data-type='warning'] {
+	--toast-accent: color-mix(in oklab, var(--warning) 80%, var(--foreground));
+}
+
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'][data-type='error'] {
+	--toast-accent: var(--destructive);
+}
+
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'][data-rich-colors='true'] {
+	border-color: color-mix(in oklab, var(--toast-accent) 25%, var(--section-rule));
+	background: color-mix(in oklab, var(--toast-accent) 5%, var(--popover));
+	color: var(--popover-foreground);
+}
+
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-icon] {
+	color: var(--toast-accent);
+}
+
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-description] {
+	color: var(--muted-foreground);
+}
+
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button] {
+	inline-size: 1.75rem;
+	block-size: 1.75rem;
+	border-color: var(--field-border);
+	background: var(--popover);
+	color: var(--popover-foreground);
+}
+
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button]:is(:hover, :focus-visible) {
+	background: var(--accent);
+	color: var(--accent-foreground);
+}
+
+.barq-toaster[data-sonner-toaster] [data-sonner-toast][data-styled='true'] [data-close-button]:focus-visible {
+	outline: 2px solid var(--ring);
+	outline-offset: 2px;
+}
+</style>

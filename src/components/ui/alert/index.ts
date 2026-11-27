@@ -9,8 +9,8 @@ export { default as AlertTitle } from './AlertTitle.vue';
 export const alertVariants = cva('grid gap-0.5 rounded-lg border px-2.5 py-2 text-start text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pe-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*=size-])]:size-4 group/alert relative w-full', {
 	variants: {
 		variant: {
-			default: 'bg-card text-card-foreground',
-			destructive: 'text-destructive bg-card *:data-[slot=alert-description]:text-destructive *:[svg]:text-current',
+			default: 'border-s-2 border-s-primary bg-card text-card-foreground *:[svg]:text-primary-link',
+			destructive: 'border-s-2 border-s-destructive bg-card text-card-foreground *:[svg]:text-destructive',
 		},
 	},
 	defaultVariants: {
