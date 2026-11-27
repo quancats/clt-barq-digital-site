@@ -74,7 +74,8 @@ export async function initLeadForm(form: HTMLFormElement) {
 	let sending = false;
 	let accepted = false;
 	let requestId = '';
-	const setStatus = (message: string) => {
+	const setStatus = (message: string, state: 'neutral' | 'success' | 'error' = 'neutral') => {
+		status.dataset.state = state;
 		status.textContent = message;
 	};
 	const updateSubmit = () => {
@@ -127,10 +128,10 @@ export async function initLeadForm(form: HTMLFormElement) {
 			if (response.status === 202 && result.ok === true && typeof result.correlationId === 'string') {
 				accepted = true;
 				form.reset();
-				setStatus(copy.success);
+				setStatus(copy.success, 'success');
 				document.dispatchEvent(new CustomEvent('barq:lead-accepted', { detail: type }));
 			} else if (result.ok === false) {
-				setStatus(errorMessage(result.code, copy));
+				setStatus(errorMessage(result.code, copy), 'error');
 				if (result.code === 'invalid_input' && Array.isArray(result.fieldErrors)) {
 					for (const field of controls.filter(({ name }) => result.fieldErrors?.includes(name))) {
 						fieldError(field, true);
@@ -138,10 +139,10 @@ export async function initLeadForm(form: HTMLFormElement) {
 					}
 				}
 			} else {
-				setStatus(copy.failure);
+				setStatus(copy.failure, 'error');
 			}
 		} catch {
-			setStatus(copy.failure);
+			setStatus(copy.failure, 'error');
 		} finally {
 			sending = false;
 			proof = '';
@@ -151,10 +152,13 @@ export async function initLeadForm(form: HTMLFormElement) {
 				try {
 					turnstile.reset(widget);
 				} catch {
-					setStatus(copy.unavailable);
+					setStatus(copy.unavailable, 'error');
 				}
 			}
-			firstInvalid?.focus();
+			if (firstInvalid) {
+				firstInvalid.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+				firstInvalid.focus({ preventScroll: true });
+			}
 		}
 	});
 
@@ -174,12 +178,12 @@ export async function initLeadForm(form: HTMLFormElement) {
 			},
 			'expired-callback': () => {
 				proof = '';
-				if (!sending && !accepted) setStatus(copy.bot);
+				if (!sending && !accepted) setStatus(copy.bot, 'error');
 				updateSubmit();
 			},
 			'error-callback': () => {
 				proof = '';
-				if (!sending && !accepted) setStatus(copy.unavailable);
+				if (!sending && !accepted) setStatus(copy.unavailable, 'error');
 				updateSubmit();
 			},
 		});
@@ -190,6 +194,6 @@ export async function initLeadForm(form: HTMLFormElement) {
 		}
 	} catch {
 		fields.disabled = true;
-		setStatus(copy.unavailable);
+		setStatus(copy.unavailable, 'error');
 	}
 }

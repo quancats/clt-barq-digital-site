@@ -1,6 +1,6 @@
 ---
 import FormField from '@/components/core/FormField.astro';
-import type { Locale } from '@/i18n/config';
+import { localizePath, type Locale } from '@/i18n/config';
 import { LEAD_ENDPOINT, LEAD_LIMITS, LEAD_PARTNERSHIP_TYPES, LEAD_USER_RANGES, type LeadType } from '@/lib/leads/contract';
 import { buttonLinkVariants } from '@/lib/ui/astroVariants';
 import { leadCopy } from './leadCopy';
@@ -16,7 +16,7 @@ const { locale, type, privacyPath, services } = Astro.props;
 const copy = leadCopy[locale];
 const siteKey = String(import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '').trim();
 const active = Boolean(siteKey && privacyPath && (type !== 'consultation' || services.length > 0));
-const control = 'block min-h-11 w-full min-w-0 rounded-md border border-border bg-background px-3 py-2 text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-link';
+const control = 'form-control block min-h-11 w-full min-w-0 rounded-md border px-3 py-2 text-base';
 const organizationRequired = type === 'demo' || type === 'partnership';
 const messageField = { general: 'message', consultation: 'need', demo: 'deploymentNeeds', partnership: 'proposal' }[type] as 'message' | 'need' | 'deploymentNeeds' | 'proposal';
 const fields = [
@@ -64,7 +64,7 @@ const chooserLabel = chooser?.name === 'service' ? copy.service : chooser?.name 
 				</FormField>
 				<div class="space-y-2">
 					<label class="flex min-h-11 w-fit items-center gap-3">
-						<input type="checkbox" name="privacyAccepted" required class="size-5 shrink-0" aria-describedby="lead-privacyAccepted-error" />
+						<input type="checkbox" name="privacyAccepted" required class="form-checkbox size-5 shrink-0" aria-describedby="lead-privacyAccepted-error" />
 						{copy.privacy}
 					</label>
 					<p id="lead-privacyAccepted-error" class="text-sm text-destructive" hidden>
@@ -76,7 +76,7 @@ const chooserLabel = chooser?.name === 'service' ? copy.service : chooser?.name 
 					{copy.submit}
 				</button>
 			</fieldset>
-			<p data-lead-status role="status" tabindex="-1" class="mt-4 text-sm font-medium">
+			<p data-lead-status role="status" tabindex="-1" class="mt-4 rounded-md px-3 py-2 text-sm font-medium wrap-anywhere">
 				{copy.preparing}
 			</p>
 			<noscript>
@@ -84,9 +84,47 @@ const chooserLabel = chooser?.name === 'service' ? copy.service : chooser?.name 
 			</noscript>
 		</form>
 	) : (
-		<p class="text-muted-foreground">{copy.unavailable}</p>
+		<p class="text-muted-foreground">
+			{copy.unavailable}
+			{type !== 'general' && (
+				<>
+					{' '}
+					<a class="text-primary-link underline underline-offset-4" href={localizePath(locale, 'contact')} data-analytics-action="contact_action">
+						{locale === 'ar' ? 'تواصل معنا مباشرة' : 'Contact us directly'}
+					</a>
+				</>
+			)}
+		</p>
 	)
 }
+
+<style>
+	[data-lead-status] {
+		border-inline-start: 2px solid var(--primary-link);
+		background: var(--brand-section-tint);
+		color: var(--foreground);
+		scroll-margin-block-start: 6rem;
+	}
+	[data-lead-status]:empty {
+		display: none;
+	}
+	[data-lead-status][data-state='error'] {
+		border-inline-start-color: var(--destructive);
+		color: var(--destructive);
+	}
+	[data-lead-status][data-state='success'] {
+		border-inline-start-color: var(--success);
+		color: var(--success);
+	}
+	button[type='submit'] {
+		transition-property: border-color, box-shadow;
+	}
+	button[type='submit']:disabled {
+		border-color: var(--field-border);
+		background: var(--muted);
+		color: var(--muted-foreground);
+	}
+</style>
 
 <script>
 	import { initLeadForm } from './leadForm';
