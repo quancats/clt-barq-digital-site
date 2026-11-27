@@ -1,5 +1,6 @@
 ---
-import { ANALYTICS_CONSENT_STORAGE_KEY, ANALYTICS_CONSENT_VERSION, parseAnalyticsMode, shouldAutoOpenConsentBanner, shouldShowAnalyticsPreferenceUi, serializeAnalyticsPreference } from '@/lib/analytics/consent';
+import { Icon } from 'astro-icon/components';
+import { parseAnalyticsMode, shouldAutoOpenConsentBanner, shouldShowAnalyticsPreferenceUi } from '@/lib/analytics/consent';
 import { isGoogleAnalyticsEnabled, resolveGoogleAnalyticsId } from '@/lib/analytics/googleAnalytics';
 import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/helpers';
@@ -29,36 +30,174 @@ const autoOpenBanner = shouldAutoOpenConsentBanner({
 	measurementId,
 });
 const copy = dictionary.common.cookie_consent;
-const grantedValue = serializeAnalyticsPreference('granted');
-const deniedValue = serializeAnalyticsPreference('denied');
-
-const bootScript = `(()=>{const root=document.getElementById('cookie-consent');if(!root)return;const key=${JSON.stringify(ANALYTICS_CONSENT_STORAGE_KEY)};const version=${ANALYTICS_CONSENT_VERSION};const mode=${JSON.stringify(mode)};const autoOpen=${autoOpenBanner ? 'true' : 'false'};const granted=${JSON.stringify(grantedValue)};const denied=${JSON.stringify(deniedValue)};function readPreference(){try{const raw=localStorage.getItem(key);if(!raw)return null;if(raw==='granted'||raw==='denied')return{state:raw,version:version};const parsed=JSON.parse(raw);if((parsed.state==='granted'||parsed.state==='denied')&&parsed.version===version)return parsed;return null;}catch{return null;}}function writePreference(value){try{localStorage.setItem(key,value);}catch{}}function hide(){root.hidden=true;}function show(){root.hidden=false;root.querySelector('[data-cookie-consent-accept]')?.focus();}function onKeydown(event){if(event.key==='Escape'&&!root.hidden){hide();}}if(autoOpen&&readPreference()==null)show();root.querySelector('[data-cookie-consent-accept]')?.addEventListener('click',()=>{writePreference(granted);hide();if(mode==='opt-in')window.location.reload();});root.querySelector('[data-cookie-consent-reject]')?.addEventListener('click',()=>{writePreference(denied);hide();window.location.reload();});document.addEventListener('keydown',onKeydown);document.querySelectorAll('[data-privacy-settings]').forEach((el)=>{el.addEventListener('click',(event)=>{event.preventDefault();show();});});})();`;
 ---
 
 {
 	showPreferenceUi ? (
-		<>
-			<div id="cookie-consent" class="pointer-events-none fixed inset-x-0 bottom-0 z-[60] p-4 sm:p-6" hidden data-cookie-consent>
-				<div class="pointer-events-auto mx-auto flex max-w-3xl flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-lg sm:flex-row sm:items-end sm:justify-between sm:gap-6" role="dialog" aria-modal="false" aria-labelledby="cookie-consent-title" aria-describedby="cookie-consent-description">
-					<div class="space-y-2">
-						<p id="cookie-consent-title" class="text-sm font-semibold text-foreground">
-							{copy.title}
-						</p>
-						<p id="cookie-consent-description" class="text-sm leading-relaxed text-muted-foreground">
-							{copy.description}
-						</p>
-					</div>
-					<div class="flex shrink-0 flex-wrap gap-2">
-						<button type="button" class="inline-flex h-11 min-h-11 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-muted" data-cookie-consent-reject>
-							{copy.reject}
-						</button>
-						<button type="button" class="inline-flex h-11 min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover" data-cookie-consent-accept>
-							{copy.accept}
-						</button>
-					</div>
+		<div id="cookie-consent" class="analytics-preferences" hidden data-cookie-consent data-mode={mode} data-auto-open={String(autoOpenBanner)}>
+			<div class="analytics-panel" role="dialog" tabindex="-1" aria-labelledby="cookie-consent-title" aria-describedby="cookie-consent-description">
+				<div class="analytics-heading">
+					<span class="analytics-icon">
+						<Icon name="lucide:chart-column" size={21} aria-hidden="true" />
+					</span>
+					<h2 id="cookie-consent-title">{copy.title}</h2>
+					<button type="button" class="analytics-close" aria-label={dictionary.common.close} data-consent-close>
+						<Icon name="lucide:x" size={20} aria-hidden="true" />
+					</button>
+				</div>
+				<p id="cookie-consent-description">{copy.description}</p>
+				<div class="analytics-actions">
+					<button type="button" class="brand-request-action" data-cookie-consent-accept>
+						{copy.accept}
+					</button>
+					<button type="button" class="analytics-reject" data-cookie-consent-reject>
+						{copy.reject}
+					</button>
 				</div>
 			</div>
-			<script is:inline set:html={bootScript} />
-		</>
+		</div>
 	) : null
 }
+
+<script>
+	import { ANALYTICS_CONSENT_STORAGE_KEY, parseAnalyticsPreference, serializeAnalyticsPreference, type AnalyticsPreferenceState } from '@/lib/analytics/consent';
+
+	const root = document.querySelector<HTMLElement>('[data-cookie-consent]');
+	const dialog = root?.querySelector<HTMLElement>('[role="dialog"]');
+
+	if (root && dialog) {
+		const triggers = document.querySelectorAll<HTMLButtonElement>('[data-privacy-settings]');
+		let activeTrigger: HTMLButtonElement | undefined;
+
+		const setOpen = (open: boolean) => {
+			root.hidden = !open;
+			triggers.forEach((trigger) => trigger.setAttribute('aria-expanded', String(open)));
+			if (open) dialog.focus({ preventScroll: true });
+			else activeTrigger?.focus({ preventScroll: true });
+		};
+
+		const save = (state: AnalyticsPreferenceState) => {
+			try {
+				localStorage.setItem(ANALYTICS_CONSENT_STORAGE_KEY, serializeAnalyticsPreference(state));
+			} catch {
+				// Storage can be unavailable in restricted browsing contexts.
+			}
+			setOpen(false);
+			if (state === 'denied' || root.dataset.mode === 'opt-in') window.location.reload();
+		};
+
+		triggers.forEach((trigger) =>
+			trigger.addEventListener('click', () => {
+				activeTrigger = trigger;
+				setOpen(root.hidden);
+			}),
+		);
+		root.querySelector('[data-cookie-consent-accept]')?.addEventListener('click', () => save('granted'));
+		root.querySelector('[data-cookie-consent-reject]')?.addEventListener('click', () => save('denied'));
+		root.querySelector('[data-consent-close]')?.addEventListener('click', () => setOpen(false));
+		document.addEventListener('keydown', (event) => {
+			if (event.key === 'Escape' && !root.hidden) setOpen(false);
+		});
+
+		if (root.dataset.autoOpen === 'true') {
+			try {
+				if (!parseAnalyticsPreference(localStorage.getItem(ANALYTICS_CONSENT_STORAGE_KEY))) setOpen(true);
+			} catch {
+				setOpen(true);
+			}
+		}
+	}
+</script>
+
+<style>
+	.analytics-preferences {
+		position: fixed;
+		inset-inline: 0;
+		inset-block-end: 0;
+		z-index: 60;
+		padding: clamp(0.75rem, 3vi, 1.5rem);
+		padding-block-end: max(0.75rem, env(safe-area-inset-bottom));
+		pointer-events: none;
+	}
+	.analytics-panel {
+		max-inline-size: 34rem;
+		max-block-size: 90dvh;
+		margin-inline: auto 0;
+		padding: clamp(0.9rem, 3vi, 1.4rem);
+		overflow: auto;
+		overscroll-behavior: contain;
+		border: 1px solid var(--section-rule);
+		border-block-start: 0.22rem solid var(--brand-accent);
+		border-radius: 0.85rem;
+		background: var(--card);
+		color: var(--card-foreground);
+		box-shadow: 0 12px 34px var(--brand-panel-shadow);
+		pointer-events: auto;
+	}
+	.analytics-heading {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.65rem;
+	}
+	.analytics-heading h2 {
+		font-size: clamp(1.05rem, 0.98rem + 0.4vi, 1.25rem);
+		font-weight: 700;
+		line-height: 1.35;
+	}
+	.analytics-icon,
+	.analytics-close {
+		display: grid;
+		place-items: center;
+		border-radius: 0.55rem;
+	}
+	.analytics-icon {
+		inline-size: 2.55rem;
+		block-size: 2.55rem;
+		background: var(--accent);
+		color: var(--accent-foreground);
+	}
+	.analytics-close {
+		inline-size: 2.75rem;
+		block-size: 2.75rem;
+		color: var(--muted-foreground);
+		cursor: pointer;
+	}
+	.analytics-panel p {
+		margin-block-start: 0.65rem;
+		color: var(--muted-foreground);
+		font-size: 0.925rem;
+		line-height: 1.65;
+	}
+	.analytics-actions {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.5rem;
+		inline-size: min(100%, 22rem);
+		margin-block-start: 1rem;
+	}
+	.analytics-actions button {
+		min-block-size: 2.75rem;
+		padding: 0.45rem 0.55rem;
+		border-radius: 0.45rem;
+		font-size: 0.875rem;
+		font-weight: 650;
+		overflow-wrap: anywhere;
+		cursor: pointer;
+	}
+	.analytics-reject {
+		border: 1px solid var(--field-border);
+		background: var(--card);
+		color: var(--card-foreground);
+	}
+	.analytics-close:is(:hover, :focus-visible),
+	.analytics-reject:is(:hover, :focus-visible) {
+		background: var(--accent);
+		color: var(--accent-foreground);
+	}
+	.analytics-close:focus-visible,
+	.analytics-reject:focus-visible {
+		outline: 2px solid var(--ring);
+		outline-offset: 2px;
+	}
+</style>

@@ -40,9 +40,9 @@ export const common = {
 	pwa_short_name: 'Barq Digital',
 	pwa_description: 'The Barq Digital website.',
 	cookie_consent: {
-		title: 'Cookies and analytics',
-		description: 'We use analytics to understand how the site is used. Analytics loads only after you accept. You can change this anytime in privacy settings.',
-		accept: 'OK',
+		title: 'Analytics to improve the website',
+		description: 'We use analytics only to improve our pages and the browsing experience. Analytics is optional, and you can change your choice anytime in privacy settings.',
+		accept: 'Allow analytics',
 		reject: 'Reject analytics',
 		privacy_settings: 'Privacy settings',
 	},
