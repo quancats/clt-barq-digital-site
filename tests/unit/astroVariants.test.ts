@@ -5,12 +5,12 @@ describe('astroVariants', () => {
 	it('builds button link variants', () => {
 		expect(buttonLinkVariants({ variant: 'default', size: 'lg' })).toContain('bg-primary');
 		expect(buttonLinkVariants({ variant: 'outline', size: 'sm' })).toContain('border-border');
-		expect(buttonLinkVariants({ variant: 'ghost' })).toContain('hover:bg-muted');
+		expect(buttonLinkVariants({ variant: 'ghost' })).toContain('hover:bg-accent');
 		expect(buttonLinkVariants({ variant: 'link' })).toContain('underline-offset-4');
 	});
 
 	it('builds badge and card variants', () => {
-		expect(badgeVariants({ variant: 'secondary' })).toContain('bg-secondary');
+		expect(badgeVariants({ variant: 'secondary' })).toContain('bg-accent');
 		expect(badgeVariants({ variant: 'outline' })).toContain('border-border');
 		expect(cardVariants({ padding: 'lg' })).toContain('p-8');
 		expect(cardVariants({ padding: 'default' })).toContain('bg-card');

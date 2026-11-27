@@ -10,7 +10,7 @@ const { locale } = Astro.props;
 const copy = getDictionary(locale).common;
 ---
 
-<select data-native-theme-picker aria-label={copy.theme_label} class="min-h-11 max-w-full rounded-md border border-border bg-background px-2 text-sm focus-visible:outline-2" hidden>
+<select data-native-theme-picker aria-label={copy.theme_label} class="form-control min-h-11 max-w-full rounded-md border px-2 text-sm" hidden>
 	<option value="light">{copy.theme_light}</option>
 	<option value="dark">{copy.theme_dark}</option>
 	<option value="auto">{copy.theme_auto}</option>

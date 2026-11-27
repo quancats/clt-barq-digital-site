@@ -7,11 +7,11 @@ export const badgeVariants = cva('h-5 gap-1 rounded-4xl border border-transparen
 	variants: {
 		variant: {
 			default: 'bg-primary text-primary-foreground [a]:hover:bg-primary-hover',
-			secondary: 'bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80',
-			destructive: 'bg-destructive/10 [a]:hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:bg-destructive/20',
-			outline: 'border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground',
-			ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
-			link: 'text-primary-link underline-offset-4 hover:underline',
+			secondary: 'bg-accent text-accent-foreground [a]:hover:bg-primary [a]:hover:text-primary-foreground',
+			destructive: 'bg-destructive/10 [a]:hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 text-destructive dark:text-red-300 dark:bg-destructive/10 dark:[a]:hover:bg-destructive/15',
+			outline: 'border-border text-foreground [a]:hover:bg-accent [a]:hover:text-accent-foreground',
+			ghost: 'hover:bg-accent hover:text-accent-foreground',
+			link: 'text-primary-link underline-offset-4 hover:text-primary-link-hover hover:underline',
 		},
 	},
 	defaultVariants: {
