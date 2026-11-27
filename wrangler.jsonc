@@ -1,9 +1,35 @@
 {
 	"name": "clt-barq-digital-site",
+	"main": "./worker/index.ts",
 	"compatibility_date": "2026-11-26",
+	"vars": {
+		"LEAD_ALLOWED_ORIGIN": "https://www.barqdigital.sa",
+		"LEAD_ALLOWED_SERVICES": "cloud-solutions,cybersecurity,data-analytics-ai,digital-transformation,governance-risk-compliance,it-infrastructure,managed-services,software-engineering,systems-integration,technical-consulting",
+	},
+	"send_email": [
+		{
+			"name": "LEAD_EMAIL",
+			"destination_address": "info@barqdigital.sa",
+			"allowed_sender_addresses": ["notifications@barqdigital.sa"],
+		},
+	],
 	"assets": {
 		"directory": "./dist",
+		"binding": "ASSETS",
 		"html_handling": "force-trailing-slash",
 		"not_found_handling": "404-page",
+		"run_worker_first": ["/api", "/api/*"],
 	},
+	"ratelimits": [
+		{
+			"name": "LEAD_RATE_LIMIT",
+			"namespace_id": "102701",
+			"simple": { "limit": 12, "period": 60 },
+		},
+		{
+			"name": "LEAD_REPLAY_LIMIT",
+			"namespace_id": "102702",
+			"simple": { "limit": 1, "period": 60 },
+		},
+	],
 }

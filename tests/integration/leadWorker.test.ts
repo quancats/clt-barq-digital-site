@@ -57,6 +57,28 @@ afterEach(() => {
 });
 
 describe('lead intake Worker', () => {
+	it('delivers verified submissions to the fixed company inbox without sending the Turnstile token', async () => {
+		const send = vi.fn(async (_message: { from: string; to: string; subject: string; text: string }) => ({ messageId: 'test-message' }));
+		const { LEAD_DELIVERY: _delivery, ...base } = config();
+		const env = { ...base, LEAD_EMAIL: { send } };
+		const response = await worker.fetch(request(), env);
+		expect(response.status).toBe(202);
+		expect(send).toHaveBeenCalledOnce();
+		const [message] = send.mock.calls[0]!;
+		expect(message).toMatchObject({ from: 'notifications@barqdigital.sa', to: 'info@barqdigital.sa', subject: 'Barq Digital website: general' });
+		expect(message.text).toContain(general.message);
+		expect(message.text).not.toContain(common.turnstileToken);
+	});
+
+	it('returns a delivery failure when Cloudflare Email Service rejects the message', async () => {
+		const send = vi.fn().mockRejectedValue(new Error('Synthetic provider failure'));
+		const { LEAD_DELIVERY: _delivery, ...base } = config();
+		const env = { ...base, LEAD_EMAIL: { send } };
+		const response = await worker.fetch(request(), env);
+		expect(response.status).toBe(503);
+		expect(await response.json()).toMatchObject({ ok: false, code: 'provider_unavailable' });
+		expect(send).toHaveBeenCalledOnce();
+	});
 	it.each([
 		general,
 		{ ...common, type: 'consultation', service: 'consulting', need: 'Synthetic consultation' },

@@ -9,11 +9,16 @@ interface RateLimitBinding {
 	limit(input: { key: string }): Promise<{ success: boolean }>;
 }
 
+interface LeadEmailBinding {
+	send(message: { from: string; to: string; subject: string; text: string }): Promise<unknown>;
+}
+
 interface Env {
 	ASSETS: FetchBinding;
 	LEAD_RATE_LIMIT?: RateLimitBinding;
 	LEAD_REPLAY_LIMIT?: RateLimitBinding;
 	LEAD_DELIVERY?: FetchBinding;
+	LEAD_EMAIL?: LeadEmailBinding;
 	LEAD_ALLOWED_ORIGIN?: string;
 	LEAD_ALLOWED_SERVICES?: string;
 	TURNSTILE_SECRET_KEY?: string;
@@ -164,7 +169,7 @@ async function handleLead(request: Request, env: Env) {
 	if (!clientIp || !env.LEAD_RATE_LIMIT || !env.LEAD_REPLAY_LIMIT || !env.TURNSTILE_SECRET_KEY) {
 		return fail('unavailable');
 	}
-	if (!env.LEAD_DELIVERY) return fail('provider_unavailable');
+	if (!env.LEAD_DELIVERY && !env.LEAD_EMAIL) return fail('provider_unavailable');
 
 	try {
 		if (!(await env.LEAD_RATE_LIMIT.limit({ key: await digest(clientIp) })).success) {
@@ -202,9 +207,20 @@ async function handleLead(request: Request, env: Env) {
 		}
 
 		try {
-			const response = await deliver(env.LEAD_DELIVERY, JSON.stringify(lead), requestId, tokenKey, correlationId);
-			if (response.status === 409) return fail('duplicate');
-			if (response.status !== 202) return fail('provider_unavailable');
+			if (env.LEAD_DELIVERY) {
+				const response = await deliver(env.LEAD_DELIVERY, JSON.stringify(lead), requestId, tokenKey, correlationId);
+				if (response.status === 409) return fail('duplicate');
+				if (response.status !== 202) return fail('provider_unavailable');
+			} else if (env.LEAD_EMAIL) {
+				await env.LEAD_EMAIL.send({
+					from: 'notifications@barqdigital.sa',
+					to: 'info@barqdigital.sa',
+					subject: `Barq Digital website: ${lead.type}`,
+					text: [`Reference: ${correlationId}`, `Request ID: ${requestId}`, ...Object.entries(lead).map(([field, value]) => `${field}: ${value}`)].join('\n'),
+				});
+			} else {
+				return fail('provider_unavailable');
+			}
 			return result({ ok: true, correlationId });
 		} catch {
 			return fail('provider_unavailable');
