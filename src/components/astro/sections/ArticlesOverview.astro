@@ -1,0 +1,315 @@
+---
+import { Icon } from 'astro-icon/components';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import type { BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+import { formatDate } from '@/i18n/format';
+import { getDictionary } from '@/i18n/helpers';
+import { editorialCopy, getEditorialEntryPath, type EditorialPageProps } from '@/lib/content/queries/getEditorialPaths';
+
+interface Props {
+	page: Extract<EditorialPageProps, { kind: 'list' }>;
+	breadcrumbs: BreadcrumbItem[];
+	hasProse: boolean;
+}
+
+const { page, breadcrumbs, hasProse } = Astro.props;
+const { locale, family, path, indexPath, entries, overview, taxonomies, emptyLinks } = page;
+const ar = locale === 'ar';
+const isNews = family === 'news';
+const articleCopy = ar ? { all: 'كل المقالات', listing: 'استكشف المقالات', results: 'المقالات ضمن هذا الموضوع', selected: 'مقال مختار', read: 'اقرأ المقال', empty: 'لا توجد مقالات منشورة هنا حاليًا.' } : { all: 'All articles', listing: 'Explore our articles', results: 'Articles on this topic', selected: 'Featured article', read: 'Read article', empty: 'No articles have been published here yet.' };
+const newsCopy = ar ? { all: 'كل الأخبار', listing: 'آخر الإعلانات', results: 'الأخبار ضمن هذا الموضوع', read: 'اقرأ الخبر', empty: 'لا توجد أخبار منشورة حاليًا' } : { all: 'All news', listing: 'Latest announcements', results: 'News on this topic', read: 'Read announcement', empty: 'No announcements have been published yet' };
+const copy = isNews ? newsCopy : articleCopy;
+const isIndex = path === indexPath;
+const intro = overview?.data.sections.find(({ key }) => key === 'listing');
+const empty = overview?.data.sections.find(({ key }) => key === 'empty');
+const articleHeading = intro?.title ?? (isIndex ? copy.listing : copy.results);
+const availableTaxonomies = taxonomies.filter(({ terms }) => terms.length > 0);
+---
+
+<div class:list={['articles-overview', { 'news-overview': isNews }]}>
+	<PageHeading id="articles-title" title={page.title} description={page.description} {breadcrumbs} breadcrumbLabel={getDictionary(locale).layout.breadcrumbs_label} />
+	<Container class="py-section">
+		{
+			hasProse && (
+				<div class="prose articles-prose">
+					<slot />
+				</div>
+			)
+		}
+		{
+			isNews && entries.length === 0 ? (
+				<section class="news-empty" aria-labelledby="news-empty-title">
+					<span class="news-empty-icon">
+						<Icon name="lucide:newspaper" size={29} aria-hidden="true" />
+					</span>
+					<div>
+						<Heading level={2} id="news-empty-title" class="articles-heading">
+							{empty?.title ?? copy.empty}
+						</Heading>
+						{empty && emptyLinks.length > 0 && <p class="articles-intro">{empty.body}</p>}
+						{emptyLinks.length > 0 && (
+							<div class="news-empty-actions">
+								{emptyLinks.map(({ href, label }) => (
+									<CallToAction {href} {label} variant="outline" />
+								))}
+							</div>
+						)}
+					</div>
+				</section>
+			) : (
+				<section aria-labelledby="article-results">
+					<Heading level={2} id="article-results" class="articles-heading">
+						{articleHeading}
+					</Heading>
+					{intro && <p class="articles-intro">{intro.body}</p>}
+					{availableTaxonomies.length > 0 && (
+						<nav class="article-filters" aria-label={editorialCopy[locale].categories}>
+							<a href={indexPath} aria-current={isIndex ? 'page' : undefined}>
+								{copy.all}
+							</a>
+							{availableTaxonomies.map(({ terms }) =>
+								terms.map(({ href, label }) => (
+									<a {href} aria-current={href === path ? 'page' : undefined}>
+										<bdi>{label}</bdi>
+									</a>
+								)),
+							)}
+						</nav>
+					)}
+					{entries.length > 0 ? (
+						<ul class="article-grid" role="list">
+							{entries.map((entry, index) => {
+								const { title, description, categoryLabel, publishedAt, media } = entry.data;
+								const featured = !isNews && isIndex && entries.length > 1 && index === 0;
+								return (
+									<li class:list={[featured && 'featured-entry']}>
+										<article class="article-item">
+											<a href={getEditorialEntryPath(entry)} class:list={['article-link', { 'has-image': media[0] }]}>
+												{media[0] && (
+													<div class="article-media">
+														<CorporateMedia image={media[0]} priority={featured} />
+													</div>
+												)}
+												<div class="article-summary">
+													<div class="article-meta">
+														{featured && <span class="article-featured-label">{articleCopy.selected}</span>}
+														{categoryLabel && <span>{categoryLabel}</span>}
+														{publishedAt && <time datetime={publishedAt.toISOString()}>{formatDate(locale, publishedAt)}</time>}
+													</div>
+													<Heading level={3} class="article-title">
+														{title}
+													</Heading>
+													<p>{description}</p>
+													<span class="article-read">
+														{copy.read}
+														<Icon name="lucide:arrow-right" size={17} class="rtl:rotate-180" aria-hidden="true" />
+													</span>
+												</div>
+											</a>
+										</article>
+									</li>
+								);
+							})}
+						</ul>
+					) : (
+						<p class="articles-intro">{copy.empty}</p>
+					)}
+				</section>
+			)
+		}
+	</Container>
+</div>
+
+<style>
+	.articles-overview {
+		--article-line: var(--section-rule);
+		--article-tint: var(--brand-section-tint);
+	}
+	.articles-overview :global(.articles-heading) {
+		font-size: clamp(1.55rem, 1.16rem + 1.5vi, 2.5rem);
+		line-height: 1.25;
+	}
+	.articles-intro,
+	.article-summary p {
+		margin-block-start: 0.55rem;
+		color: var(--muted-foreground);
+		line-height: 1.7;
+	}
+	.articles-prose {
+		margin-block-end: 1.4rem;
+	}
+	.article-filters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		margin-block-start: 1rem;
+	}
+	.article-filters a {
+		display: inline-flex;
+		align-items: center;
+		min-block-size: 2.75rem;
+		padding: 0.35rem 0.8rem;
+		border: 1px solid var(--article-line);
+		border-radius: 0.5rem;
+		background: var(--card);
+		font-size: 0.9rem;
+		font-weight: 650;
+		overflow-wrap: anywhere;
+	}
+	.article-filters a:is(:hover, :focus-visible, [aria-current='page']) {
+		border-color: var(--primary-link);
+		background: var(--article-tint);
+		color: var(--primary-link);
+	}
+	.article-grid {
+		display: grid;
+		gap: clamp(0.85rem, 2.3vi, 1.55rem);
+		margin-block-start: clamp(1rem, 2.9vi, 2rem);
+	}
+	.article-grid li,
+	.article-item {
+		min-inline-size: 0;
+		block-size: 100%;
+	}
+	.article-link {
+		display: flex;
+		flex-direction: column;
+		block-size: 100%;
+		overflow: clip;
+		border: 1px solid var(--article-line);
+		border-radius: 0.9rem;
+		background: var(--card);
+	}
+	.article-link:is(:hover, :focus-visible) {
+		border-color: var(--primary-link);
+	}
+	.article-media {
+		padding: clamp(0.9rem, 2.7vi, 1.6rem) clamp(0.9rem, 2.7vi, 1.6rem) 0;
+	}
+	.article-summary {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		align-items: flex-start;
+		min-inline-size: 0;
+		padding: clamp(1rem, 2.9vi, 2rem);
+		overflow-wrap: anywhere;
+	}
+	.article-meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem 0.8rem;
+		margin-block-end: 0.7rem;
+		color: var(--muted-foreground);
+		font-size: 0.875rem;
+	}
+	.articles-overview :global(.article-title) {
+		font-size: clamp(1.22rem, 1.06rem + 0.72vi, 1.75rem);
+		line-height: 1.28;
+	}
+	.article-read {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		min-block-size: 2.75rem;
+		margin-block-start: auto;
+		padding-block-start: 0.55rem;
+		color: var(--primary-link);
+		font-weight: 650;
+	}
+	.article-link:is(:hover, :focus-visible) .article-read {
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+	.featured-entry {
+		grid-column: 1 / -1;
+	}
+	.featured-entry .article-link {
+		border-color: var(--brand-navy-border);
+		background: repeating-linear-gradient(90deg, transparent 0 43px, color-mix(in oklab, var(--brand-accent) 6%, transparent) 43px 44px), radial-gradient(ellipse at top, var(--brand-panel-glow), transparent 85%), var(--brand-panel-surface);
+		color: var(--color-white);
+	}
+	.featured-entry .article-summary {
+		padding: clamp(1.2rem, 4.1vi, 3rem);
+	}
+	.featured-entry :global(.article-title) {
+		max-inline-size: 35ch;
+		color: inherit;
+		font-size: clamp(1.5rem, 1.1rem + 1.45vi, 2.5rem);
+		text-wrap: balance;
+	}
+	.featured-entry .article-summary p,
+	.featured-entry .article-meta {
+		color: var(--brand-panel-copy);
+	}
+	.featured-entry .article-read,
+	.article-featured-label {
+		color: var(--brand-on-panel);
+	}
+	.article-featured-label {
+		padding: 0.15rem 0.55rem;
+		border: 1px solid var(--brand-navy-border);
+		border-radius: 0.35rem;
+		font-weight: 650;
+	}
+	.news-empty {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		gap: clamp(1rem, 3vi, 2rem);
+		padding: clamp(1.15rem, 4vi, 3rem);
+		border: 1px solid var(--article-line);
+		border-inline-start: 0.23rem solid var(--primary-link);
+		border-radius: 0.9rem;
+		background: var(--article-tint);
+	}
+	.news-empty-icon {
+		display: grid;
+		place-items: center;
+		inline-size: 3.5rem;
+		block-size: 3.5rem;
+		border: 1px solid var(--article-line);
+		border-radius: 0.75rem;
+		background: var(--card);
+		color: var(--primary-link);
+	}
+	.news-empty > div {
+		flex: 1 1 20rem;
+		min-inline-size: 0;
+	}
+	.news-empty-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.65rem;
+		margin-block-start: 1.05rem;
+	}
+	@media (min-width: 48rem) {
+		.article-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.featured-entry .has-image {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
+		}
+		.featured-entry .article-media {
+			align-self: center;
+			padding-block-end: clamp(0.9rem, 2.7vi, 1.6rem);
+		}
+		.news-overview .article-grid {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.news-overview .has-image {
+			display: grid;
+			grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
+		}
+		.news-overview .article-media {
+			align-self: center;
+			padding-block-end: clamp(0.9rem, 2.7vi, 1.6rem);
+		}
+	}
+</style>

@@ -10,17 +10,17 @@ import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
 export const GET: APIRoute = async (context) => {
 	const site = context.site ?? new URL(FALLBACK_SITE_URL);
 	const [approved, preview] = await Promise.all([getPublishedContent('articles'), getPublishedArticles()]);
-	const articles = [...approved, ...preview].sort((a, b) => b.data.publishedAt.valueOf() - a.data.publishedAt.valueOf());
+	const articles = [...approved, ...preview].flatMap((entry) => (entry.data.publishedAt ? [{ entry, publishedAt: entry.data.publishedAt }] : [])).sort((a, b) => b.publishedAt.valueOf() - a.publishedAt.valueOf());
 	const dictionary = getDictionary(defaultLocale);
 
 	return rss({
 		title: dictionary.common.brand,
 		description: dictionary.common.rss_description,
 		site,
-		items: articles.map((entry) => ({
+		items: articles.map(({ entry, publishedAt }) => ({
 			title: entry.data.title,
 			description: entry.data.description,
-			pubDate: entry.data.publishedAt,
+			pubDate: publishedAt,
 			link: 'governance' in entry.data ? getApprovedArticlePath(entry.data.locale, entry.data.slug) : localizePath(entry.data.locale, `/articles/${getArticleSlug(entry)}`),
 		})),
 	});

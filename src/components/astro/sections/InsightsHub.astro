@@ -1,0 +1,243 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+import { getDictionary } from '@/i18n/helpers';
+import { getEditorialEntryPath, type EditorialPageProps } from '@/lib/content/queries/getEditorialPaths';
+
+interface Props {
+	page: Extract<EditorialPageProps, { kind: 'hub' }>;
+	breadcrumbs: BreadcrumbItem[];
+	hasProse: boolean;
+}
+
+const { page, breadcrumbs, hasProse } = Astro.props;
+const { locale, title, description, entry, sections, articles, consultationHref } = page;
+const copy = locale === 'ar' ? { browse: 'تصفّح المركز المعرفي', reading: 'مقالات للقراءة', read: 'اقرأ المقال' } : { browse: 'Explore insights', reading: 'Articles to read', read: 'Read article' };
+const details = new Map(entry.data.sections.map((section) => [section.key, section]));
+const icons = new Map([
+	['articles', 'lucide:book-open'],
+	['news', 'lucide:newspaper'],
+	['resources', 'lucide:clipboard-list'],
+]);
+const consultation = details.get('consultation');
+---
+
+<div class="insights-hub">
+	<PageHeading id="insights-title" {title} {description} {breadcrumbs} breadcrumbLabel={getDictionary(locale).layout.breadcrumbs_label} />
+
+	{
+		sections.length > 0 && (
+			<section class="py-section" aria-labelledby="insights-navigation">
+				<Container>
+					<Heading level={2} id="insights-navigation" class="hub-heading">
+						{copy.browse}
+					</Heading>
+					<ul class="hub-directories" role="list">
+						{sections.map(({ key, label, href }) => {
+							const info = details.get(key);
+							return (
+								<li>
+									<a {href} class="directory-link">
+										<span class="directory-icon">
+											<Icon name={icons.get(key) ?? 'lucide:book-open'} size={24} aria-hidden="true" />
+										</span>
+										<Heading level={3} class="directory-title">
+											{info?.title ?? label}
+										</Heading>
+										{info && <p>{info.body}</p>}
+										<Icon name="lucide:arrow-right" size={19} class="directory-arrow rtl:rotate-180" aria-hidden="true" />
+									</a>
+								</li>
+							);
+						})}
+					</ul>
+				</Container>
+			</section>
+		)
+	}
+
+	{
+		(hasProse || entry.data.media.length > 0) && (
+			<Container class="py-section">
+				{hasProse && (
+					<div class="prose">
+						<slot />
+					</div>
+				)}
+				{entry.data.media.length > 0 && (
+					<div class="grid gap-grid-gutter md:grid-cols-2">
+						{entry.data.media.map((image) => (
+							<CorporateMedia {image} />
+						))}
+					</div>
+				)}
+			</Container>
+		)
+	}
+
+	{
+		articles.length > 0 && (
+			<section class="section-wash py-section" aria-labelledby="insights-articles">
+				<Container>
+					<Heading level={2} id="insights-articles" class="hub-heading">
+						{copy.reading}
+					</Heading>
+					<ul class:list={['hub-articles', { 'has-more': articles.length > 1 }]} role="list">
+						{articles.map((article, index) => (
+							<li class:list={[index === 0 && 'hub-featured']}>
+								<a href={getEditorialEntryPath(article)} class="reading-link">
+									<Heading level={3} class="directory-title">
+										{article.data.title}
+									</Heading>
+									{index === 0 && <p>{article.data.description}</p>}
+									<span class="reading-action">
+										<span>{copy.read}</span>
+										<Icon name="lucide:arrow-right" size={18} class="rtl:rotate-180" aria-hidden="true" />
+									</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				</Container>
+			</section>
+		)
+	}
+
+	{
+		consultation && consultationHref && (
+			<section class="py-section" aria-labelledby="insights-cta">
+				<Container>
+					<div class="hub-cta">
+						<Heading level={2} id="insights-cta" class="hub-heading">
+							{consultation.title}
+						</Heading>
+						<CallToAction href={consultationHref} label={consultation.body} analyticsAction="consultation_cta" />
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.insights-hub {
+		--hub-line: var(--section-rule);
+		--hub-tint: var(--brand-section-tint);
+	}
+	.insights-hub :global(.hub-heading) {
+		font-size: clamp(1.45rem, 1.1rem + 1.6vi, 2.45rem);
+		line-height: 1.25;
+	}
+	.insights-hub :global(.directory-title) {
+		font-size: clamp(1.14rem, 1.02rem + 0.55vi, 1.55rem);
+		line-height: 1.32;
+	}
+	.hub-directories,
+	.hub-articles {
+		display: grid;
+		gap: clamp(0.75rem, 2vi, 1.3rem);
+		margin-block-start: clamp(0.95rem, 2.4vi, 1.6rem);
+	}
+	.hub-directories {
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+	}
+	.directory-link,
+	.reading-link {
+		display: grid;
+		align-content: start;
+		align-items: start;
+		gap: 0.65rem;
+		min-inline-size: 0;
+		block-size: 100%;
+		padding: clamp(1rem, 2.65vi, 1.8rem);
+		border: 1px solid var(--hub-line);
+		border-radius: 0.8rem;
+		background: var(--card);
+		overflow-wrap: anywhere;
+	}
+	.directory-link {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+	.directory-link:is(:hover, :focus-visible),
+	.reading-link:is(:hover, :focus-visible) {
+		border-color: var(--primary-link);
+	}
+	.directory-icon {
+		display: grid;
+		place-items: center;
+		inline-size: 2.8rem;
+		block-size: 2.8rem;
+		border: 1px solid var(--hub-line);
+		border-radius: 0.55rem;
+		background: var(--hub-tint);
+		color: var(--primary-link);
+	}
+	.directory-arrow {
+		grid-column: 2;
+		grid-row: 1;
+		align-self: center;
+		color: var(--primary-link);
+	}
+	.directory-link p,
+	.directory-link :global(.directory-title) {
+		grid-column: 1 / -1;
+	}
+	.directory-link p,
+	.reading-link p {
+		color: var(--muted-foreground);
+		line-height: 1.65;
+	}
+	.reading-action {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		color: var(--primary-link);
+		font-weight: 650;
+	}
+	.hub-featured .reading-link {
+		align-content: center;
+		padding: clamp(1.15rem, 4vi, 2.9rem);
+		border-color: var(--brand-navy-border);
+		background: repeating-linear-gradient(90deg, transparent 0 43px, color-mix(in oklab, var(--brand-accent) 6%, transparent) 43px 44px), radial-gradient(ellipse at top, var(--brand-panel-glow), transparent 85%), var(--brand-panel-surface);
+		color: var(--color-white);
+	}
+	.hub-featured :global(.directory-title) {
+		color: inherit;
+		font-size: clamp(1.4rem, 1.04rem + 1.25vi, 2.2rem);
+		text-wrap: balance;
+	}
+	.hub-featured .reading-link p {
+		color: var(--brand-panel-copy);
+	}
+	.hub-featured .reading-action {
+		color: var(--brand-on-panel);
+	}
+	.hub-cta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem 1.5rem;
+		padding: clamp(1.1rem, 3.6vi, 2.3rem);
+		border: 1px solid var(--hub-line);
+		border-inline-start: 0.23rem solid var(--primary-link);
+		border-radius: 0.8rem;
+		background: var(--card);
+	}
+	.hub-cta :global(.hub-heading) {
+		font-size: clamp(1.25rem, 1.02rem + 1vi, 1.8rem);
+	}
+	@media (min-width: 52rem) {
+		.hub-articles.has-more {
+			grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+		}
+		.hub-articles:has(> li:nth-child(3)) .hub-featured {
+			grid-row: span 2;
+		}
+	}
+</style>

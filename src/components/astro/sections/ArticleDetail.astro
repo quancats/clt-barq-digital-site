@@ -1,0 +1,266 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+import { formatDate } from '@/i18n/format';
+import { getDictionary } from '@/i18n/helpers';
+import { editorialCopy, type EditorialPageProps } from '@/lib/content/queries/getEditorialPaths';
+
+interface Props {
+	page: Extract<EditorialPageProps, { kind: 'detail' }>;
+	breadcrumbs: BreadcrumbItem[];
+	headings: { depth: number; slug: string; text: string }[];
+}
+
+const { page, breadcrumbs, headings } = Astro.props;
+const { locale, title, description, entry, author, related, taxonomies } = page;
+const { data } = entry;
+const copy = editorialCopy[locale];
+const isNews = entry.collection === 'news';
+const labels = locale === 'ar' ? { contents: isNews ? 'في هذا الخبر' : 'في هذا المقال', back: isNews ? 'جميع الأخبار' : 'جميع المقالات' } : { contents: isNews ? 'In this announcement' : 'In this article', back: isNews ? 'All news' : 'All articles' };
+const chapters = headings.filter(({ depth }) => depth === 2);
+const terms = taxonomies.flatMap(({ terms }) => terms);
+const indexHref = page.parents.at(-1)?.href;
+---
+
+<article class="article-detail" aria-labelledby="article-detail-title">
+	<PageHeading id="article-detail-title" {title} {description} {breadcrumbs} breadcrumbLabel={getDictionary(locale).layout.breadcrumbs_label}>
+		{
+			(terms.length > 0 || author || data.publishedAt) && (
+				<div class="article-details-meta">
+					{terms.map(({ href, label }) => (
+						<a {href}>
+							<bdi>{label}</bdi>
+						</a>
+					))}
+					{author && (
+						<span>
+							{copy.author} <bdi>{author}</bdi>
+						</span>
+					)}
+					{data.publishedAt && <time datetime={data.publishedAt.toISOString()}>{formatDate(locale, data.publishedAt)}</time>}
+				</div>
+			)
+		}
+	</PageHeading>
+
+	<Container class="py-section">
+		<div class:list={['reading-layout', { 'has-contents': chapters.length > 0 }]}>
+			{
+				chapters.length > 0 && (
+					<nav class="article-contents" aria-labelledby="article-contents-title">
+						<p id="article-contents-title">{labels.contents}</p>
+						<ul role="list">
+							{chapters.map(({ slug, text }) => (
+								<li>
+									<a href={`#${encodeURIComponent(slug)}`}>{text}</a>
+								</li>
+							))}
+						</ul>
+					</nav>
+				)
+			}
+			<div class="reading-column">
+				{
+					data.media.length > 0 && (
+						<div class="article-illustrations">
+							{data.media.map((image, index) => (
+								<CorporateMedia {image} priority={index === 0} />
+							))}
+						</div>
+					)
+				}
+				<div class="prose article-prose">
+					<slot />
+				</div>
+				{
+					indexHref && (
+						<a class="article-return" href={indexHref}>
+							<Icon name="lucide:arrow-left" size={18} class="rtl:rotate-180" aria-hidden="true" />
+							{labels.back}
+						</a>
+					)
+				}
+			</div>
+		</div>
+	</Container>
+</article>
+
+{
+	related.length > 0 && (
+		<section class="article-related section-divider section-wash py-section" aria-labelledby="article-related-title">
+			<Container>
+				<Heading id="article-related-title" level={2} class="related-title">
+					{copy.related}
+				</Heading>
+				<ul role="list">
+					{related.map(({ href, label }) => (
+						<li>
+							<a {href}>
+								<span>{label}</span>
+								<Icon name="lucide:arrow-right" size={18} class="rtl:rotate-180" aria-hidden="true" />
+							</a>
+						</li>
+					))}
+				</ul>
+			</Container>
+		</section>
+	)
+}
+
+<style>
+	:global(html:has(.article-contents)) {
+		scroll-behavior: auto;
+	}
+	.article-detail {
+		--reading-line: var(--section-rule);
+		--reading-tint: var(--brand-section-tint);
+	}
+	.article-details-meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.45rem 1rem;
+		font-size: 0.875rem;
+		color: var(--muted-foreground);
+	}
+	.article-details-meta a {
+		display: inline-flex;
+		align-items: center;
+		min-block-size: 2.75rem;
+		padding-inline: 0.75rem;
+		border: 1px solid var(--reading-line);
+		border-radius: 0.5rem;
+		background: var(--card);
+		color: var(--primary-link);
+		font-weight: 650;
+	}
+	.reading-layout {
+		display: grid;
+		align-items: start;
+		gap: clamp(1.3rem, 4.8vi, 4.25rem);
+	}
+	.article-contents {
+		min-inline-size: 0;
+		padding: clamp(0.9rem, 2.4vi, 1.5rem);
+		border: 1px solid var(--reading-line);
+		border-inline-start: 0.22rem solid var(--primary-link);
+		border-radius: 0.8rem;
+		background: var(--reading-tint);
+	}
+	.article-contents p {
+		margin-block-end: 0.45rem;
+		font-weight: 700;
+	}
+	.article-contents li + li {
+		border-block-start: 1px solid var(--reading-line);
+	}
+	.article-contents a {
+		display: block;
+		padding-block: 0.65rem;
+		color: var(--muted-foreground);
+		line-height: 1.45;
+		overflow-wrap: anywhere;
+	}
+	.article-contents a:is(:hover, :focus-visible),
+	.article-details-meta a:is(:hover, :focus-visible),
+	.article-return:is(:hover, :focus-visible) {
+		color: var(--primary-link);
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+	.reading-column {
+		inline-size: min(100%, 74ch);
+		min-inline-size: 0;
+		margin-inline: auto;
+	}
+	.article-illustrations {
+		display: grid;
+		gap: 1rem;
+		margin-block-end: clamp(1rem, 3vi, 2rem);
+	}
+	.article-prose {
+		max-inline-size: none;
+		font-size: clamp(1rem, 0.96rem + 0.2vi, 1.12rem);
+		line-height: 1.85;
+		overflow-wrap: anywhere;
+	}
+	.article-prose :global(:is(h2, h3, h4)[id]) {
+		scroll-margin-block-start: 6rem;
+	}
+	.article-prose :global(h2) {
+		margin-block-start: 1.65em;
+		font-size: clamp(1.3rem, 1.08rem + 0.78vi, 1.85rem);
+		line-height: 1.3;
+	}
+	.article-prose > :global(* + h2) {
+		padding-block-start: 0.85em;
+		border-block-start: 1px solid var(--reading-line);
+	}
+	.article-prose > :global(:first-child) {
+		margin-block-start: 0;
+	}
+	.article-prose :global(pre),
+	.article-prose :global(table) {
+		display: block;
+		max-inline-size: 100%;
+		overflow-x: auto;
+	}
+	.article-return {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		margin-block-start: clamp(1.25rem, 3.2vi, 2.4rem);
+		padding-block-start: 1rem;
+		border-block-start: 1px solid var(--reading-line);
+		color: var(--primary-link);
+		font-weight: 650;
+	}
+	.article-related :global(.related-title) {
+		font-size: clamp(1.45rem, 1.15rem + 1.4vi, 2.25rem);
+	}
+	.article-related ul {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+		gap: 0.75rem;
+		margin-block-start: 1rem;
+	}
+	.article-related a {
+		display: flex;
+		block-size: 100%;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.7rem;
+		padding: clamp(1rem, 2.3vi, 1.5rem);
+		border: 1px solid var(--reading-line);
+		border-radius: 0.8rem;
+		background: var(--card);
+		font-weight: 650;
+		overflow-wrap: anywhere;
+	}
+	.article-related a:is(:hover, :focus-visible) {
+		border-color: var(--primary-link);
+		color: var(--primary-link);
+	}
+	.article-related a svg {
+		flex: none;
+		color: var(--primary-link);
+	}
+	@media (min-width: 55rem) {
+		.reading-layout.has-contents {
+			grid-template-columns: minmax(12.5rem, 0.34fr) minmax(0, 1fr);
+		}
+		.article-contents {
+			position: sticky;
+			inset-block-start: 6rem;
+			max-block-size: calc(100dvh - 7rem);
+			overflow-y: auto;
+		}
+		.has-contents .reading-column {
+			margin-inline-start: 0;
+		}
+	}
+</style>

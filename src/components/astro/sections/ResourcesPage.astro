@@ -1,0 +1,292 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import Container from '@/components/layout/Container.astro';
+import { formatDate } from '@/i18n/format';
+import { getDictionary } from '@/i18n/helpers';
+import { editorialCopy, type EditorialPageProps } from '@/lib/content/queries/getEditorialPaths';
+
+interface Props {
+	page: Extract<EditorialPageProps, { kind: 'resources' }>;
+	breadcrumbs: BreadcrumbItem[];
+	hasProse: boolean;
+}
+
+const { page, breadcrumbs, hasProse } = Astro.props;
+const { locale, title, description, overview, entries, requestLinks } = page;
+const dictionary = getDictionary(locale);
+const copy = editorialCopy[locale];
+const ar = locale === 'ar';
+const labels = ar ? { checklists: 'قوائم المراجعة', communication: 'تقييم منصة التواصل', transformation: 'التخطيط للتحول الرقمي', demo: 'ناقش القائمة في عرض BIM', consultation: 'اطلب استشارة تقنية', downloads: 'موارد قابلة للتنزيل', sections: 'أقسام الأدلة والموارد' } : { checklists: 'Planning checklists', communication: 'Evaluate a communication platform', transformation: 'Plan digital transformation', demo: 'Discuss the checklist in a BIM demo', consultation: 'Request a consultation', downloads: 'Downloadable resources', sections: 'Resource sections' };
+const types = new Map([
+	['communication', { icon: 'lucide:messages-square', label: labels.communication, href: requestLinks.demo, action: 'demo_cta' as const, actionLabel: labels.demo }],
+	['transformation', { icon: 'lucide:workflow', label: labels.transformation, href: requestLinks.consultation, action: 'consultation_cta' as const, actionLabel: labels.consultation }],
+]);
+const checklists = (overview?.data.sections ?? []).map(({ key, title, body }) => ({
+	id: `checklist-${key}`,
+	title,
+	items: body
+		.split('\n')
+		.map((line) => line.trim())
+		.filter(Boolean),
+	type: types.get(key),
+}));
+const bytes = new Intl.NumberFormat(locale, { style: 'unit', unit: 'byte' });
+const kilobytes = new Intl.NumberFormat(locale, { style: 'unit', unit: 'kilobyte', maximumFractionDigits: 1 });
+---
+
+<div class="resources-page">
+	<PageHeading id="resources-title" {title} {description} {breadcrumbs} breadcrumbLabel={dictionary.layout.breadcrumbs_label}>
+		{
+			(checklists.length > 0 || entries.length > 0) && (
+				<nav class="resources-nav" aria-label={labels.sections}>
+					{checklists.map(({ id, title, type }) => (
+						<a href={`#${id}`}>
+							{type?.label ?? title}
+							<Icon name="lucide:arrow-down" size={17} aria-hidden="true" />
+						</a>
+					))}
+					{entries.length > 0 && (
+						<a href="#resource-downloads">
+							{labels.downloads}
+							<Icon name="lucide:arrow-down" size={17} aria-hidden="true" />
+						</a>
+					)}
+				</nav>
+			)
+		}
+	</PageHeading>
+
+	{
+		checklists.length > 0 && (
+			<section class="py-section" aria-labelledby="resource-checklists-title">
+				<Container>
+					<Heading level={2} id="resource-checklists-title" class="resources-heading">
+						{labels.checklists}
+					</Heading>
+					<div class="checklists-grid">
+						{checklists.map(({ id, title, items, type }) => (
+							<section {id} class="resource-checklist" aria-labelledby={`${id}-title`}>
+								<div class="checklist-header">
+									<span class="checklist-icon">
+										<Icon name={type?.icon ?? 'lucide:clipboard-list'} size={23} aria-hidden="true" />
+									</span>
+									<Heading level={3} id={`${id}-title`} class="resource-title">
+										{title}
+									</Heading>
+								</div>
+								<ul role="list" class="checklist-items">
+									{items.map((item) => (
+										<li>
+											<Icon name="lucide:check" size={18} aria-hidden="true" />
+											<span>{item}</span>
+										</li>
+									))}
+								</ul>
+								{type?.href && (
+									<div class="checklist-action">
+										<CallToAction href={type.href} label={type.actionLabel} analyticsAction={type.action} variant="outline" />
+									</div>
+								)}
+							</section>
+						))}
+					</div>
+				</Container>
+			</section>
+		)
+	}
+
+	{
+		hasProse && (
+			<Container class="py-section">
+				<div class="prose">
+					<slot />
+				</div>
+			</Container>
+		)
+	}
+
+	{
+		entries.length > 0 && (
+			<section class="resource-downloads section-wash py-section" id="resource-downloads" aria-labelledby="resource-downloads-title">
+				<Container>
+					<Heading level={2} id="resource-downloads-title" class="resources-heading">
+						{labels.downloads}
+					</Heading>
+					<ul class="download-list" role="list">
+						{entries.map(({ entry: { data }, sizeBytes, related }) => (
+							<li class="download-card">
+								<p class="download-meta">
+									{copy[data.kind]} · <bdi>{data.categoryLabel ?? data.category}</bdi> · <time datetime={data.publishedAt.toISOString()}>{formatDate(locale, data.publishedAt)}</time>
+								</p>
+								<Heading level={3} class="resource-title">
+									{data.title}
+								</Heading>
+								<p>{data.description}</p>
+								<a href={data.file.path} download type="application/pdf" hreflang={data.file.locale} class="download-link">
+									<Icon name="lucide:download" size={18} aria-hidden="true" />
+									<span>
+										{data.file.label}{' '}
+										<bdi>
+											(PDF · {sizeBytes < 1000 ? bytes.format(sizeBytes) : kilobytes.format(sizeBytes / 1000)} · {dictionary.common[`language_name_${data.file.locale}`]})
+										</bdi>
+									</span>
+								</a>
+								{related.length > 0 && (
+									<ul class="download-related" aria-label={copy.related}>
+										{related.map(({ label, href }) => (
+											<li>
+												<a {href}>{label}</a>
+											</li>
+										))}
+									</ul>
+								)}
+							</li>
+						))}
+					</ul>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	:global(html:has(.resources-nav)) {
+		scroll-behavior: auto;
+	}
+	.resources-page {
+		--resource-line: var(--section-rule);
+		--resource-tint: var(--brand-section-tint);
+	}
+	.resources-nav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.55rem;
+	}
+	.resources-nav a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		min-block-size: 2.75rem;
+		padding: 0.35rem 0.8rem;
+		border: 1px solid var(--resource-line);
+		border-radius: 0.5rem;
+		background: var(--card);
+		color: var(--primary-link);
+		font-size: 0.925rem;
+		font-weight: 650;
+	}
+	.resources-nav a:is(:hover, :focus-visible) {
+		border-color: var(--primary-link);
+	}
+	.resources-nav a svg,
+	.download-link svg {
+		flex: none;
+	}
+	.resources-page :global(.resources-heading) {
+		font-size: clamp(1.5rem, 1.1rem + 1.6vi, 2.4rem);
+		line-height: 1.25;
+	}
+	.resources-page :global(.resource-title) {
+		font-size: clamp(1.18rem, 1.03rem + 0.65vi, 1.7rem);
+		line-height: 1.35;
+		text-wrap: balance;
+	}
+	.checklists-grid,
+	.download-list {
+		display: grid;
+		gap: clamp(0.9rem, 2.8vi, 1.8rem);
+		margin-block-start: clamp(1rem, 2.7vi, 1.65rem);
+	}
+	.resource-checklist,
+	.resource-checklist,
+	.download-card {
+		min-inline-size: 0;
+		border: 1px solid var(--resource-line);
+		border-radius: 0.85rem;
+		background: var(--card);
+	}
+	.resource-checklist {
+		display: flex;
+		flex-direction: column;
+		overflow: clip;
+	}
+	.checklist-header {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		padding: clamp(1.1rem, 2.8vi, 1.8rem);
+		border-block-end: 1px solid var(--resource-line);
+		background: var(--resource-tint);
+	}
+	.checklist-icon {
+		display: grid;
+		flex: none;
+		place-items: center;
+		inline-size: 2.8rem;
+		block-size: 2.8rem;
+		border: 1px solid var(--resource-line);
+		border-radius: 0.55rem;
+		background: var(--card);
+		color: var(--primary-link);
+	}
+	.checklist-items {
+		padding-inline: clamp(1rem, 2.8vi, 1.8rem);
+	}
+	.checklist-items li {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: start;
+		gap: 0.75rem;
+		padding-block: 0.8rem;
+		color: var(--muted-foreground);
+		line-height: 1.6;
+	}
+	.checklist-items li + li {
+		border-block-start: 1px solid var(--resource-line);
+	}
+	.checklist-items svg {
+		margin-block-start: 0.16rem;
+		color: var(--primary-link);
+	}
+	.checklist-action {
+		margin-block-start: auto;
+		padding: 0.8rem clamp(1rem, 2.8vi, 1.8rem) clamp(1rem, 2.8vi, 1.8rem);
+	}
+	.download-card {
+		display: grid;
+		justify-items: start;
+		gap: 0.55rem;
+		padding: clamp(1rem, 2.8vi, 1.8rem);
+	}
+	.download-card p {
+		color: var(--muted-foreground);
+	}
+	.download-meta {
+		font-size: 0.875rem;
+	}
+	.download-link,
+	.download-related a {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		min-block-size: 2.75rem;
+		color: var(--primary-link);
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+	.download-related {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem 1rem;
+	}
+	@media (min-width: 52rem) {
+		.checklists-grid,
+		.download-list {
+			grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+		}
+	}
+</style>
