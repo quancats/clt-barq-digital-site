@@ -20,11 +20,11 @@ sections:
           Unify work channels
           Organize group and direct communication
           Define access needs
-          Assess bim against the technical environment
+          Assess how BIM fits the organization’s environment and its account, device, and access management needs
     - key: 'value'
       title: 'Expected value'
-      body: 'More organized communication, clearer information-sharing paths, and a user-management approach. Target outcomes and verification measures are defined during scoping, based on organizational requirements.'
+      body: 'The assessment outlines the communication channels needed, how staff and administrator access would be organized, and which requirements should be verified in a BIM demo. Implementation details and acceptance criteria are defined in the agreed scope.'
     - key: 'consultation'
-      title: 'Let''s discuss the right solution for you'
+      title: "Let's discuss the right solution for you"
       body: 'Request a consultation'
 ---

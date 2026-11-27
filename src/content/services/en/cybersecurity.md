@@ -9,7 +9,7 @@ governance: { 'status': 'published', 'approvalRef': 'website-copy-2026-11-26' }
 sortOrder: 5
 seo: { 'title': 'Cybersecurity | Barq Digital', 'description': 'Protecting digital assets starts with understanding threats and the technology environment, then selecting controls appropriate to the business.' }
 scope: ['Assess network, endpoint and data protection needs', 'Select malware protection controls', 'Manage access', 'Assess encryption requirements', 'Review security configurations']
-deliverables: ['Risk and priority overview, solution scope, implementation recommendations and agreed acceptance criteria.']
+deliverables: ['A summary of risks and priorities in the environment assessed.', 'A defined solution scope and recommendations for implementing the selected controls.', 'Agreed acceptance criteria for verifying implementation deliverables.']
 sections:
     - key: 'fit'
       title: 'When is this service relevant?'
