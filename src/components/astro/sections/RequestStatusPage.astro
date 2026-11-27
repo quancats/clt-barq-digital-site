@@ -1,4 +1,5 @@
 ---
+import { render } from 'astro:content';
 import ButtonLink from '@/components/astro/content/ButtonLink.astro';
 import Heading from '@/components/astro/content/Heading.astro';
 import ProseText from '@/components/astro/content/ProseText.astro';
@@ -6,6 +7,7 @@ import Section from '@/components/astro/content/Section.astro';
 import Stack from '@/components/astro/content/Stack.astro';
 import { localizePath, type Locale } from '@/i18n/config';
 import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import { getPublishedContent } from '@/lib/content/queries/getPublishedContent';
 import { createPageSeo } from '@/lib/seo/createPageSeo';
 
 interface Props {
@@ -27,6 +29,8 @@ const copy = {
 }[locale];
 const route = '/thank-you/';
 const alternateLocale = locale === 'ar' ? 'en' : 'ar';
+const entry = (await getPublishedContent('pages', locale)).find(({ data }) => data.translationKey === 'thank-you');
+const Content = entry?.body?.trim() ? (await render(entry)).Content : undefined;
 ---
 
 <WebsiteLayout {locale} alternatePath={localizePath(alternateLocale, route)} seo={createPageSeo({ title: copy.title, description: copy.description, canonicalPath: localizePath(locale, route), noindex: true })}>
@@ -34,7 +38,17 @@ const alternateLocale = locale === 'ar' ? 'en' : 'ar';
 		<Stack spacing="relaxed">
 			<Heading id="request-status-title" size="display">{copy.title}</Heading>
 			<ProseText>{copy.description}</ProseText>
-			<div><ButtonLink href={localizePath(locale, '/')}>{copy.home}</ButtonLink></div>
+			{
+				Content ? (
+					<div class="prose">
+						<Content />
+					</div>
+				) : (
+					<div>
+						<ButtonLink href={localizePath(locale, '/')}>{copy.home}</ButtonLink>
+					</div>
+				)
+			}
 		</Stack>
 	</Section>
 </WebsiteLayout>

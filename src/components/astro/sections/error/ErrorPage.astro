@@ -12,9 +12,10 @@ interface Props {
 	statusCode?: number;
 	/** Optional technical detail for non-404/500 codes (page body only; never used in meta). */
 	technicalMessage?: string;
+	notFound?: { title: string; description: string; links: { href: string; label: string }[] };
 }
 
-const { locale, statusCode = 404, technicalMessage } = Astro.props;
+const { locale, statusCode = 404, technicalMessage, notFound } = Astro.props;
 const dictionary = getDictionary(locale);
 const direction = getLocaleDirection(locale);
 const homeHref = localizePath(locale, '/');
@@ -24,26 +25,26 @@ const homeTrailingIcon = direction === 'rtl' ? 'lucide:arrow-left' : 'lucide:arr
 const showRetryAction = statusCode >= 500 || statusCode === 408;
 
 const copy = dictionary.common.error;
-const title = statusCode === 404 ? copy.titles.not_found : statusCode === 500 ? copy.titles.server_error : copy.titles.generic.replace('{code}', String(statusCode));
+const title = statusCode === 404 ? (notFound?.title ?? copy.titles.not_found) : statusCode === 500 ? copy.titles.server_error : copy.titles.generic.replace('{code}', String(statusCode));
 
-const baseDescription = statusCode === 404 ? copy.descriptions.not_found : statusCode === 500 ? copy.descriptions.server_error : copy.descriptions.generic;
+const baseDescription = statusCode === 404 ? (notFound?.description ?? copy.descriptions.not_found) : statusCode === 500 ? copy.descriptions.server_error : copy.descriptions.generic;
 
 const trimmedTechnical = technicalMessage?.trim();
 const description = statusCode !== 404 && statusCode !== 500 && trimmedTechnical ? `${baseDescription} (${trimmedTechnical})` : baseDescription;
 ---
 
-<main id="main" class="error-page relative min-h-screen overflow-hidden bg-primary-50 dark:bg-primary-950">
+<main id="main" class="relative min-h-dvh overflow-hidden bg-background">
 	<div class="error-page__art pointer-events-none absolute inset-0 flex h-full w-full items-start justify-center" aria-hidden="true">
 		<ErrorBackground class="h-auto w-full max-w-none" />
 	</div>
 
-	<div class="relative z-10 flex min-h-screen items-end justify-center px-4 pb-8 sm:pb-12">
-		<section class="error-page__copy mx-auto max-w-3xl text-center">
-			<h1 class="mb-4 text-2xl font-semibold tracking-tight text-primary-800 md:text-3xl dark:text-primary-100">
+	<div class="relative z-10 flex min-h-dvh items-center justify-center px-4 pt-8 pb-8 sm:items-end sm:pb-12">
+		<section class="error-page__copy mx-auto w-full max-w-3xl rounded-xl border text-center">
+			<h1 class="mb-4 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
 				{title}
 			</h1>
 
-			<p class="mx-auto mb-8 max-w-2xl text-base text-primary-700 md:text-lg dark:text-primary-200">
+			<p class="mx-auto mb-8 max-w-2xl text-base text-muted-foreground md:text-lg">
 				{description}
 			</p>
 
@@ -62,8 +63,15 @@ const description = statusCode !== 404 && statusCode !== 500 && trimmedTechnical
 					<Icon name={homeTrailingIcon} size={18} aria-hidden="true" />
 				</ButtonLink>
 				{
+					notFound?.links.map(({ href, label }) => (
+						<ButtonLink {href} variant="secondary" size="lg">
+							{label}
+						</ButtonLink>
+					))
+				}
+				{
 					statusCode === 404 && (
-						<a href={localizePath(otherLocale, '/')} lang={otherLocale} hreflang={otherLocale} class="inline-flex min-h-11 items-center rounded-sm px-2 text-primary-link underline focus-visible:outline-2">
+						<a href={localizePath(otherLocale, '/')} lang={otherLocale} hreflang={otherLocale} class="inline-flex min-h-11 items-center rounded-sm px-2 text-primary-link underline hover:text-primary-link-hover focus-visible:text-primary-link-hover focus-visible:outline-2">
 							{otherLocaleHomeLabel}
 						</a>
 					)
@@ -76,10 +84,17 @@ const description = statusCode !== 404 && statusCode !== 500 && trimmedTechnical
 <style>
 	/* Allowed exception: keyframe motion not expressible as a clear Tailwind utility set. */
 	.error-page__art {
+		--color-primary-100: var(--brand-section-tint);
+		--color-primary-200: color-mix(in oklab, var(--brand-accent) 30%, var(--background));
+		--color-primary-500: color-mix(in oklab, var(--brand-accent) 62%, var(--background));
+		--color-primary-900: var(--primary-link);
 		animation: error-art-in 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
 	}
 
 	.error-page__copy {
+		padding: clamp(1rem, 4vi, 2.25rem);
+		border-color: var(--section-rule);
+		background: var(--card);
 		animation: error-copy-in 700ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
 	}
 

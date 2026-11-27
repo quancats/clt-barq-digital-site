@@ -4,15 +4,23 @@ import { localizePath, type Locale } from '@/i18n/config';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { resolveErrorSeo } from '@/lib/error/resolveErrorSeo';
 import { createPageSeo } from '@/lib/seo/createPageSeo';
+import { getSiteContent, getSiteSections } from '@/lib/content/queries/getSiteRoutes';
 
 interface Props {
 	locale: Locale;
 }
 
 const { locale } = Astro.props;
-const { title, description } = resolveErrorSeo(locale, 404);
+const [content, sections] = await Promise.all([getSiteContent(), getSiteSections(locale)]);
+const entry = content.pages.find(({ data }) => data.locale === locale && data.translationKey === '404')?.data;
+const fallback = resolveErrorSeo(locale, 404);
+const labels = locale === 'ar' ? { solutions: 'الحلول', contact: 'تواصل معنا' } : { solutions: 'Solutions', contact: 'Contact us' };
+const links = (['solutions', 'contact'] as const).flatMap((key) => {
+	const section = sections.find((item) => item.key === key);
+	return section ? [{ href: section.href, label: labels[key] }] : [];
+});
 ---
 
-<BaseLayout locale={locale} seo={createPageSeo({ title, description, canonicalPath: localizePath(locale, '/'), noindex: true })}>
-	<ErrorPage {locale} statusCode={404} />
+<BaseLayout locale={locale} seo={createPageSeo({ title: entry?.seo?.title ?? fallback.title, description: entry?.seo?.description ?? fallback.description, canonicalPath: localizePath(locale, '/'), noindex: true })}>
+	<ErrorPage {locale} statusCode={404} {...entry ? { notFound: { title: entry.title, description: entry.description, links } } : {}} />
 </BaseLayout>
