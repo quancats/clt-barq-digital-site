@@ -36,6 +36,15 @@ Evidence date: 2026-11-25. Repository: `clt-barq-digital-site`. Starting revisio
 
 On 2026-11-26 the user directed the team to skip the audible screen-reader check, separate designer and technical lead sign-off, and the hosted CI run. MS-006 and MS-013 are recorded as accepted with those exceptions on the strength of the completed local checks. The exceptions do not extend to asset rights, later release gates or authorization to push, merge or deploy.
 
+## Follow-up verification on 2026-11-26
+
+- Reviewed `07476fb` and the local changes with independent audits of foundation, design and shared UI. The execution plan assigns implementation to this single website repository.
+- Re-ran the preview validation locally with Node 24.15.0 and pnpm 10.32.1. The 72 Vitest tests, six focused publication checks, static build, budget, link and preview SEO checks, and 64 Chromium tests passed. The 12-page preview had zero broken or isolated pages. Astro reported zero type diagnostics and logged empty collection warnings.
+- The local production-profile build with a test origin passed static SEO and internal-link checks for four HTML pages. It had zero broken or isolated pages.
+- Updated the component preview's language-link focus color, isolated product names for bidirectional text and clarified how the approved logo and font decisions superseded the initial asset inventory.
+- In Chromium at 320 px with JavaScript disabled, both design previews rendered in the declared direction, isolated BIM in the heading, applied the language link's focus color, opened the disclosure via Enter and exposed the email field's invalid state.
+- MS-010 still needs live status behavior and a privacy-reviewed responsive video pattern. MS-011 still needs approved destinations and a production mobile-menu check. MS-012 still needs an integrated article fixture and evidence for related content and the remaining card patterns. The existing Chromium mobile-menu checks exercise the preview header.
+
 ## Design and engineering records
 
 - [Visual directions and rights record](MS-007-brand-direction-draft.md) records the selected visual approach and the owners' outstanding asset decisions.

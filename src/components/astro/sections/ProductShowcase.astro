@@ -22,7 +22,7 @@ const headingId = `${id}-heading`;
 <Section {id} labelledBy={headingId} tone="muted">
 	<div class:list={['grid items-center gap-grid-gutter', image && 'md:grid-cols-2']}>
 		<Stack spacing="relaxed">
-			<Heading id={headingId} level={2}>{name}</Heading>
+			<Heading id={headingId} level={2}><bdi>{name}</bdi></Heading>
 			<ProseText>{description}</ProseText>
 			<div><CallToAction {...link} /></div>
 		</Stack>
