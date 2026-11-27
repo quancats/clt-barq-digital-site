@@ -44,7 +44,7 @@ const primary = destination('consultation') ?? contact;
 const securityService = content.services.find(({ data }) => data.locale === locale && data.translationKey === 'cybersecurity');
 const securityHref = securityService ? localizePath(locale, `services/${securityService.data.slug}`) : destination('services')?.href;
 const securityLabel = securityService ? (locale === 'ar' ? 'استكشف الأمن السيبراني' : 'Explore cybersecurity') : locale === 'ar' ? 'استكشف الخدمات' : 'Explore services';
-const hero = locale === 'ar' ? { category: 'الأمن السيبراني للمؤسسات', title: 'أمّن أعمالك.', emphasis: 'وطوّر قدراتك.', consultation: 'اطلب استشارة' } : { category: 'Enterprise cybersecurity', title: 'Secure your operations.', emphasis: 'Build what’s next.', consultation: 'Request a consultation' };
+const hero = locale === 'ar' ? { category: 'تقنية المؤسسات والأمن السيبراني', title: 'أمّن أعمالك.', emphasis: 'وطوّر قدراتك.', consultation: 'اطلب استشارة' } : { category: 'Enterprise Technology & Cybersecurity', title: 'Secure your operations.', emphasis: 'Build what’s next.', consultation: 'Request a consultation' };
 const demo = destination('demo');
 const bim = destination('bim');
 const bimIntro = home?.sections.find(({ key }) => key === 'bim');
