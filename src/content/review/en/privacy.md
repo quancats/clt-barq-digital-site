@@ -20,15 +20,15 @@ This policy explains the handling of personal data related to visiting the Barq 
 
 ## Responsible entity
 
-Barq Digital — [approved full legal name, registration and address]. Privacy inquiries: info@barqdigital.sa [or approved privacy contact].
+Barq Digital for Information Technology, based in Dammam, Saudi Arabia, is responsible for personal data processing on the corporate website. For privacy inquiries and requests, email [info@barqdigital.sa](mailto:info@barqdigital.sa).
 
 ## Data collected
 
-Form data may include name, organization, email, phone number and description of needs. Operational logs may contain technical data required for security and diagnostics, such as IP address and request time. [Specify actual data, analytics tools and cookies used].
+The forms ask for a name, email address and request details. Depending on the request type, they may also ask for an organization name, a service, an estimated user range or a partnership type. The forms also record acceptance of the privacy policy. The site uses Cloudflare Turnstile to verify submissions, and the form handler uses a hash of the IP address to limit repeated submissions. [Verify production logging, analytics tools and cookies].
 
 ## Purposes and legal basis
 
-Data is used to respond to inquiries, evaluate requests, prepare proposals, secure the website and address faults. The responsible entity determines the applicable legal basis for each purpose and any required consent before processing. Optional marketing requires an appropriate legal basis.
+We use the information you submit to respond to your inquiry, assess your needs, prepare a proposal or arrange follow-up. Required fields are needed to process the request. You can leave optional fields blank. We use technical data to protect the website and diagnose faults, and request separate consent for optional analytics.
 
 ## Sharing and processing location
 
@@ -36,15 +36,15 @@ Hosting, form protection and request delivery providers may be used as needed. [
 
 ## Retention and security
 
-Data is retained for a period appropriate to its purpose and applicable legal requirements under [approved retention and deletion schedule]. Appropriate safeguards are applied according to data nature and risks.
+We delete inquiry data when it is no longer needed and no later than 12 months after closing the inquiry, unless a legal obligation or the management of an ongoing contractual relationship requires longer retention. [Verify that Barq and its providers apply the retention period and deletion process before publication].
 
 ## Individual rights
 
-Individuals may exercise applicable statutory rights, including access, correction, deletion or withdrawal of consent where relevant, subject to legal conditions and exceptions. Contact the privacy channel to submit a request. [Add complaint process, competent authority, timing and approved procedures].
+You may ask how your data is used, request access or a copy, request correction or destruction, and withdraw consent where applicable, subject to legal conditions. Send requests or complaints to the privacy email above. We may ask for information to verify your identity before acting on a request. You may also submit a complaint through the National Data Governance Platform.
 
 ## Cookies
 
-[Specify necessary and optional cookies, purposes, duration and consent or rejection mechanisms where applicable].
+The website uses browser local storage to remember your appearance and analytics preferences. If Google Analytics is enabled, website measurement begins after you consent. You can change your choice through the privacy settings in the footer. [Verify the production consent mode and cookie durations before publication].
 
 ## Updates and contact
 

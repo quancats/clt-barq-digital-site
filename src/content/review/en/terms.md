@@ -20,7 +20,7 @@ These terms govern use of the public corporate website. They are not BIM's produ
 
 ## Responsible entity
 
-Barq Digital — [approved full legal name and details].
+The website is operated by Barq Digital for Information Technology, based in Dammam, Saudi Arabia.
 
 ## Website use
 
@@ -40,7 +40,7 @@ The website may link to other products and sites. External services are subject 
 
 ## Liability and applicable law
 
-[Legal counsel to approve liability provisions, governing law and jurisdiction in accordance with applicable law, without excluding non-excludable rights].
+These website terms are governed by the laws of Saudi Arabia. Disputes relating to them are referred to the competent court under those laws. These terms apply subject to statutory rights.
 
 ## Contact and updates
 

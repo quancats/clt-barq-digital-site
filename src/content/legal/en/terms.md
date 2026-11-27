@@ -1,0 +1,42 @@
+---
+contentId: 'terms-en'
+translationKey: 'terms'
+locale: 'en'
+slug: 'terms'
+title: 'Barq Digital website terms of use'
+description: "These terms govern use of the public corporate website. They are not BIM's product terms or a service or licensing agreement."
+governance: { 'status': 'published', 'approvalRef': 'website-legal-2026-11-27' }
+revision: 'website-v1'
+effectiveDate: '2026-11-27'
+sortOrder: 47
+---
+
+These terms govern use of the public corporate website. They are not BIM's product terms or a service or licensing agreement.
+
+## Responsible entity
+
+The website is operated by Barq Digital for Information Technology, based in Dammam, Saudi Arabia.
+
+## Website use
+
+The website may be used to access information and inquire about solutions and products. Do not disrupt the website, attempt unauthorized access or submit harmful or unlawful content.
+
+## Information and proposals
+
+Content is for general information. Services, products, features, pricing and deployment models are subject to availability, evaluation and contractual agreement. Submitting a request does not create a contract or commitment to deliver services.
+
+## Intellectual property
+
+Website content, marks, logos and materials remain subject to their respective owners' rights. Visiting the website does not grant copying or redistribution rights beyond applicable law, written permission or license.
+
+## External links
+
+The website may link to other products and sites. External services are subject to their own terms and policies.
+
+## Liability and applicable law
+
+These website terms are governed by the laws of Saudi Arabia. Disputes relating to them are referred to the competent court under those laws. These terms apply subject to statutory rights.
+
+## Contact and updates
+
+For questions about these terms: info@barqdigital.sa.
