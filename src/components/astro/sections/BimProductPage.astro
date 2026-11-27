@@ -1,0 +1,378 @@
+---
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import type { CollectionEntry } from 'astro:content';
+import adminAr from '@/assets/images/projects/bim-previews/admin-ar.jpg';
+import adminEn from '@/assets/images/projects/bim-previews/admin-en.jpg';
+import mobileAr from '@/assets/images/projects/bim-previews/mobile-ar.jpg';
+import mobileEn from '@/assets/images/projects/bim-previews/mobile-en.jpg';
+import Breadcrumbs from '@/components/astro/content/Breadcrumbs.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import Container from '@/components/layout/Container.astro';
+import { localizePath } from '@/i18n/config';
+import BimLogo from './BimLogo.astro';
+
+interface Props {
+	product: CollectionEntry<'products'>['data'];
+	breadcrumbs: { label: string; href?: string }[];
+	demoHref: string | undefined;
+}
+
+const { product, breadcrumbs, demoHref } = Astro.props;
+const { locale, title, description, features, sections = [], useCases = [], externalLinks = [] } = product;
+const ar = locale === 'ar';
+const copy = ar
+	? {
+			breadcrumb: 'مسار التنقل',
+			label: 'منتج برق الرقمي',
+			mobile: 'تطبيق BIM على Android وiOS',
+			admin: 'لوحة الإدارة على الويب',
+			sectionNav: 'استكشف المنصة',
+			preview: 'معاينة من موقع BIM ببيانات تجريبية',
+			mobileAlt: 'معاينة شاشة المحادثات في تطبيق BIM على iPhone بالعربية',
+			adminAlt: 'معاينة دليل المستخدمين وتبويبات الصلاحيات والخوادم والمزامنة في لوحة إدارة BIM بالعربية',
+			demo: 'اطلب عرضًا توضيحيًا',
+			site: 'موقع BIM',
+			mobilePreview: 'جرّب معاينة التطبيق',
+			adminPreview: 'افتح معاينة لوحة الإدارة',
+			securityLink: 'تفاصيل الحماية في BIM',
+			scenarios: 'BIM في يوم العمل',
+			closing: 'استكشف BIM مع فريقك',
+			story: 'قصة تطوير BIM',
+		}
+	: {
+			breadcrumb: 'Breadcrumb',
+			label: 'A Barq Digital product',
+			mobile: 'BIM on Android and iOS',
+			admin: 'Web admin console',
+			sectionNav: 'Explore the platform',
+			preview: 'Preview from the BIM website with sample data',
+			mobileAlt: 'English iPhone preview of the BIM chats screen',
+			adminAlt: 'English BIM admin preview showing the user directory and tabs for permissions, servers, and synchronization',
+			demo: 'Request a demo',
+			site: 'BIM website',
+			mobilePreview: 'Try the app preview',
+			adminPreview: 'Open the admin preview',
+			securityLink: 'Explore BIM security',
+			scenarios: 'BIM in the workday',
+			closing: 'Explore BIM with your team',
+			story: 'The story behind BIM',
+		};
+const source = product.officialUrl;
+const sourcePage = (page: string) => (source ? `${source.replace(/\/$/, '')}/${page}` : undefined);
+const mobilePreview = sourcePage('features#app-features');
+const adminPreview = sourcePage('features#admin-console');
+const securityPage = sourcePage('security');
+const mobile = ar ? mobileAr : mobileEn;
+const admin = ar ? adminAr : adminEn;
+const adminFeature = features.find(({ key }) => key === 'admin-console');
+const privacy = sections.find(({ key }) => key === 'privacy');
+const icons: Record<string, string> = { messaging: 'lucide:messages-square', 'file-sharing': 'lucide:paperclip', calls: 'lucide:video' };
+---
+
+<div class="bim-product">
+	<section class="product-hero py-section" aria-labelledby="bim-product-title">
+		<Container>
+			<Breadcrumbs items={breadcrumbs} label={copy.breadcrumb} />
+			<div class="hero-flow">
+				<div class="hero-copy">
+					<div class="product-logo"><BimLogo priority /></div>
+					<p class="product-label">{copy.label}</p>
+					<PageHeading id="bim-product-title" {title} {description} embedded />
+					<div class="product-actions">
+						{demoHref && <CallToAction href={demoHref} label={copy.demo} analyticsAction="demo_cta" />}
+						{source && <CallToAction href={source} label={copy.site} variant="outline" external analyticsAction="bim_outbound" />}
+					</div>
+					<nav class="product-nav" aria-label={copy.sectionNav}>
+						<a href="#bim-mobile">{copy.mobile}</a>
+						<a href="#bim-admin">{copy.admin}</a>
+						{privacy && <a href="#bim-privacy">{privacy.title}</a>}
+					</nav>
+				</div>
+				<figure class="mobile-preview">
+					<Image src={mobile} alt={copy.mobileAlt} priority />
+					<figcaption>{copy.preview}</figcaption>
+				</figure>
+			</div>
+		</Container>
+	</section>
+
+	<section id="bim-mobile" class="product-mobile py-section" aria-labelledby="bim-mobile-title">
+		<Container>
+			<header class="product-section-header">
+				<Heading id="bim-mobile-title" level={2} class="product-title">{copy.mobile}</Heading>
+				{mobilePreview && <CallToAction href={mobilePreview} label={copy.mobilePreview} variant="outline" external analyticsAction="bim_outbound" />}
+			</header>
+			<ul class="mobile-features" role="list">
+				{
+					features
+						.filter(({ key }) => key !== 'admin-console')
+						.map(({ key, title, description }) => (
+							<li>
+								<Icon name={icons[key] ?? 'lucide:smartphone'} size={28} aria-hidden="true" />
+								<Heading level={3} class="feature-title">
+									{title}
+								</Heading>
+								<p>{description}</p>
+							</li>
+						))
+				}
+			</ul>
+		</Container>
+	</section>
+
+	<section id="bim-admin" class="product-admin section-wash py-section" aria-labelledby="bim-admin-title">
+		<Container>
+			<div class="admin-layout">
+				<div>
+					<Heading id="bim-admin-title" level={2} class="product-title">{copy.admin}</Heading>
+					{adminFeature && <p class="product-description">{adminFeature.description}</p>}
+					{adminPreview && <CallToAction href={adminPreview} label={copy.adminPreview} variant="outline" external analyticsAction="bim_outbound" />}
+				</div>
+				<figure class="admin-preview">
+					<a href={admin.src} target="_blank" rel="noopener" aria-label={copy.adminAlt}>
+						<Image src={admin} alt={copy.adminAlt} />
+					</a>
+					<figcaption>{copy.preview}</figcaption>
+				</figure>
+			</div>
+		</Container>
+	</section>
+
+	{
+		(privacy || useCases.length > 0) && (
+			<div class="product-context py-section">
+				<Container>
+					<div class="context-layout">
+						{privacy && (
+							<section id="bim-privacy" class="privacy-panel" aria-labelledby="bim-privacy-title">
+								<div class="small-logo">
+									<BimLogo markOnly />
+								</div>
+								<Heading id="bim-privacy-title" level={2} class="product-title">
+									{privacy.title}
+								</Heading>
+								<p class="product-description">{privacy.body}</p>
+								{securityPage && <CallToAction href={securityPage} label={copy.securityLink} variant="outline" external analyticsAction="bim_outbound" />}
+							</section>
+						)}
+						{useCases.length > 0 && (
+							<section class="use-case-panel" aria-labelledby="bim-use-case-title">
+								<Heading id="bim-use-case-title" level={2} class="product-title">
+									{copy.scenarios}
+								</Heading>
+								<ul role="list">
+									{useCases.map((useCase) => (
+										<li>{useCase}</li>
+									))}
+								</ul>
+							</section>
+						)}
+					</div>
+				</Container>
+			</div>
+		)
+	}
+
+	<section class="product-end py-section" aria-labelledby="bim-end-title">
+		<Container>
+			<div class="product-footer">
+				<Heading id="bim-end-title" level={2} class="product-title">{copy.closing}</Heading>
+				<div class="product-actions">
+					{demoHref && <CallToAction href={demoHref} label={copy.demo} analyticsAction="demo_cta" />}
+					{externalLinks.map(({ href, label }) => <CallToAction {href} {label} variant="outline" external />)}
+					<CallToAction href={localizePath(locale, 'projects/bim-product')} label={copy.story} variant="outline" />
+				</div>
+			</div>
+		</Container>
+	</section>
+</div>
+
+<style>
+	.bim-product {
+		--bim-accent: var(--primary-link);
+		--bim-tint: var(--brand-section-tint);
+		--bim-line: var(--section-rule);
+	}
+	.product-hero {
+		padding-block: clamp(1.65rem, 4.4vi, 4rem);
+		background: radial-gradient(ellipse at top, var(--bim-tint), var(--background) 78%);
+	}
+	.hero-flow,
+	.admin-layout,
+	.context-layout {
+		display: grid;
+		align-items: center;
+		gap: clamp(1.5rem, 5vi, 4rem);
+	}
+	.hero-flow {
+		margin-block-start: clamp(1.25rem, 3vi, 2.5rem);
+	}
+	.hero-copy {
+		min-inline-size: 0;
+	}
+	.hero-copy .product-actions {
+		margin-block-start: 1.25rem;
+	}
+	.product-logo {
+		inline-size: min(100%, 16rem);
+		margin-block-end: 1.25rem;
+	}
+	.product-label {
+		margin-block-end: 0.45rem;
+		color: var(--bim-accent);
+		font-weight: 700;
+	}
+	.product-description {
+		max-inline-size: 64ch;
+		margin-block: 1rem 1.4rem;
+		color: var(--muted-foreground);
+		line-height: 1.75;
+	}
+	.product-actions,
+	.product-nav {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+		align-items: center;
+	}
+	.product-nav {
+		margin-block-start: 1.15rem;
+		gap: 0.15rem 1rem;
+	}
+	.product-nav a {
+		display: inline-flex;
+		min-block-size: 2.75rem;
+		align-items: center;
+		color: var(--bim-accent);
+		font-weight: 650;
+	}
+	.product-nav a:is(:hover, :focus-visible) {
+		text-decoration: underline;
+		text-underline-offset: 0.23em;
+	}
+	.mobile-preview {
+		display: grid;
+		justify-items: center;
+		gap: 0.8rem;
+		margin: 0;
+		padding: clamp(1rem, 3vi, 2rem);
+		border-radius: 1.4rem;
+		background: radial-gradient(ellipse at center, var(--brand-panel-glow), var(--brand-panel-surface) 75%);
+	}
+	.mobile-preview img {
+		inline-size: min(64%, 14rem);
+		block-size: auto;
+		border-radius: clamp(0.9rem, 3vi, 1.75rem);
+	}
+	.mobile-preview figcaption {
+		text-align: center;
+		color: var(--brand-panel-copy);
+		font-size: 0.82rem;
+	}
+	.product-section-header {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+	}
+	.bim-product :global(.product-title) {
+		font-size: clamp(1.65rem, 1.25rem + 1.8vi, 2.65rem);
+		line-height: 1.23;
+		text-wrap: balance;
+	}
+	.bim-product :global(.feature-title) {
+		font-size: 1.15rem;
+	}
+	.mobile-features {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1.2rem;
+		margin-block-start: 1.5rem;
+	}
+	.mobile-features li {
+		display: grid;
+		align-content: start;
+		gap: 0.65rem;
+		padding-block-start: 1rem;
+		border-block-start: 1px solid var(--bim-line);
+	}
+	.mobile-features :global(svg) {
+		color: var(--bim-accent);
+	}
+	.mobile-features p,
+	.use-case-panel li {
+		color: var(--muted-foreground);
+		line-height: 1.65;
+	}
+	.admin-preview {
+		min-inline-size: 0;
+		margin: 0;
+	}
+	.admin-preview a {
+		display: block;
+		border: 1px solid var(--bim-line);
+		border-radius: 0.85rem;
+	}
+	.admin-preview img {
+		inline-size: 100%;
+		block-size: auto;
+		border-radius: inherit;
+	}
+	.admin-preview figcaption {
+		margin-block-start: 0.55rem;
+		color: var(--muted-foreground);
+		font-size: 0.85rem;
+	}
+	.context-layout {
+		align-items: start;
+	}
+	.small-logo {
+		display: inline-block;
+		margin-block-end: 0.7rem;
+	}
+	.privacy-panel {
+		padding: clamp(1rem, 3vi, 2rem);
+		border: 1px solid var(--bim-line);
+		border-radius: 1rem;
+		background: var(--bim-tint);
+	}
+	.use-case-panel ul {
+		margin-block-start: 1rem;
+	}
+	.use-case-panel li {
+		padding-block: 0.8rem;
+		border-block-start: 1px solid var(--bim-line);
+	}
+	.product-footer {
+		display: grid;
+		gap: 1.2rem;
+		padding: clamp(1.2rem, 4vi, 2.5rem);
+		border-block-start: 1px solid var(--bim-line);
+		background: var(--bim-tint);
+	}
+	.product-mobile,
+	.product-admin,
+	.privacy-panel {
+		scroll-margin-block-start: 6rem;
+	}
+	@media (min-width: 44rem) {
+		.mobile-features {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+	@media (min-width: 56rem) {
+		.hero-flow {
+			grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+		}
+		.admin-layout {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
+		}
+		.context-layout {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+</style>

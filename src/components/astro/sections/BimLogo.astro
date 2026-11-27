@@ -1,0 +1,55 @@
+---
+import { Image } from 'astro:assets';
+import bimLogo from '@/assets/images/projects/bim-logo.png';
+
+interface Props {
+	markOnly?: boolean;
+	onDarkSurface?: boolean;
+	priority?: boolean;
+}
+
+const { markOnly = false, onDarkSurface = false, priority = false } = Astro.props;
+---
+
+<span class:list={['bim-logo', markOnly && 'bim-logo-mark', onDarkSurface && 'bim-logo-inverted']} aria-hidden="true">
+	<Image src={bimLogo} alt="" width={markOnly ? 384 : 900} format="png" {priority} />
+</span>
+
+<style>
+	.bim-logo {
+		/* Crop the blank margins from the supplied 16:9 artwork. */
+		position: relative;
+		display: block;
+		overflow: clip;
+		inline-size: min(100%, 19rem);
+		aspect-ratio: 2.88;
+		mix-blend-mode: multiply;
+	}
+
+	.bim-logo-mark {
+		inline-size: 2.4rem;
+		aspect-ratio: 0.842;
+	}
+
+	.bim-logo img {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 124.38%;
+		max-width: none;
+		height: auto;
+		transform: translate(-9.6%, -25%);
+	}
+
+	.bim-logo-mark img {
+		/* Include only the shield, to the left of the lettering. */
+		width: 425.53%;
+		transform: translate(-9.5%, -25%);
+	}
+
+	.bim-logo-inverted,
+	:global(.dark) .bim-logo {
+		filter: grayscale(1) invert(1) brightness(1.3);
+		mix-blend-mode: screen;
+	}
+</style>
