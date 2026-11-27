@@ -1,20 +1,30 @@
 ---
+import { render } from 'astro:content';
+import { Image } from 'astro:assets';
+import cybersecurityHero from '@/assets/images/cybersecurity-shield-hero.png';
+import enterpriseArchitecture from '@/assets/images/enterprise-architecture-about.png';
+import ButtonLink from '@/components/astro/content/ButtonLink.astro';
 import CallToAction from '@/components/astro/content/CallToAction.astro';
 import Card from '@/components/astro/content/Card.astro';
 import Heading from '@/components/astro/content/Heading.astro';
 import ProseText from '@/components/astro/content/ProseText.astro';
 import Section from '@/components/astro/content/Section.astro';
 import Stack from '@/components/astro/content/Stack.astro';
-import HomeArticles from '@/components/astro/sections/home/HomeArticles.astro';
-import HomeHero from '@/components/astro/sections/home/HomeHero.astro';
 import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import HomeBim from '@/components/astro/sections/HomeBim.astro';
+import HomeCapabilities from '@/components/astro/sections/HomeCapabilities.astro';
+import HomeNextSections from '@/components/astro/sections/HomeNextSections.astro';
+import HomeWorkMethod from '@/components/astro/sections/HomeWorkMethod.astro';
+import Container from '@/components/layout/Container.astro';
+import { localizePath } from '@/i18n/config';
 import type { Locale } from '@/i18n/config';
 import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
 import { createHomePage } from '@/lib/content/queries/createHomePage';
+import { getApprovedArticlePath } from '@/lib/content/queries/getEditorialPaths';
+import { getPublishedContent } from '@/lib/content/queries/getPublishedContent';
 import { getSiteContent, getSiteSections } from '@/lib/content/queries/getSiteRoutes';
 import { FALLBACK_SITE_URL } from '@/lib/env/resolveSiteUrl';
 import { createOrganizationJsonLd } from '@/lib/seo/structured-data/createOrganizationJsonLd';
-import { ENV } from 'astro:env/server';
 
 interface Props {
 	locale: Locale;
@@ -23,17 +33,55 @@ interface Props {
 const { locale } = Astro.props;
 const site = Astro.site ?? new URL(FALLBACK_SITE_URL);
 const [page, content, destinations] = await Promise.all([createHomePage({ locale, site }), getSiteContent(), getSiteSections(locale)]);
-const home = content.pages.find(({ data }) => data.locale === locale && data.translationKey === 'home')?.data;
+const homeEntry = content.pages.find(({ data }) => data.locale === locale && data.translationKey === 'home');
+const home = homeEntry?.data;
+const Content = homeEntry?.body?.trim() ? (await render(homeEntry)).Content : undefined;
 const destination = (key: string) => destinations.find((item) => item.key === key);
 const seo = home ? { ...page.seo, title: home.seo?.title ?? home.title, description: home.seo?.description ?? home.description, image: home.media[0]?.path } : page.seo;
 const jsonLd = home ? [page.jsonLd, createOrganizationJsonLd({ site, name: page.dictionary.common.brand, description: home.description, path: seo.canonicalPath })] : page.jsonLd;
 const contact = destination('contact');
 const primary = destination('consultation') ?? contact;
+const securityService = content.services.find(({ data }) => data.locale === locale && data.translationKey === 'cybersecurity');
+const securityHref = securityService ? localizePath(locale, `services/${securityService.data.slug}`) : destination('services')?.href;
+const securityLabel = securityService ? (locale === 'ar' ? 'استكشف الأمن السيبراني' : 'Explore cybersecurity') : locale === 'ar' ? 'استكشف الخدمات' : 'Explore services';
+const hero = locale === 'ar' ? { category: 'الأمن السيبراني للمؤسسات', title: 'أمّن أعمالك.', emphasis: 'وطوّر قدراتك.', consultation: 'اطلب استشارة' } : { category: 'Enterprise cybersecurity', title: 'Secure your operations.', emphasis: 'Build what’s next.', consultation: 'Request a consultation' };
 const demo = destination('demo');
 const bim = destination('bim');
 const bimIntro = home?.sections.find(({ key }) => key === 'bim');
-const otherSections = home?.sections.filter(({ key }) => key !== 'bim') ?? [];
+const bimFeatures = home?.sections.find(({ key }) => key === 'bim-features');
+const aboutIntro = home?.sections.find(({ key }) => key === 'about');
+const workMethod = home?.sections.find(({ key }) => key === 'work-method');
+const capabilitySections = home?.sections.filter(({ key }) => key.startsWith('capability-')) ?? [];
+const capabilityLinks = {
+	cybersecurity: securityService ? securityHref : undefined,
+	solutions: destination('solutions')?.href,
+	products: destination('products')?.href,
+};
+const detailSections = home?.sections.filter(({ key }) => key.startsWith('detail-')) ?? [];
+const otherSections = home?.sections.filter(({ key }) => !['bim', 'bim-features', 'about', 'work-method'].includes(key) && !key.startsWith('capability-') && !key.startsWith('detail-')) ?? [];
+const insightLinks = detailSections.some(({ key }) => key === 'detail-insights') ? (await getPublishedContent('articles', locale)).flatMap(({ data }) => ('governance' in data ? [{ label: data.title, description: data.description, href: getApprovedArticlePath(locale, data.slug) }] : [])).slice(0, 2) : [];
+const serviceHighlights = ['cybersecurity', 'it-infrastructure', 'software-engineering', 'cloud-solutions'].flatMap((key) => {
+	const entry = content.services.find(({ data }) => data.locale === locale && data.translationKey === key);
+	return entry ? [{ key, label: entry.data.title, href: localizePath(locale, `services/${entry.data.slug}`) }] : [];
+});
+const industryHighlights = content.industries
+	.filter(({ data }) => data.locale === locale)
+	.slice(0, 6)
+	.map(({ data }) => ({ key: data.translationKey, label: data.title, href: localizePath(locale, `industries/${data.slug}`) }));
+const bimProject = content.projects.find(({ data }) => data.locale === locale && data.translationKey === 'bim');
+const featuredProject = bimProject ? { label: bimProject.data.title, description: bimProject.data.description, href: localizePath(locale, `projects/${bimProject.data.slug}`) } : undefined;
+const solutionLinks = Object.fromEntries((['services', 'solutions'] as const).flatMap((family) => content[family].filter(({ data }) => data.locale === locale).map(({ data }) => [data.translationKey, localizePath(locale, `${family}/${data.slug}`)] as const)));
+const detailLinks = {
+	solutions: destination('solutions')?.href,
+	services: destination('services')?.href,
+	industries: destination('industries')?.href,
+	projects: destination('projects')?.href,
+	insights: content.pages.some(({ data }) => data.locale === locale && data.translationKey === 'insights') ? localizePath(locale, 'insights') : undefined,
+	consultation: destination('consultation')?.href,
+	contact: contact?.href,
+};
 const intro = destination('about');
+const aboutCopy = locale === 'ar' ? { label: 'من نحن', link: 'تعرّف على برق' } : { label: 'About us', link: 'About Barq' };
 const commercial = ['solutions', 'services', 'industries', 'projects'].flatMap((key) => destination(key) ?? []);
 const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواصل معنا' } : { explore: 'Explore', getInTouch: 'Get in touch' };
 ---
@@ -42,65 +90,86 @@ const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواص�
 	{
 		home ? (
 			<>
-				<Section labelledBy="home-title">
-					<div class:list={['grid items-center gap-grid-gutter', home.media[0] && 'md:grid-cols-2']}>
-						<Stack spacing="relaxed">
-							<Heading id="home-title" size="display">
-								{home.title}
-							</Heading>
-							<ProseText>{home.description}</ProseText>
-							{primary && (
-								<div>
-									<CallToAction href={primary.href} label={primary.title} analyticsAction={primary === contact ? 'contact_action' : 'consultation_cta'} />
+				<section class="home-hero" aria-labelledby="home-title">
+					<Container class="home-hero-layout">
+						<div class="home-hero-copy">
+							<p class="home-hero-category">{hero.category}</p>
+							<h1 id="home-title" class="home-hero-heading">
+								{hero.title} <span>{hero.emphasis}</span>
+							</h1>
+							<p class="home-hero-description">{home.description}</p>
+							{(primary || securityHref) && (
+								<div class="home-hero-actions">
+									{primary && (
+										<ButtonLink href={primary.href} size="lg" class="brand-request-action min-h-12 px-5" analyticsAction={primary === contact ? 'contact_action' : 'consultation_cta'}>
+											{primary === contact ? primary.title : hero.consultation}
+										</ButtonLink>
+									)}
+									{securityHref && (
+										<ButtonLink href={securityHref} size="lg" variant="outline" class="min-h-12 border-white/50 bg-transparent px-5 text-white hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:border-primary focus-visible:bg-primary focus-visible:text-primary-foreground dark:border-white/50 dark:bg-transparent dark:hover:border-primary dark:hover:bg-primary dark:focus-visible:bg-primary">
+											{securityLabel}
+										</ButtonLink>
+									)}
 								</div>
 							)}
-						</Stack>
-						{home.media[0] && <CorporateMedia image={home.media[0]} priority />}
-					</div>
-				</Section>
-				{(bim || bimIntro) && (
-					<Section id="bim" labelledBy="home-bim-title" tone="muted">
-						<div class:list={['grid items-center gap-grid-gutter', bim?.media[0] && 'md:grid-cols-2']}>
-							<Stack spacing="relaxed">
-								<Heading id="home-bim-title" level={2} class="text-2xl wrap-anywhere">
-									<bdi>{bimIntro?.title ?? bim?.title}</bdi>
-								</Heading>
-								<ProseText>{bimIntro?.body ?? bim?.description}</ProseText>
-								{(bim || demo) && (
-									<div class="flex flex-wrap gap-3">
-										{bim && <CallToAction href={bim.href} label={bim.title} />}
-										{demo && <CallToAction href={demo.href} label={demo.title} variant="outline" analyticsAction="demo_cta" />}
-									</div>
-								)}
-							</Stack>
-							{bim?.media[0] && <CorporateMedia image={bim.media[0]} />}
+						</div>
+						{home.media[0] ? (
+							<div class="home-hero-visual home-hero-published-media">
+								<CorporateMedia image={home.media[0]} priority />
+							</div>
+						) : (
+							<div class="home-hero-visual">
+								<Image src={cybersecurityHero} alt="" widths={[480, 720, 960, 1280]} sizes="(min-width: 80rem) 680px, (min-width: 56rem) 51vw, 100vw" format="webp" quality={80} priority class="home-hero-image" />
+							</div>
+						)}
+					</Container>
+				</section>
+				{(aboutIntro || (!Content && intro)) && (
+					<section id="about" aria-labelledby="home-intro-title" class="home-about py-section">
+						<Container>
+							<div class="home-about-intro">
+								<div class="home-about-summary">
+									{aboutIntro && <p class="home-about-label">{aboutCopy.label}</p>}
+									<Heading id="home-intro-title" level={2} class="home-about-title">
+										{aboutIntro?.title ?? intro?.title}
+									</Heading>
+									<ProseText class="mt-4 max-w-xl">{aboutIntro?.body ?? intro?.description}</ProseText>
+									{intro && (
+										<ButtonLink href={intro.href} variant="outline" size="lg" class="mt-4 min-h-11 px-4">
+											{aboutCopy.link}
+										</ButtonLink>
+									)}
+								</div>
+								<div class="home-about-visual">
+									<Image src={enterpriseArchitecture} alt="" widths={[400, 640, 900, 1200]} sizes="(min-width: 80rem) 580px, (min-width: 56rem) 47vw, 100vw" format="webp" quality={80} class="home-about-image" />
+								</div>
+							</div>
+						</Container>
+					</section>
+				)}
+				{workMethod && <HomeWorkMethod {locale} title={workMethod.title} intro={workMethod.body} />}
+				{capabilitySections.length > 0 && <HomeCapabilities {locale} sections={capabilitySections} links={capabilityLinks} />}
+				{(bimIntro || (!Content && bim)) && <HomeBim {locale} title={bimIntro?.title ?? bim?.title ?? 'BIM'} description={bimIntro?.body ?? bim?.description ?? ''} featureSection={bimFeatures} productHref={bim?.href} demoHref={demo?.href} image={bim?.media[0]} />}
+				{detailSections.length > 0 && <HomeNextSections {locale} sections={detailSections} links={detailLinks} {solutionLinks} {serviceHighlights} {industryHighlights} {featuredProject} {insightLinks} />}
+				{Content && (
+					<Section class={aboutIntro && !workMethod && !capabilitySections.length && !bimIntro ? 'pt-0' : ''}>
+						<div class="prose">
+							<Content />
 						</div>
 					</Section>
 				)}
-				{intro && (
-					<Section labelledBy="home-intro-title">
-						<Stack>
-							<Heading id="home-intro-title" level={2} class="text-2xl wrap-anywhere">
-								{intro.title}
-							</Heading>
-							<ProseText>{intro.description}</ProseText>
-							<div>
-								<CallToAction href={intro.href} label={intro.title} variant="outline" />
-							</div>
-						</Stack>
-					</Section>
-				)}
-				{otherSections.map((section, index) => (
-					<Section labelledBy={`home-section-${index}`} tone={index % 2 === 0 ? 'muted' : 'plain'}>
-						<Stack>
-							<Heading id={`home-section-${index}`} level={2} class="text-2xl wrap-anywhere">
-								{section.title}
-							</Heading>
-							<ProseText class="whitespace-pre-line">{section.body}</ProseText>
-						</Stack>
-					</Section>
-				))}
-				{commercial.length > 0 && (
+				{!Content &&
+					otherSections.map((section, index) => (
+						<Section labelledBy={`home-section-${index}`} tone={index % 2 === 0 ? 'muted' : 'plain'}>
+							<Stack>
+								<Heading id={`home-section-${index}`} level={2} class="text-2xl wrap-anywhere">
+									{section.title}
+								</Heading>
+								<ProseText class="whitespace-pre-line">{section.body}</ProseText>
+							</Stack>
+						</Section>
+					))}
+				{!Content && !detailSections.length && commercial.length > 0 && (
 					<Section labelledBy="home-explore-title">
 						<Stack spacing="relaxed">
 							<Heading id="home-explore-title" level={2} class="text-2xl">
@@ -126,8 +195,6 @@ const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواص�
 					</Section>
 				)}
 			</>
-		) : ENV === 'local' ? (
-			<HomeHero {locale} />
 		) : (
 			<Section labelledBy="home-title">
 				<Heading id="home-title" size="display">
@@ -136,9 +203,8 @@ const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواص�
 			</Section>
 		)
 	}
-	<HomeArticles {locale} articles={page.articles} />
 	{
-		home && contact && (
+		home && !Content && !detailSections.some(({ key }) => key === 'detail-contact') && contact && (
 			<Section tone="muted" labelledBy="home-contact-title">
 				<Stack>
 					<Heading id="home-contact-title" level={2} class="text-2xl">
@@ -152,3 +218,148 @@ const copy = locale === 'ar' ? { explore: 'استكشف', getInTouch: 'تواص�
 		)
 	}
 </WebsiteLayout>
+
+<style>
+	.home-about {
+		background: var(--brand-section-wash, var(--card));
+	}
+
+	.home-about-intro {
+		display: grid;
+		align-items: center;
+		gap: clamp(1.5rem, 3vi, 3rem);
+	}
+
+	.home-about-summary {
+		min-width: 0;
+	}
+
+	.home-about-visual {
+		min-width: 0;
+		background: radial-gradient(ellipse at center, var(--brand-section-tint), transparent 70%);
+	}
+
+	.home-about-image {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	.home-about-label {
+		margin-block-end: 0.5rem;
+		color: var(--primary-link);
+		font-size: 0.875rem;
+		font-weight: 650;
+	}
+
+	.home-about :global(.home-about-title) {
+		max-width: 37rem;
+		font-size: clamp(2rem, 1.35rem + 2.25vi, 3.35rem);
+		line-height: 1.2;
+		text-wrap: balance;
+	}
+
+	@media (min-width: 56rem) {
+		.home-about-intro {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+		}
+	}
+
+	.home-hero {
+		--hero-glow-origin: 79%;
+		background: radial-gradient(ellipse at var(--hero-glow-origin) 51%, var(--brand-panel-glow), transparent 62%), var(--brand-panel-surface);
+		color: var(--brand-on-navy);
+	}
+
+	:global(.dark) .home-hero {
+		background: linear-gradient(to top, var(--background), transparent 30%), radial-gradient(ellipse at var(--hero-glow-origin) 43%, var(--brand-panel-glow), transparent 70%), linear-gradient(var(--brand-frame-surface), var(--background));
+	}
+
+	:global(.dark) :is(.home-hero-image, .home-about-image) {
+		filter: hue-rotate(-24deg) saturate(0.72);
+	}
+
+	.home-hero:dir(rtl) {
+		--hero-glow-origin: 21%;
+	}
+
+	.home-hero :global(.home-hero-layout) {
+		display: grid;
+		align-items: center;
+		gap: clamp(1.5rem, 3vi, 3rem);
+		padding-block: clamp(2.5rem, 5.5vi, 5.5rem);
+	}
+
+	.home-hero-copy {
+		min-width: 0;
+	}
+
+	.home-hero-category {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.3rem 0.7rem;
+		border: 1px solid color-mix(in oklab, var(--brand-accent) 32%, transparent);
+		border-radius: 999px;
+		color: var(--brand-on-panel);
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.home-hero-category::before {
+		width: 0.4rem;
+		height: 0.4rem;
+		flex: none;
+		border-radius: 50%;
+		background: currentColor;
+		content: '';
+	}
+
+	.home-hero-heading {
+		margin-block: 0.85rem 1rem;
+		font-size: clamp(2.4rem, 1.35rem + 3vi, 4.25rem);
+		font-weight: 700;
+		line-height: 1.12;
+		overflow-wrap: anywhere;
+	}
+
+	.home-hero-heading span {
+		display: block;
+		color: var(--brand-on-panel);
+	}
+
+	.home-hero-description {
+		max-width: 38rem;
+		color: var(--brand-panel-copy);
+		font-size: clamp(1rem, 0.94rem + 0.35vi, 1.125rem);
+		line-height: 1.75;
+	}
+
+	.home-hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		margin-block-start: 1.5rem;
+	}
+
+	.home-hero-visual {
+		min-width: 0;
+	}
+
+	.home-hero-published-media {
+		border: 1px solid var(--brand-navy-border);
+		border-radius: var(--radius-lg);
+	}
+
+	.home-hero-image {
+		display: block;
+		width: 100%;
+		height: auto;
+	}
+
+	@media (min-width: 56rem) {
+		.home-hero :global(.home-hero-layout) {
+			grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.2fr);
+		}
+	}
+</style>

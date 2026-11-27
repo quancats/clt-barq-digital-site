@@ -1,0 +1,239 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { CollectionEntry } from 'astro:content';
+import ButtonLink from '@/components/astro/content/ButtonLink.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import BimLogo from '@/components/astro/sections/BimLogo.astro';
+import Container from '@/components/layout/Container.astro';
+import type { Locale } from '@/i18n/config';
+
+interface Props {
+	locale: Locale;
+	title: string;
+	description: string;
+	featureSection: { title: string; body: string } | undefined;
+	productHref: string | undefined;
+	demoHref: string | undefined;
+	image: CollectionEntry<'pages'>['data']['media'][number] | undefined;
+}
+
+const { locale, title, description, featureSection, productHref, demoHref, image } = Astro.props;
+const features =
+	featureSection?.body
+		.split('\n')
+		.map((feature) => feature.trim())
+		.filter(Boolean) ?? [];
+const copy = locale === 'ar' ? { label: 'منتجنا الرئيسي', product: 'اكتشف BIM', demo: 'اطلب عرضًا توضيحيًا' } : { label: 'Our flagship product', product: 'Discover BIM', demo: 'Request a demo' };
+const nodes = ['lucide:messages-square', 'lucide:video', 'lucide:network', 'lucide:users'];
+---
+
+<section id="bim" aria-labelledby="home-bim-title" class="home-bim py-section">
+	<Container>
+		<div class="bim-layout">
+			<header class="bim-intro">
+				<p class="bim-label">{copy.label} <span aria-hidden="true"></span> <bdi>BIM</bdi></p>
+				<Heading id="home-bim-title" level={2} class="bim-title">{title}</Heading>
+				<p class="bim-description">{description}</p>
+				{
+					(productHref || demoHref) && (
+						<div class="bim-actions">
+							{productHref && (
+								<ButtonLink href={productHref} size="lg" class="brand-request-action min-h-11">
+									{copy.product}
+									<Icon name="lucide:arrow-right" size={18} class="shrink-0 rtl:rotate-180" aria-hidden="true" />
+								</ButtonLink>
+							)}
+							{demoHref && <CallToAction href={demoHref} label={copy.demo} variant="outline" analyticsAction="demo_cta" />}
+						</div>
+					)
+				}
+			</header>
+			{
+				image ? (
+					<CorporateMedia {image} />
+				) : (
+					<div class="bim-visual" aria-hidden="true">
+						<div class="bim-diagram">
+							<div class="bim-core">
+								<BimLogo markOnly onDarkSurface />
+							</div>
+							{nodes.map((icon) => (
+								<div class="bim-node">
+									<Icon name={icon} size={24} />
+								</div>
+							))}
+						</div>
+					</div>
+				)
+			}
+		</div>
+		{
+			features.length > 0 && (
+				<ul class="bim-features" role="list" aria-label={featureSection?.title}>
+					{features.map((feature) => (
+						<li>
+							<Icon name="lucide:check" size={18} aria-hidden="true" />
+							<span>{feature}</span>
+						</li>
+					))}
+				</ul>
+			)
+		}
+	</Container>
+</section>
+
+<style>
+	.home-bim {
+		--bim-rule: var(--section-rule);
+		border-block: 1px solid var(--bim-rule);
+		background: var(--brand-section-wash, color-mix(in oklab, var(--primary-link) 4%, var(--brand-frame-surface)));
+	}
+
+	.bim-layout {
+		display: grid;
+		align-items: center;
+		gap: clamp(1.75rem, 5vi, 4rem);
+	}
+
+	.bim-label {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		margin-block-end: 0.6rem;
+		color: var(--primary-link);
+		font-size: 0.875rem;
+		font-weight: 700;
+	}
+
+	.bim-label span {
+		inline-size: 0.25rem;
+		block-size: 0.25rem;
+		border-radius: 50%;
+		background: currentColor;
+	}
+
+	.bim-intro :global(.bim-title) {
+		font-size: clamp(2rem, 1.35rem + 2.25vi, 3.35rem);
+		line-height: 1.16;
+		text-wrap: balance;
+	}
+
+	.bim-description {
+		max-inline-size: 56ch;
+		margin-block-start: 1rem;
+		color: var(--muted-foreground);
+		line-height: 1.75;
+	}
+
+	.bim-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.65rem;
+		margin-block-start: 1.4rem;
+	}
+
+	.bim-visual {
+		--line: color-mix(in oklab, var(--brand-accent) 45%, transparent);
+		--grid: color-mix(in oklab, var(--brand-accent) 11%, transparent);
+		display: grid;
+		place-items: center;
+		min-block-size: clamp(14rem, 27vi, 21rem);
+		padding: 1.1rem;
+		border: 1px solid var(--brand-navy-border);
+		border-radius: 1.25rem;
+		background: radial-gradient(ellipse at center, transparent, var(--brand-panel-surface) 83%), repeating-linear-gradient(0deg, transparent 0 23px, var(--grid) 23px 24px), repeating-linear-gradient(90deg, transparent 0 23px, var(--grid) 23px 24px), var(--brand-panel-glow);
+		color: var(--brand-on-panel);
+	}
+
+	.bim-diagram {
+		display: grid;
+		place-items: center;
+		grid-template: repeat(3, minmax(0, 1fr)) / repeat(3, minmax(0, 1fr));
+		inline-size: min(100%, 21rem);
+		min-block-size: 11.5rem;
+		background:
+			linear-gradient(var(--line), var(--line)) center / 1px 67% no-repeat,
+			linear-gradient(var(--line), var(--line)) center / 67% 1px no-repeat;
+	}
+
+	.bim-core,
+	.bim-node {
+		display: grid;
+		place-items: center;
+		border: 1px solid var(--line);
+		background: var(--brand-navy);
+	}
+
+	.bim-core {
+		grid-area: 2 / 2;
+		isolation: isolate;
+		inline-size: 4.65rem;
+		block-size: 4.65rem;
+		border-radius: 1rem;
+		box-shadow: 0 0 1.5rem color-mix(in oklab, var(--brand-accent) 22%, transparent);
+	}
+
+	.bim-node {
+		inline-size: 2.85rem;
+		block-size: 2.85rem;
+		border-radius: 0.7rem;
+	}
+
+	.bim-node:nth-child(2) {
+		grid-area: 1 / 2;
+	}
+	.bim-node:nth-child(3) {
+		grid-area: 2 / 1;
+	}
+	.bim-node:nth-child(4) {
+		grid-area: 2 / 3;
+	}
+	.bim-node:nth-child(5) {
+		grid-area: 3 / 2;
+	}
+
+	.bim-features {
+		display: grid;
+		gap: 1px;
+		overflow: clip;
+		margin-block-start: clamp(1.4rem, 3vi, 2.5rem);
+		border: 1px solid var(--bim-rule);
+		border-radius: 0.9rem;
+		background: var(--bim-rule);
+	}
+
+	.bim-features li {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.65rem;
+		padding: 1rem;
+		background: var(--brand-frame-surface);
+		color: var(--foreground);
+		font-size: 0.9375rem;
+		line-height: 1.55;
+	}
+
+	.bim-features li :global(svg) {
+		flex: none;
+		margin-block-start: 0.1rem;
+		color: var(--primary-link);
+	}
+
+	@media (min-width: 36rem) {
+		.bim-features {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 56rem) {
+		.bim-layout {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		}
+
+		.bim-features {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+	}
+</style>

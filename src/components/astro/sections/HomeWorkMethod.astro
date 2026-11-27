@@ -1,0 +1,183 @@
+---
+import { Icon } from 'astro-icon/components';
+import Heading from '@/components/astro/content/Heading.astro';
+import Container from '@/components/layout/Container.astro';
+import type { Locale } from '@/i18n/config';
+
+interface Props {
+	locale: Locale;
+	title: string;
+	intro: string;
+}
+
+const { locale, title, intro } = Astro.props;
+const steps = [
+	{
+		icon: 'lucide:search',
+		ar: { title: 'فهم الاحتياج', detail: 'نراجع أهداف المؤسسة والأنظمة القائمة ونحدّد المخاطر والأولويات.' },
+		en: { title: 'Discovery', detail: 'We review your objectives and existing systems, then identify risks and priorities.' },
+	},
+	{
+		icon: 'lucide:layers',
+		ar: { title: 'النطاق والتصميم', detail: 'نصمّم الحل ونتفق معك على المخرجات والمسؤوليات قبل بدء التنفيذ.' },
+		en: { title: 'Scope and design', detail: 'We design the solution and agree on deliverables and responsibilities with you.' },
+	},
+	{
+		icon: 'lucide:network',
+		ar: { title: 'التنفيذ والتكامل', detail: 'ننفّذ الحل ونربطه بالأنظمة القائمة وفق نطاق العمل المعتمد.' },
+		en: { title: 'Implementation and integration', detail: 'We implement the solution and connect it to your existing systems within the agreed scope.' },
+	},
+	{
+		icon: 'lucide:clipboard-check',
+		ar: { title: 'التحقق والتسليم', detail: 'نختبر المخرجات مقابل المتطلبات، ثم نسلّمها ونحدّد احتياجات الدعم.' },
+		en: { title: 'Verification and handover', detail: 'We test deliverables against requirements, hand them over, and identify what support is needed.' },
+	},
+];
+const number = new Intl.NumberFormat(locale, { minimumIntegerDigits: 2, useGrouping: false });
+---
+
+<section id="how-we-work" aria-labelledby="how-we-work-title" class="work-method py-section">
+	<Container>
+		<div class="method-panel">
+			<header class="method-intro">
+				<Heading id="how-we-work-title" level={2} class="method-title">{title}</Heading>
+				<p>{intro}</p>
+			</header>
+
+			<ol class="method-steps" role="list">
+				{
+					steps.map((step, index) => (
+						<li class="method-step">
+							<div class="step-marker" aria-hidden="true">
+								<span class="step-icon">
+									<Icon name={step.icon} size={22} />
+								</span>
+								<span class="step-number">{number.format(index + 1)}</span>
+							</div>
+							<Heading level={3} class="step-title">
+								{step[locale].title}
+							</Heading>
+							<p>{step[locale].detail}</p>
+						</li>
+					))
+				}
+			</ol>
+		</div>
+	</Container>
+</section>
+
+<style>
+	.work-method {
+		--method-rule: var(--section-rule);
+		background: var(--background);
+	}
+
+	.method-panel {
+		display: grid;
+		overflow: clip;
+		border: 1px solid var(--method-rule);
+		border-radius: 1.25rem;
+		background: var(--brand-frame-surface);
+	}
+
+	.method-intro {
+		--grid-line: color-mix(in oklab, var(--brand-accent) 12%, transparent);
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		padding: clamp(1.5rem, 4vi, 3.5rem);
+		border-block-end: 1px solid var(--method-rule);
+		background: linear-gradient(165deg, var(--brand-panel-surface) 15%, transparent 105%), repeating-linear-gradient(90deg, transparent 0 27px, var(--grid-line) 27px 28px), repeating-linear-gradient(0deg, transparent 0 27px, var(--grid-line) 27px 28px), var(--brand-panel-glow);
+		color: var(--brand-on-navy);
+	}
+
+	.method-intro::before {
+		width: 2.5rem;
+		height: 0.2rem;
+		margin-block-end: 1.15rem;
+		border-radius: 99px;
+		background: var(--brand-accent);
+		content: '';
+	}
+
+	.method-intro :global(.method-title) {
+		color: inherit;
+		font-size: clamp(2rem, 1.35rem + 2.25vi, 3.35rem);
+		line-height: 1.15;
+		text-wrap: balance;
+	}
+
+	.method-intro p {
+		max-width: 36ch;
+		margin-block-start: 1rem;
+		color: var(--brand-panel-copy);
+		line-height: 1.75;
+	}
+
+	.method-steps {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1px;
+		background: var(--method-rule);
+	}
+
+	.method-step {
+		min-width: 0;
+		padding: clamp(1.15rem, 2.65vi, 2rem);
+		background: var(--brand-frame-surface);
+	}
+
+	.step-marker {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		margin-block-end: 0.85rem;
+		color: var(--primary-link);
+	}
+
+	.step-icon {
+		display: grid;
+		width: 2.7rem;
+		height: 2.7rem;
+		place-items: center;
+		border: 1px solid var(--method-rule);
+		border-radius: 0.6rem;
+		background: color-mix(in oklab, var(--primary-link) 9%, var(--brand-frame-surface));
+	}
+
+	.step-number {
+		font-weight: 650;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.method-step :global(.step-title) {
+		font-size: clamp(1.05rem, 0.94rem + 0.45vi, 1.3rem);
+		line-height: 1.35;
+		text-wrap: pretty;
+	}
+
+	.method-step p {
+		margin-block-start: 0.4rem;
+		color: var(--muted-foreground);
+		font-size: 0.9375rem;
+		line-height: 1.65;
+	}
+
+	@media (min-width: 36rem) {
+		.method-steps {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 56rem) {
+		.method-panel {
+			grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
+		}
+
+		.method-intro {
+			border-block-end: 0;
+			border-inline-end: 1px solid var(--method-rule);
+		}
+	}
+</style>

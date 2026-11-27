@@ -1,0 +1,608 @@
+---
+import { Icon } from 'astro-icon/components';
+import ButtonLink from '@/components/astro/content/ButtonLink.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import BimLogo from '@/components/astro/sections/BimLogo.astro';
+import Container from '@/components/layout/Container.astro';
+import type { Locale } from '@/i18n/config';
+import { industryIcons } from '@/lib/ui/industryIcons';
+
+type Preview = { label: string; description: string; href: string };
+type CatalogLink = { key: string; label: string; href: string };
+
+interface Props {
+	locale: Locale;
+	sections: { key: string; title: string; body: string }[];
+	links: Record<'solutions' | 'services' | 'industries' | 'projects' | 'insights' | 'consultation' | 'contact', string | undefined>;
+	solutionLinks: Record<string, string>;
+	serviceHighlights: CatalogLink[];
+	industryHighlights: CatalogLink[];
+	featuredProject: Preview | undefined;
+	insightLinks: Preview[];
+}
+
+const { locale, sections, links, solutionLinks, serviceHighlights, industryHighlights, featuredProject, insightLinks } = Astro.props;
+const section = (key: string) => sections.find((item) => item.key === `detail-${key}`);
+const subsections = (key: string) => sections.filter((item) => item.key.startsWith(`detail-${key}-`));
+const copy = locale === 'ar' ? { solutions: 'جميع الحلول', servicesLabel: 'خدماتنا', services: 'استكشف الخدمات', industries: 'استكشف القطاعات', projects: 'استكشف أعمالنا', project: 'قصة تطوير BIM', insights: 'المركز المعرفي', consultation: 'اطلب استشارة', contact: 'تواصل معنا' } : { solutions: 'All solutions', servicesLabel: 'Our services', services: 'Explore services', industries: 'Explore industries', projects: 'Explore our work', project: 'The story behind BIM', insights: 'Explore insights', consultation: 'Request a consultation', contact: 'Contact us' };
+const serviceIcons: Record<string, string> = {
+	cybersecurity: 'lucide:shield-check',
+	'it-infrastructure': 'lucide:server',
+	'software-engineering': 'lucide:code',
+	'cloud-solutions': 'lucide:cloud',
+};
+const solution = section('solutions');
+const services = section('services');
+const industries = section('industries');
+const why = section('why');
+const projects = section('projects');
+const insights = section('insights');
+const contact = section('contact');
+---
+
+{
+	solution && (
+		<section id="solutions" aria-labelledby="home-solutions-title" class="home-details home-solutions py-section">
+			<Container>
+				<header class="section-header">
+					<div>
+						<p class="section-label">{solution.body}</p>
+						<Heading id="home-solutions-title" level={2} class="section-title">
+							{solution.title}
+						</Heading>
+					</div>
+					{links.solutions && <CallToAction href={links.solutions} label={copy.solutions} variant="outline" />}
+				</header>
+				<ul class="solution-grid" role="list">
+					{subsections('solutions').map(({ key, title, body }) => {
+						const href = solutionLinks[key.slice('detail-solutions-'.length)];
+						const Tag = href ? 'a' : 'div';
+						return (
+							<li>
+								<Tag {href} class="solution-item">
+									<div>
+										<Heading level={3} class="item-title">
+											{title}
+										</Heading>
+										<p>{body}</p>
+									</div>
+									{href && (
+										<span class="solution-arrow" aria-hidden="true">
+											<Icon name="lucide:arrow-right" size={19} class="rtl:rotate-180" />
+										</span>
+									)}
+								</Tag>
+							</li>
+						);
+					})}
+				</ul>
+			</Container>
+		</section>
+	)
+}
+
+{
+	services && (
+		<section id="services" aria-labelledby="home-services-title" class="home-details home-services py-section">
+			<Container>
+				<div class="services-layout">
+					<header>
+						<p class="section-label">{copy.servicesLabel}</p>
+						<Heading id="home-services-title" level={2} class="section-title">
+							{services.title}
+						</Heading>
+						<p class="section-description">{services.body}</p>
+						{links.services && <CallToAction href={links.services} label={copy.services} variant="outline" />}
+					</header>
+					{serviceHighlights.length > 0 && (
+						<ul class="service-index" role="list">
+							{serviceHighlights.map(({ key, label, href }) => (
+								<li>
+									<a {href}>
+										<Icon name={serviceIcons[key] ?? 'lucide:settings'} size={23} class="shrink-0" aria-hidden="true" />
+										<span>{label}</span>
+										<Icon name="lucide:arrow-right" size={17} class="shrink-0 rtl:rotate-180" aria-hidden="true" />
+									</a>
+								</li>
+							))}
+						</ul>
+					)}
+				</div>
+			</Container>
+		</section>
+	)
+}
+
+{
+	industries && (
+		<section id="industries" aria-labelledby="home-industries-title" class="home-details home-industries py-section">
+			<Container>
+				<header class="industry-header">
+					<Heading id="home-industries-title" level={2} class="section-title">
+						{industries.title}
+					</Heading>
+					<p class="section-description">{industries.body}</p>
+				</header>
+				{industryHighlights.length > 0 && (
+					<ul class="industry-directory" role="list">
+						{industryHighlights.map(({ key, label, href }) => (
+							<li>
+								<a {href}>
+									<Icon name={industryIcons[key] ?? 'lucide:building-2'} size={27} aria-hidden="true" />
+									<span>{label}</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				)}
+				{links.industries && (
+					<div class="industry-action">
+						<CallToAction href={links.industries} label={copy.industries} variant="outline" />
+					</div>
+				)}
+			</Container>
+		</section>
+	)
+}
+
+{
+	why && (
+		<section id="why-barq" aria-labelledby="home-why-title" class="home-details home-why py-section">
+			<Container>
+				<header>
+					<p class="section-label">{why.body}</p>
+					<Heading id="home-why-title" level={2} class="section-title">
+						{why.title}
+					</Heading>
+				</header>
+				<ul class="principles" role="list">
+					{subsections('why').map(({ title, body }) => (
+						<li>
+							<Heading level={3} class="item-title">
+								{title}
+							</Heading>
+							<p>{body}</p>
+						</li>
+					))}
+				</ul>
+			</Container>
+		</section>
+	)
+}
+
+{
+	projects && (
+		<section id="projects" aria-labelledby="home-projects-title" class="home-details home-projects py-section">
+			<Container>
+				<div class="projects-layout">
+					<header>
+						<Heading id="home-projects-title" level={2} class="section-title">
+							{projects.title}
+						</Heading>
+						<p class="section-description">{projects.body}</p>
+						{links.projects && <CallToAction href={links.projects} label={copy.projects} variant="outline" />}
+					</header>
+					{featuredProject && (
+						<article class="project-feature">
+							<div class="project-mark" aria-hidden="true">
+								<BimLogo />
+							</div>
+							<div class="project-story">
+								<Heading level={3} class="item-title">
+									{featuredProject.label}
+								</Heading>
+								<p>{featuredProject.description}</p>
+								<a href={featuredProject.href} class="text-action">
+									{copy.project}
+									<Icon name="lucide:arrow-right" size={17} class="shrink-0 rtl:rotate-180" aria-hidden="true" />
+								</a>
+							</div>
+						</article>
+					)}
+				</div>
+			</Container>
+		</section>
+	)
+}
+
+{
+	insights && (
+		<section id="insights" aria-labelledby="home-insights-title" class="home-details home-insights py-section">
+			<Container>
+				<header class="section-header">
+					<div>
+						<Heading id="home-insights-title" level={2} class="section-title">
+							{insights.title}
+						</Heading>
+						<p class="section-description">{insights.body}</p>
+					</div>
+					{links.insights && <CallToAction href={links.insights} label={copy.insights} variant="outline" />}
+				</header>
+				{insightLinks.length > 0 && (
+					<ul class="insight-list" role="list">
+						{insightLinks.map(({ label, description, href }) => (
+							<li>
+								<article>
+									<Icon name="lucide:file-text" size={25} class="article-icon" aria-hidden="true" />
+									<div>
+										<Heading level={3} class="item-title">
+											<a {href}>{label}</a>
+										</Heading>
+										<p>{description}</p>
+									</div>
+								</article>
+							</li>
+						))}
+					</ul>
+				)}
+			</Container>
+		</section>
+	)
+}
+
+{
+	contact && (
+		<section id="next-step" aria-labelledby="home-next-step-title" class="home-details home-closing py-section">
+			<Container>
+				<div class="closing-panel">
+					<div>
+						<Heading id="home-next-step-title" level={2} class="section-title">
+							{contact.title}
+						</Heading>
+						<p>{contact.body}</p>
+					</div>
+					{(links.consultation || links.contact) && (
+						<div class="closing-actions">
+							{links.consultation && (
+								<ButtonLink href={links.consultation} size="lg" class="brand-request-action min-h-11" analyticsAction="consultation_cta">
+									{copy.consultation}
+								</ButtonLink>
+							)}
+							{links.contact && (
+								<ButtonLink href={links.contact} size="lg" variant="outline" class="min-h-11" analyticsAction="contact_action">
+									{copy.contact}
+								</ButtonLink>
+							)}
+						</div>
+					)}
+				</div>
+			</Container>
+		</section>
+	)
+}
+
+<style>
+	.home-details {
+		--detail-rule: var(--section-rule);
+		--detail-tint: var(--brand-section-tint);
+		background: var(--background);
+	}
+
+	.section-header {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: end;
+		justify-content: space-between;
+		gap: 1rem 2rem;
+		margin-block-end: clamp(1.5rem, 3vi, 2.25rem);
+	}
+
+	.section-label {
+		color: var(--primary-link);
+		font-size: 0.875rem;
+		font-weight: 650;
+	}
+
+	.home-details :global(.section-title) {
+		margin-block-start: 0.35rem;
+		font-size: clamp(2rem, 1.35rem + 2.25vi, 3.35rem);
+		line-height: 1.16;
+		text-wrap: balance;
+	}
+
+	.section-description {
+		max-inline-size: 63ch;
+		margin-block-start: 1rem;
+		color: var(--muted-foreground);
+		line-height: 1.7;
+	}
+
+	.home-details :global(.item-title) {
+		font-size: clamp(1.05rem, 0.98rem + 0.45vi, 1.3rem);
+		line-height: 1.35;
+		overflow-wrap: anywhere;
+	}
+
+	.solution-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0.75rem;
+	}
+
+	.solution-item {
+		display: flex;
+		block-size: 100%;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding: clamp(1rem, 2.35vi, 1.65rem);
+		border: 1px solid var(--detail-rule);
+		border-radius: 0.85rem;
+		background: var(--brand-frame-surface);
+	}
+
+	a.solution-item:is(:hover, :focus-visible) {
+		border-color: var(--primary-link);
+	}
+
+	.solution-item p,
+	.project-story p,
+	.insight-list p {
+		margin-block-start: 0.4rem;
+		color: var(--muted-foreground);
+		line-height: 1.65;
+	}
+
+	.solution-arrow {
+		display: grid;
+		inline-size: 2.4rem;
+		block-size: 2.4rem;
+		flex: none;
+		place-items: center;
+		border-radius: 50%;
+		background: var(--detail-tint);
+		color: var(--primary-link);
+	}
+
+	.home-services {
+		border-block: 1px solid var(--detail-rule);
+		background: var(--detail-tint);
+	}
+
+	.services-layout,
+	.projects-layout {
+		display: grid;
+		align-items: center;
+		gap: clamp(1.6rem, 5vi, 4.25rem);
+	}
+
+	.services-layout header :global(a),
+	.projects-layout header :global(a) {
+		margin-block-start: 1.3rem;
+	}
+
+	.service-index {
+		border-block-start: 1px solid var(--detail-rule);
+	}
+
+	.service-index a {
+		display: grid;
+		grid-template-columns: 1.5rem minmax(0, 1fr) 1.1rem;
+		align-items: center;
+		gap: clamp(0.6rem, 2vi, 1.15rem);
+		padding: 1rem 0.45rem;
+		border-block-end: 1px solid var(--detail-rule);
+		font-size: clamp(1rem, 0.92rem + 0.4vi, 1.2rem);
+		font-weight: 650;
+	}
+
+	.service-index a :global(svg),
+	.industry-directory a :global(svg),
+	.article-icon {
+		color: var(--primary-link);
+	}
+
+	.service-index a:is(:hover, :focus-visible) {
+		background: var(--brand-frame-surface);
+		color: var(--primary-link);
+	}
+
+	.industry-header {
+		display: grid;
+		justify-items: center;
+		text-align: center;
+	}
+
+	.industry-directory {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1px;
+		overflow: clip;
+		margin-block-start: clamp(1.5rem, 3vi, 2.5rem);
+		border: 1px solid var(--detail-rule);
+		border-radius: 0.9rem;
+		background: var(--detail-rule);
+	}
+
+	.industry-directory a {
+		display: grid;
+		block-size: 100%;
+		min-block-size: 7.4rem;
+		align-content: center;
+		justify-items: center;
+		gap: 0.75rem;
+		padding: 0.85rem 0.6rem;
+		background: var(--brand-frame-surface);
+		font-size: 0.9375rem;
+		font-weight: 650;
+		line-height: 1.4;
+		text-align: center;
+		overflow-wrap: anywhere;
+	}
+
+	.industry-directory a:is(:hover, :focus-visible) {
+		background: var(--detail-tint);
+		color: var(--primary-link);
+	}
+
+	.industry-directory a:focus-visible {
+		outline-offset: -3px;
+	}
+
+	.industry-action {
+		display: flex;
+		justify-content: center;
+		margin-block-start: 1.35rem;
+	}
+
+	.home-details.home-why {
+		--why-rule: color-mix(in oklab, var(--brand-accent) 44%, transparent);
+		background: radial-gradient(ellipse at top, var(--brand-panel-glow), var(--brand-panel-surface) 68%);
+		color: var(--brand-on-navy);
+	}
+
+	.home-why .section-label {
+		color: var(--brand-on-panel);
+	}
+
+	.home-why :global(.section-title),
+	.home-why :global(.item-title) {
+		color: inherit;
+	}
+
+	.principles {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1.1rem clamp(1rem, 3vi, 2.5rem);
+		margin-block-start: clamp(1.6rem, 4vi, 3rem);
+	}
+
+	.principles li {
+		padding-block-start: 0.85rem;
+		border-block-start: 2px solid var(--why-rule);
+	}
+
+	.principles p {
+		margin-block-start: 0.45rem;
+		color: var(--brand-panel-copy);
+		line-height: 1.65;
+	}
+
+	.project-feature {
+		display: grid;
+		overflow: clip;
+		border: 1px solid var(--detail-rule);
+		border-radius: 1rem;
+		background: var(--brand-frame-surface);
+	}
+
+	.project-mark {
+		isolation: isolate;
+		display: grid;
+		min-block-size: 8.5rem;
+		place-items: center;
+		padding: 1rem clamp(1rem, 4vi, 2rem);
+		border-block-end: 1px solid var(--detail-rule);
+		background: repeating-linear-gradient(135deg, transparent 0 15px, color-mix(in oklab, var(--primary-link) 10%, transparent) 15px 16px), var(--detail-tint);
+	}
+
+	.project-story {
+		padding: clamp(1.1rem, 2.5vi, 1.8rem);
+	}
+
+	.text-action {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		min-block-size: 2.75rem;
+		margin-block-start: 0.55rem;
+		color: var(--primary-link);
+		font-weight: 650;
+		text-underline-offset: 0.25em;
+	}
+
+	.text-action:is(:hover, :focus-visible),
+	.insight-list a:is(:hover, :focus-visible) {
+		text-decoration: underline;
+	}
+
+	.home-insights {
+		border-block-start: 1px solid var(--detail-rule);
+	}
+
+	.insight-list {
+		border-block-start: 1px solid var(--detail-rule);
+	}
+
+	.insight-list article {
+		display: grid;
+		grid-template-columns: 1.6rem minmax(0, 1fr);
+		gap: clamp(0.75rem, 2.15vi, 1.6rem);
+		padding-block: clamp(1rem, 2vi, 1.55rem);
+		border-block-end: 1px solid var(--detail-rule);
+	}
+
+	.insight-list a {
+		color: var(--primary-link);
+		text-underline-offset: 0.25em;
+	}
+
+	.insight-list p {
+		max-inline-size: 72ch;
+	}
+
+	.home-closing {
+		padding-block-start: 0;
+	}
+
+	.closing-panel {
+		--grid-line: color-mix(in oklab, var(--primary-link) 13%, transparent);
+		display: grid;
+		align-items: center;
+		gap: 1.4rem 2.5rem;
+		padding: clamp(1.25rem, 4vi, 3.5rem);
+		border: 1px solid var(--detail-rule);
+		border-radius: 1.1rem;
+		background: radial-gradient(ellipse at top, transparent, var(--detail-tint) 80%), repeating-linear-gradient(90deg, transparent 0 26px, var(--grid-line) 26px 27px), var(--detail-tint);
+	}
+
+	.closing-panel :global(.section-title) {
+		margin-block-start: 0;
+	}
+
+	.closing-panel p {
+		max-inline-size: 62ch;
+		margin-block-start: 0.75rem;
+		color: var(--card-foreground);
+		line-height: 1.7;
+	}
+
+	.closing-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.6rem;
+	}
+
+	@media (min-width: 42rem) {
+		.solution-grid,
+		.principles {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.industry-directory {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 56rem) {
+		.services-layout,
+		.projects-layout {
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		}
+	}
+
+	@media (min-width: 68rem) {
+		.industry-directory {
+			grid-template-columns: repeat(6, minmax(0, 1fr));
+		}
+
+		.principles {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+
+		.closing-panel {
+			grid-template-columns: minmax(0, 1fr) auto;
+		}
+	}
+</style>
