@@ -11,10 +11,10 @@ const VIEWPORTS = [
 const ROUTES = [
 	{ path: '/ar/', dir: 'rtl', lang: 'ar' },
 	{ path: '/en/', dir: 'ltr', lang: 'en' },
-	{ path: '/ar/articles/', dir: 'rtl', lang: 'ar' },
-	{ path: '/ar/components/', dir: 'rtl', lang: 'ar' },
-	{ path: '/en/articles/', dir: 'ltr', lang: 'en' },
-	{ path: '/en/components/', dir: 'ltr', lang: 'en' },
+	{ path: '/ar/products/bim/', dir: 'rtl', lang: 'ar' },
+	{ path: '/ar/projects/bim-product/', dir: 'rtl', lang: 'ar' },
+	{ path: '/en/products/bim/', dir: 'ltr', lang: 'en' },
+	{ path: '/en/projects/bim-product/', dir: 'ltr', lang: 'en' },
 ] as const;
 
 for (const viewport of VIEWPORTS) {
