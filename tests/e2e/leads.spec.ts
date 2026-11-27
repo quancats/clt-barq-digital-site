@@ -33,7 +33,14 @@ async function fillLead(page: Page, journey: (typeof journeys)[number]) {
 	await form.locator('[name="name"]').fill('Fixture Person');
 	await form.locator('[name="email"]').fill('fixture@example.invalid');
 	if (journey.type === 'demo' || journey.type === 'partnership') await form.locator('[name="organization"]').fill('Synthetic Institution');
-	if ('choice' in journey) await form.locator(`[name="${journey.choice[0]}"]`).selectOption(journey.choice[1]);
+	if ('choice' in journey) {
+		const dropdown = form.locator('[data-lead-dropdown]');
+		const trigger = dropdown.locator('[data-lead-dropdown-trigger]');
+		await trigger.press('Enter');
+		await dropdown.locator(`[data-lead-option="${journey.choice[1]}"]`).press('Enter');
+		await expect(trigger).toBeFocused();
+		await expect(dropdown.locator(`[name="${journey.choice[0]}"]`)).toHaveValue(journey.choice[1]);
+	}
 	await form.locator(`[name="${journey.details}"]`).fill('Synthetic request body for local verification.');
 	await form.locator('[name="privacyAccepted"]').check();
 	return form.locator('button[type="submit"]');

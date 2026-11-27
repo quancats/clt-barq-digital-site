@@ -44,9 +44,7 @@ const agenda = sections.filter(({ key }) => key !== 'request');
 						</a>
 					)
 				}
-				<div class="demo-form">
-					<LeadForm {locale} type="demo" services={[]} {...links.privacy ? { privacyPath: links.privacy } : {}} />
-				</div>
+				<LeadForm {locale} type="demo" services={[]} {...links.privacy ? { privacyPath: links.privacy } : {}} />
 			</section>
 			<div class="demo-guide">
 				<figure class="demo-preview">
@@ -157,10 +155,8 @@ const agenda = sections.filter(({ key }) => key !== 'request');
 		color: var(--muted-foreground);
 		line-height: 1.65;
 	}
-	.demo-form {
+	.demo-request > :global(.lead-form) {
 		margin-block-start: 1.15rem;
-		padding-block-start: 1.15rem;
-		border-block-start: 1px solid var(--demo-line);
 	}
 	.demo-privacy,
 	.demo-product {

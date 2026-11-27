@@ -42,9 +42,7 @@ const stepNumber = new Intl.NumberFormat(locale);
 						</a>
 					)
 				}
-				<div class="consultation-form">
-					<LeadForm {locale} type="consultation" {services} {...links.privacy ? { privacyPath: links.privacy } : {}} />
-				</div>
+				<LeadForm {locale} type="consultation" {services} {...links.privacy ? { privacyPath: links.privacy } : {}} />
 			</section>
 			{
 				steps.length > 0 && (
@@ -149,10 +147,8 @@ const stepNumber = new Intl.NumberFormat(locale);
 		color: var(--muted-foreground);
 		line-height: 1.65;
 	}
-	.consultation-form {
+	.consultation-request > :global(.lead-form) {
 		margin-block-start: 1.15rem;
-		padding-block-start: 1.15rem;
-		border-block-start: 1px solid var(--consultation-line);
 	}
 	.consultation-privacy,
 	.consultation-catalog {

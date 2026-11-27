@@ -2,7 +2,7 @@ import { LEAD_ENDPOINT, LEAD_TURNSTILE_ACTION, type LeadResponse, type LeadType 
 import { leadCopy } from './leadCopy';
 
 type LeadCopy = (typeof leadCopy)[keyof typeof leadCopy];
-type Field = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+type Field = HTMLInputElement | HTMLTextAreaElement;
 type Turnstile = {
 	render: (container: HTMLElement, options: Record<string, unknown>) => string;
 	reset: (widget: string) => void;
@@ -61,6 +61,57 @@ function errorMessage(code: string | undefined, copy: LeadCopy) {
 	}
 }
 
+function initDropdown(form: HTMLFormElement, placeholder: string) {
+	const root = form.querySelector<HTMLElement>('[data-lead-dropdown]');
+	if (!root) return;
+
+	const input = root.querySelector<HTMLInputElement>('input[type="hidden"]')!;
+	const trigger = root.querySelector<HTMLButtonElement>('[data-lead-dropdown-trigger]')!;
+	const label = trigger.querySelector<HTMLElement>('[data-lead-dropdown-value]')!;
+	const list = root.querySelector<HTMLElement>('[data-lead-dropdown-options]')!;
+	const options = [...list.querySelectorAll<HTMLButtonElement>('[data-lead-option]')];
+	const setOpen = (open: boolean) => {
+		list.hidden = !open;
+		trigger.setAttribute('aria-expanded', String(open));
+	};
+	const select = (value: string) => {
+		const selection = options.find(({ dataset }) => dataset.leadOption === value);
+		input.value = selection?.dataset.leadOption ?? '';
+		label.textContent = selection?.textContent?.trim() || placeholder;
+		for (const option of options) option.setAttribute('aria-pressed', String(option === selection));
+	};
+
+	trigger.addEventListener('click', () => setOpen(list.hidden));
+	root.addEventListener('focusout', ({ relatedTarget }) => {
+		if (relatedTarget instanceof Node && root.contains(relatedTarget)) return;
+		setOpen(false);
+	});
+	root.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && !list.hidden) {
+			event.preventDefault();
+			setOpen(false);
+			trigger.focus();
+		}
+		if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+		event.preventDefault();
+		const index = options.findIndex((option) => option === event.target);
+		const step = event.key === 'ArrowDown' ? 1 : -1;
+		const next = index < 0 ? (step === 1 ? 0 : options.length - 1) : (index + step + options.length) % options.length;
+		setOpen(true);
+		options[next]?.focus();
+	});
+	for (const option of options) {
+		option.addEventListener('click', () => {
+			select(option.dataset.leadOption!);
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+			setOpen(false);
+			trigger.focus();
+		});
+	}
+	form.addEventListener('reset', () => select(''));
+	return { input, trigger, select };
+}
+
 export async function initLeadForm(form: HTMLFormElement) {
 	const locale = form.dataset.locale === 'ar' ? 'ar' : 'en';
 	const type = form.dataset.leadType as LeadType;
@@ -69,7 +120,9 @@ export async function initLeadForm(form: HTMLFormElement) {
 	const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
 	const status = form.querySelector<HTMLElement>('[data-lead-status]')!;
 	const challenge = form.querySelector<HTMLElement>('[data-lead-challenge]')!;
-	const controls = Array.from(form.querySelectorAll<Field>('input[name], select[name], textarea[name]'));
+	const controls = Array.from(form.querySelectorAll<Field>('input[name], textarea[name]'));
+	const dropdown = initDropdown(form, copy.select);
+	const focusTarget = (field: Field) => (dropdown && field === dropdown.input ? dropdown.trigger : field);
 	let proof = '';
 	let sending = false;
 	let accepted = false;
@@ -82,8 +135,9 @@ export async function initLeadForm(form: HTMLFormElement) {
 		submit.disabled = !proof || sending || accepted;
 	};
 	const fieldError = (field: Field, invalid: boolean) => {
-		field.toggleAttribute('aria-invalid', invalid);
-		if (invalid) field.setAttribute('aria-invalid', 'true');
+		const target = focusTarget(field);
+		if (invalid) target.setAttribute('aria-invalid', 'true');
+		else target.removeAttribute('aria-invalid');
 		const description = document.getElementById(`lead-${field.name}-error`);
 		if (description) description.hidden = !invalid;
 	};
@@ -99,6 +153,11 @@ export async function initLeadForm(form: HTMLFormElement) {
 	form.addEventListener('submit', async (event) => {
 		event.preventDefault();
 		if (sending || accepted || !proof || !form.reportValidity()) return;
+		if (dropdown && !dropdown.input.value) {
+			fieldError(dropdown.input, true);
+			dropdown.trigger.focus();
+			return;
+		}
 		const values: Record<string, string | boolean> = {};
 		for (const field of controls) {
 			fieldError(field, false);
@@ -156,8 +215,9 @@ export async function initLeadForm(form: HTMLFormElement) {
 				}
 			}
 			if (firstInvalid) {
-				firstInvalid.scrollIntoView({ block: 'nearest', behavior: 'instant' });
-				firstInvalid.focus({ preventScroll: true });
+				const target = focusTarget(firstInvalid);
+				target.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+				target.focus({ preventScroll: true });
 			}
 		}
 	});
@@ -189,8 +249,7 @@ export async function initLeadForm(form: HTMLFormElement) {
 		});
 		if (type === 'consultation') {
 			const selected = new URLSearchParams(location.search).get('service');
-			const select = form.querySelector<HTMLSelectElement>('select[name="service"]');
-			if (selected && select && Array.from(select.options).some(({ value }) => value === selected)) select.value = selected;
+			if (selected) dropdown?.select(selected);
 		}
 	} catch {
 		fields.disabled = true;

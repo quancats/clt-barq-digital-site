@@ -1,6 +1,7 @@
 ---
 import FormField from '@/components/core/FormField.astro';
-import { localizePath, type Locale } from '@/i18n/config';
+import { Icon } from 'astro-icon/components';
+import type { Locale } from '@/i18n/config';
 import { LEAD_ENDPOINT, LEAD_LIMITS, LEAD_PARTNERSHIP_TYPES, LEAD_USER_RANGES, type LeadType } from '@/lib/leads/contract';
 import { buttonLinkVariants } from '@/lib/ui/astroVariants';
 import { leadCopy } from './leadCopy';
@@ -16,7 +17,7 @@ const { locale, type, privacyPath, services } = Astro.props;
 const copy = leadCopy[locale];
 const siteKey = String(import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '').trim();
 const active = Boolean(siteKey && privacyPath && (type !== 'consultation' || services.length > 0));
-const control = 'form-control block min-h-11 w-full min-w-0 rounded-md border px-3 py-2 text-base';
+const control = 'form-control min-h-10 w-full min-w-0 rounded-md border px-3 py-2 text-base sm:text-sm';
 const organizationRequired = type === 'demo' || type === 'partnership';
 const messageField = { general: 'message', consultation: 'need', demo: 'deploymentNeeds', partnership: 'proposal' }[type] as 'message' | 'need' | 'deploymentNeeds' | 'proposal';
 const fields = [
@@ -28,77 +29,111 @@ const chooser = type === 'consultation' ? { name: 'service', options: services }
 const chooserLabel = chooser?.name === 'service' ? copy.service : chooser?.name === 'userRange' ? copy.userRange : copy.partnershipType;
 ---
 
-{
-	active ? (
-		<form method="post" action={LEAD_ENDPOINT} data-lead-form data-lead-type={type} data-locale={locale} data-site-key={siteKey} class="w-full max-w-2xl">
-			<fieldset disabled class="grid min-w-0 gap-5">
-				{fields.map(({ name, label, inputType, autocomplete, min, max, required }) => (
-					<FormField name={`lead-${name}`} {label} {required}>
-						<input id={`lead-${name}`} {name} type={inputType} {autocomplete} minlength={min} maxlength={max} {required} dir={inputType === 'email' ? 'ltr' : 'auto'} class={control} aria-describedby={`lead-${name}-error`} />
-						<p id={`lead-${name}-error`} class="text-sm text-destructive" hidden>
-							{copy.fieldError}
-						</p>
-					</FormField>
-				))}
-				{chooser && (
-					<FormField name={`lead-${chooser.name}`} label={chooserLabel} required>
-						<select id={`lead-${chooser.name}`} name={chooser.name} required class={control} dir={chooser.name === 'userRange' ? 'ltr' : undefined} aria-describedby={`lead-${chooser.name}-error`}>
-							<option value="">{copy.select}</option>
-							{chooser.options.map(({ key, label }) => (
-								<option value={key}>{label}</option>
-							))}
-						</select>
-						<p id={`lead-${chooser.name}-error`} class="text-sm text-destructive" hidden>
-							{copy.fieldError}
-						</p>
-					</FormField>
-				)}
-				<FormField name={`lead-${messageField}`} label={copy[messageField]} required>
-					<textarea id={`lead-${messageField}`} name={messageField} minlength={LEAD_LIMITS.details.min} maxlength={LEAD_LIMITS.details.max} required dir="auto" rows="5" class={control} aria-describedby={`lead-sensitive lead-${messageField}-error`} />
-					<p id="lead-sensitive" class="text-sm text-muted-foreground">
-						{copy.sensitive}
-					</p>
-					<p id={`lead-${messageField}-error`} class="text-sm text-destructive" hidden>
+<form method="post" action={LEAD_ENDPOINT} data-lead-form={active || undefined} data-lead-type={type} data-locale={locale} data-site-key={active ? siteKey : undefined} aria-describedby={!active ? 'lead-form-status' : undefined} class="lead-form w-full min-w-0">
+	<fieldset disabled class="lead-fields grid min-w-0 gap-3.5">
+		{
+			fields.map(({ name, label, inputType, autocomplete, min, max, required }) => (
+				<FormField name={`lead-${name}`} {label} {required} class={name === 'organization' && !chooser ? 'lead-wide space-y-1' : 'space-y-1'}>
+					<input id={`lead-${name}`} {name} type={inputType} {autocomplete} minlength={min} maxlength={max} {required} dir={inputType === 'email' ? 'ltr' : 'auto'} class={control} aria-describedby={`lead-${name}-error`} />
+					<p id={`lead-${name}-error`} class="text-sm text-destructive" hidden>
 						{copy.fieldError}
 					</p>
 				</FormField>
-				<div class="space-y-2">
-					<label class="flex min-h-11 w-fit items-center gap-3">
-						<input type="checkbox" name="privacyAccepted" required class="form-checkbox size-5 shrink-0" aria-describedby="lead-privacyAccepted-error" />
-						{copy.privacy}
-					</label>
-					<p id="lead-privacyAccepted-error" class="text-sm text-destructive" hidden>
+			))
+		}
+		{
+			chooser && (
+				<FormField name={`lead-${chooser.name}`} label={chooserLabel} required class="space-y-1">
+					<div data-lead-dropdown class="relative">
+						<input type="hidden" name={chooser.name} value="" />
+						<button type="button" id={`lead-${chooser.name}`} data-lead-dropdown-trigger class:list={[control, 'flex items-center justify-between gap-2 text-start']} aria-expanded="false" aria-controls={`lead-${chooser.name}-options`} aria-describedby={`lead-${chooser.name}-value lead-${chooser.name}-error`}>
+							<span id={`lead-${chooser.name}-value`} data-lead-dropdown-value dir={chooser.name === 'userRange' ? 'ltr' : undefined}>
+								{copy.select}
+							</span>
+							<Icon name="lucide:chevron-down" class="size-4 shrink-0" aria-hidden="true" />
+						</button>
+						<ul id={`lead-${chooser.name}-options`} data-lead-dropdown-options class="lead-dropdown-options absolute inset-x-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-lg" hidden>
+							{chooser.options.map(({ key, label }) => (
+								<li>
+									<button type="button" data-lead-option={key} aria-pressed="false" class="lead-option w-full rounded-sm px-2.5 py-2 text-start text-sm">
+										<bdi>{label}</bdi>
+									</button>
+								</li>
+							))}
+						</ul>
+					</div>
+					<p id={`lead-${chooser.name}-error`} class="text-sm text-destructive" hidden>
 						{copy.fieldError}
 					</p>
-				</div>
-				<div data-lead-challenge />
-				<button type="submit" class:list={[buttonLinkVariants({ size: 'lg' }), 'w-fit']} disabled>
-					{copy.submit}
-				</button>
-			</fieldset>
-			<p data-lead-status role="status" tabindex="-1" class="mt-4 rounded-md px-3 py-2 text-sm font-medium wrap-anywhere">
-				{copy.preparing}
+				</FormField>
+			)
+		}
+		<FormField name={`lead-${messageField}`} label={copy[messageField]} required class="lead-wide space-y-1">
+			<textarea id={`lead-${messageField}`} name={messageField} minlength={LEAD_LIMITS.details.min} maxlength={LEAD_LIMITS.details.max} required dir="auto" rows="3" class={control} aria-describedby={`lead-sensitive lead-${messageField}-error`}></textarea>
+			<p id="lead-sensitive" class="text-sm text-muted-foreground">
+				{copy.sensitive}
 			</p>
-			<noscript>
-				<p>{copy.noScript}</p>
-			</noscript>
-		</form>
-	) : (
-		<p class="text-muted-foreground">
-			{copy.unavailable}
-			{type !== 'general' && (
-				<>
-					{' '}
-					<a class="text-primary-link underline underline-offset-4" href={localizePath(locale, 'contact')} data-analytics-action="contact_action">
-						{locale === 'ar' ? 'تواصل معنا مباشرة' : 'Contact us directly'}
-					</a>
-				</>
-			)}
-		</p>
-	)
-}
+			<p id={`lead-${messageField}-error`} class="text-sm text-destructive" hidden>
+				{copy.fieldError}
+			</p>
+		</FormField>
+		<div class="lead-wide space-y-1">
+			<label class="flex min-h-9 w-fit items-center gap-2 text-sm">
+				<input type="checkbox" name="privacyAccepted" required class="form-checkbox size-4 shrink-0" aria-describedby="lead-privacyAccepted-error" />
+				{copy.privacy}
+			</label>
+			<p id="lead-privacyAccepted-error" class="text-sm text-destructive" hidden>
+				{copy.fieldError}
+			</p>
+		</div>
+		{active && <div data-lead-challenge class="lead-wide" />}
+		<button type="submit" class:list={[buttonLinkVariants({ size: 'default' }), 'lead-wide min-h-10 w-fit']} disabled>
+			{copy.submit}
+		</button>
+	</fieldset>
+	{
+		active ? (
+			<>
+				<p data-lead-status role="status" tabindex="-1" class="mt-4 rounded-md px-3 py-2 text-sm font-medium wrap-anywhere">
+					{copy.preparing}
+				</p>
+				<noscript>
+					<p>{copy.noScript}</p>
+				</noscript>
+			</>
+		) : (
+			<p id="lead-form-status" class="mt-4 text-muted-foreground">
+				{copy.unavailable}{' '}
+				<a class="text-primary-link underline underline-offset-4" href="mailto:info@barqdigital.sa" data-analytics-action="contact_action">
+					info@barqdigital.sa
+				</a>
+			</p>
+		)
+	}
+</form>
 
 <style>
+	.lead-form {
+		container-type: inline-size;
+	}
+	@container (min-width: 25rem) {
+		.lead-fields {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.lead-fields > :global(.lead-wide) {
+			grid-column: 1 / -1;
+		}
+	}
+	.lead-option:is(:hover, :focus-visible, [aria-pressed='true']) {
+		background: var(--accent);
+		color: var(--accent-foreground);
+	}
+	[data-lead-dropdown-trigger]:disabled {
+		cursor: not-allowed;
+	}
+	[data-lead-dropdown-trigger][aria-expanded='true'] :global(svg) {
+		rotate: 180deg;
+	}
 	[data-lead-status] {
 		border-inline-start: 2px solid var(--primary-link);
 		background: var(--brand-section-tint);
