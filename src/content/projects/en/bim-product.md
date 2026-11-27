@@ -16,9 +16,11 @@ products: ['bim']
 
 ## The challenge
 
-Team members need to exchange messages and files in the context of their work. Organization administrators need to manage access and monitor the messaging service.
+Team members need to exchange messages and files and make calls during their work. Organization administrators need to manage accounts and devices and monitor the messaging service. Barq Digital for Information Technology developed its BIM product to meet both needs.
 
-## How the platform addresses it
+## Design decision
+
+The mobile app serves team members, while the web console supports administrators. Each group has access to the tools it needs for its role.
 
 - **For teams:** Direct and group chats, document and media sharing, voice notes, and one-to-one voice and video calls from direct chats on Android and iOS.
 - **For administrators:** A web console to manage organizations, departments, users, devices, and conversation rooms, and monitor servers, synchronization, alerts, and the audit log.
@@ -27,8 +29,9 @@ Team members need to exchange messages and files in the context of their work. O
 
 BIM supports end-to-end encryption for message content in encrypted chats and lets users review linked devices and verify sessions. Administrator access follows the permissions assigned to the role, organization, and server.
 
-## What the project aims to deliver
+## What you can review
 
-Keep conversations and work files in context while giving organization administrators a way to organize access and monitor the messaging service.
+- **Mobile app:** The product page shows the chat interface and links to the Android app on Google Play.
+- **Web admin console:** The product page shows the administration interface. During a demo, you can ask to see how administrators manage permissions and monitor synchronization within their assigned roles.
 
-[Platform features](https://site.bimchat.dev/en/features) · [BIM security](https://site.bimchat.dev/en/security)
+[Explore BIM](/en/products/bim/) · [Request a demo](/en/contact/demo/)
