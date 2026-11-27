@@ -45,11 +45,16 @@ if (production) {
 }
 
 check(pages.size > 0, 'missing HTML pages');
-check(pages.has('/'), 'Arabic home must be rendered at the root');
-const expectedRedirects = renderHostRedirects((route) => {
-	const target = pages.get(route);
-	return Boolean(target && !target.error && !target.redirect && (!production || !target.noindex));
-});
+check(pages.get('/')?.redirect, 'Root must render a redirect');
+for (const [locale, dir] of [
+	['ar', 'rtl'],
+	['en', 'ltr'],
+]) {
+	const home = pages.get(`/${locale}/`);
+	const html = home?.elements.find(({ name }) => name === 'html')?.attributes;
+	check(home && !home.redirect && html?.lang === locale && html.dir === dir, `Missing or invalid ${locale} home`);
+}
+const expectedRedirects = renderHostRedirects([...pages].filter(([, page]) => !page.error && !page.redirect).map(([route]) => route));
 check(assets.has('/_redirects') && (await readFile(path.join(directory, '_redirects'), 'utf8')) === expectedRedirects, 'missing or outdated Cloudflare redirect rules');
 for (const [route, page] of pages) {
 	const excluded = page.noindex || page.error || page.redirect || isHostRedirectSource(route);

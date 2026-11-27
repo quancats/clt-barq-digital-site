@@ -6,9 +6,9 @@ import { readBuild } from './build-output.mjs';
 const BUILD_DIR = path.resolve('dist');
 const DIST_DIR = path.join(BUILD_DIR, '_astro');
 const CSS_BASELINE = {
-	'/': { files: 1, gzipBytes: 19065 },
+	'/ar/': { files: 1, gzipBytes: 19065 },
 	'/en/': { files: 1, gzipBytes: 18739 },
-	'/components/': { files: 2, gzipBytes: 22118 },
+	'/ar/components/': { files: 2, gzipBytes: 22118 },
 	'/en/components/': { files: 2, gzipBytes: 21792 },
 };
 

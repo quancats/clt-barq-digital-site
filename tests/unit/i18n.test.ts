@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { localizePath } from '@/i18n/config';
 import { formatDate, formatNumber } from '@/i18n/format';
-import { getAlternateLocale, mapStaticPathToLocale, stripLocalePrefix } from '@/i18n/helpers';
+import { getAlternateLocale, mapStaticPathToLocale, resolveLocaleFromPathname, stripLocalePrefix } from '@/i18n/helpers';
 
 describe('i18n helpers', () => {
-	it('prefixes English and keeps the default locale at the root', () => {
-		expect(localizePath('ar', '/')).toBe('/');
-		expect(localizePath('ar', '/articles')).toBe('/articles/');
+	it('prefixes both locales and defaults unprefixed URLs to English', () => {
+		expect(localizePath('ar', '/')).toBe('/ar/');
+		expect(localizePath('ar', '/articles')).toBe('/ar/articles/');
+		expect(localizePath('en', '/')).toBe('/en/');
 		expect(localizePath('en', '/articles')).toBe('/en/articles/');
 		expect(localizePath('en', '/articles/')).toBe('/en/articles/');
+		expect(resolveLocaleFromPathname('/')).toBe('en');
+		expect(resolveLocaleFromPathname('/ar/')).toBe('ar');
 	});
 
 	it('strips locale prefixes', () => {
@@ -21,7 +24,7 @@ describe('i18n helpers', () => {
 	it('maps static paths between locales', () => {
 		expect(mapStaticPathToLocale('/ar/articles', 'en')).toBe('/en/articles/');
 		expect(mapStaticPathToLocale('/ar/articles/', 'en')).toBe('/en/articles/');
-		expect(mapStaticPathToLocale('/en/articles/', 'ar')).toBe('/articles/');
+		expect(mapStaticPathToLocale('/en/articles/', 'ar')).toBe('/ar/articles/');
 		expect(getAlternateLocale('ar')).toBe('en');
 	});
 

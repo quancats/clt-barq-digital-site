@@ -3,10 +3,10 @@ import { expect, test, type Page } from '@playwright/test';
 import worker from '../../worker/index';
 
 const journeys = [
-	{ type: 'general', path: '/contact/', details: 'message' },
-	{ type: 'consultation', path: '/contact/consultation/?service=fixture-service', details: 'need', choice: ['service', 'fixture-service'] },
-	{ type: 'demo', path: '/contact/demo/', details: 'deploymentNeeds', choice: ['userRange', '1-50'] },
-	{ type: 'partnership', path: '/partners/', details: 'proposal', choice: ['partnershipType', 'technology'] },
+	{ type: 'general', path: '/ar/contact/', details: 'message' },
+	{ type: 'consultation', path: '/ar/contact/consultation/?service=fixture-service', details: 'need', choice: ['service', 'fixture-service'] },
+	{ type: 'demo', path: '/ar/contact/demo/', details: 'deploymentNeeds', choice: ['userRange', '1-50'] },
+	{ type: 'partnership', path: '/ar/partners/', details: 'proposal', choice: ['partnershipType', 'technology'] },
 ] as const;
 
 test.skip(process.env.PLAYWRIGHT_LEAD_FIXTURE !== '1', 'Requires an isolated build with synthetic contact, privacy, and service entries.');

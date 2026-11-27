@@ -9,7 +9,7 @@ import { defineConfig, envField } from 'astro/config';
 import { loadEnv } from 'vite';
 import { renderHostRedirects } from './src/data/hostRedirects.mjs';
 import { previewAssets } from './src/data/previewAssets';
-import { defaultLocale, locales } from './src/i18n/config';
+import { defaultLocale, localizePath, locales } from './src/i18n/config';
 import { resolveSiteUrl } from './src/lib/env/resolveSiteUrl';
 import { isSiteIndexable } from './src/lib/seo/indexingPolicy';
 import { productionSitemap } from './src/lib/seo/productionSitemap';
@@ -87,9 +87,11 @@ export default defineConfig({
 		locales: [...locales],
 		defaultLocale,
 		routing: {
-			prefixDefaultLocale: false,
+			prefixDefaultLocale: true,
+			redirectToDefaultLocale: false,
 		},
 	},
+	redirects: { '/': { destination: localizePath(defaultLocale), status: 302 } },
 	prefetch: {
 		prefetchAll: false,
 		defaultStrategy: 'viewport',
@@ -114,16 +116,9 @@ export default defineConfig({
 			hooks: {
 				'astro:build:done': async ({ dir }) => {
 					// Workers Static Assets uses the closest 404.html when 404-page handling is enabled.
-					await rename(new URL('en/404/index.html', dir), new URL('en/404.html', dir));
+					await Promise.all(locales.map((locale) => rename(new URL(`${locale}/404/index.html`, dir), new URL(`${locale}/404.html`, dir))));
 					const { pages } = await readBuild(fileURLToPath(dir));
-					await writeFile(
-						new URL('_redirects', dir),
-						renderHostRedirects((path) => {
-							const target = pages.get(path);
-							return Boolean(target && !target.error && !target.redirect && (!indexable || !target.noindex));
-						}),
-						{ flag: 'wx' },
-					);
+					await writeFile(new URL('_redirects', dir), renderHostRedirects([...pages].filter(([, page]) => !page.error && !page.redirect).map(([path]) => path)), { flag: 'wx' });
 					if (configuredEnv === 'production') {
 						await Promise.all(previewAssets.map((path) => rm(new URL(path.slice(1), dir), { force: true })));
 					}

@@ -1,7 +1,7 @@
 export const locales = ['ar', 'en'] as const;
 export type Locale = (typeof locales)[number];
 
-export const defaultLocale: Locale = 'ar';
+export const defaultLocale: Locale = 'en';
 
 export const localeDirections: Record<Locale, 'rtl' | 'ltr'> = {
 	ar: 'rtl',
@@ -18,6 +18,6 @@ export function getLocaleDirection(locale: Locale): 'rtl' | 'ltr' {
 
 export function localizePath(locale: Locale, path = '/'): string {
 	const trimmed = path.replace(/^\/+|\/+$/g, '');
-	const prefix = locale === defaultLocale ? '' : `/${locale}`;
+	const prefix = `/${locale}`;
 	return trimmed ? `${prefix}/${trimmed}/` : `${prefix}/`;
 }

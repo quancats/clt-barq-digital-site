@@ -1,12 +1,12 @@
 # Recipe: Routing and host redirects
 
-The template builds static HTML under `dist/` and serves the locale homes at `/ar/` and `/en/`. Astro keeps `prefixDefaultLocale: true` and `redirectToDefaultLocale: false`. The build writes `dist/_redirects` from `src/data/hostRedirects.mjs`, using `defaultLocale` from `src/i18n/config.ts`. The initial artifact contains:
+Barq Digital builds static HTML under `dist/` and serves the locale homes at `/ar/` and `/en/`. English is the default. The build writes `dist/_redirects` from `src/data/hostRedirects.mjs`, using `defaultLocale` from `src/i18n/config.ts`:
 
 ```text
-/ /ar/ 302
+/ /en/ 302
 ```
 
-Cloudflare Workers Static Assets returns the HTTP redirect before serving HTML. Use 302 while the default destination can change. Use 301 when the destination is permanent and you are ready for browsers and caches to retain the decision. Set the default locale to `en` in an adopting project to generate `/ /en/ 302`.
+Cloudflare Workers Static Assets returns the HTTP redirect before serving HTML. Astro also generates an HTML redirect at the root for static previews. Old unprefixed Arabic URLs, such as `/about/`, use a permanent redirect to the corresponding page under `/ar/` when that page is present in the build.
 
 ## Cloudflare Workers Static Assets
 

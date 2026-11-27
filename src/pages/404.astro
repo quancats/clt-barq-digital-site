@@ -1,9 +1,6 @@
 ---
 import NotFoundPage from '@/components/astro/sections/error/NotFoundPage.astro';
 import { defaultLocale } from '@/i18n/config';
-import { resolveLocaleFromPathname } from '@/i18n/helpers';
-
-const locale = resolveLocaleFromPathname(Astro.url.pathname) || defaultLocale;
 ---
 
-<NotFoundPage {locale} />
+<NotFoundPage locale={defaultLocale} />
