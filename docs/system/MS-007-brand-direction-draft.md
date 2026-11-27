@@ -33,13 +33,15 @@ Plan §WP-007.2 provides these review values. Navy `#0B172B` and slate `#475569`
 
 Ratios use W3C sRGB relative luminance and round to two decimals for display. The comparison uses minimum ratios of 4.5:1 for normal text and 3:1 for large text and applicable non-text elements. The checks cover solid pairs. Component review must cover real default, hover, focus and error states against adjacent colors, gradients, overlays and imagery. [Text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), [non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
 
-## Typography review
+## Initial typography review
 
 The starter config defines Tajawal for Arabic and Manrope for English. The plan proposes IBM Plex Sans Arabic or Alexandria for Arabic and Inter or IBM Plex Sans for English. A coordinated Arabic and Latin trial can begin with IBM Plex Sans Arabic and IBM Plex Sans. Alexandria and Inter provide a second comparison. Published font license texts are available for the candidate families. Record the exact binaries, version and accompanying license before including files in the site. [IBM Plex Sans Arabic license](https://github.com/google/fonts/blob/main/ofl/ibmplexsansarabic/OFL.txt), [IBM Plex Sans license](https://github.com/google/fonts/blob/main/ofl/ibmplexsans/OFL.txt), [Alexandria license](https://github.com/google/fonts/blob/main/ofl/alexandria/OFL.txt), [Inter license](https://github.com/google/fonts/blob/main/ofl/inter/OFL.txt).
 
 Test Arabic shaping and punctuation, Latin text within Arabic, product-name rendering, numerals and weights in headings, buttons, navigation and body copy. Verify 200% zoom, comfortable reading width and wrapping in RTL and LTR. Font comparisons and licensing references are available for review. Application-level typography, rendering and payload checks await selection and source files.
 
-## Brand asset rights and acceptance record
+## Initial brand asset inventory
+
+The table records the state at the initial visual review. The 2026-11-26 approvals below supersede the initial status for the site logo, browser icon derivatives and font.
 
 | Item                         | Evidence observed                                                                                                                          | Release evidence needed                                                                                                                                | Approver role / state                            |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
