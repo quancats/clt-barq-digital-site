@@ -14,6 +14,7 @@ import { resolveSiteUrl } from './src/lib/env/resolveSiteUrl';
 import { isSiteIndexable } from './src/lib/seo/indexingPolicy';
 import { productionSitemap } from './src/lib/seo/productionSitemap';
 import { readBuild } from './scripts/build-output.mjs';
+import { bundleHomeStyles } from './scripts/bundle-home-styles.mjs';
 
 // Astro evaluates this file before normal Vite `.env` injection; load file env explicitly.
 const fileEnv = loadEnv(process.env.NODE_ENV === 'production' ? 'production' : 'development', process.cwd(), '');
@@ -24,6 +25,7 @@ const site = resolveSiteUrl({
 const configuredEnv = (process.env.ENV ?? fileEnv.ENV ?? 'local').trim();
 const configuredOrigin = process.env.PUBLIC_SITE_URL?.trim() || fileEnv.PUBLIC_SITE_URL || '';
 const indexable = isSiteIndexable(configuredEnv, configuredOrigin);
+const catalogOnlySources = ['../components/islands/interactive/ComponentCatalog.vue', '../components/astro/sections/components', '../pages/design-preview', '../components/ui/{accordion,alert,alert-dialog,aspect-ratio,avatar,badge,card,carousel,checkbox,combobox,empty,field,form,input,input-group,item,label,native-select,number-field,pagination,progress,radio-group,separator,skeleton,sonner,spinner,stepper,switch,tabs,textarea,tooltip}'];
 
 export default defineConfig({
 	output: 'static',
@@ -120,6 +122,7 @@ export default defineConfig({
 					const { pages } = await readBuild(fileURLToPath(dir));
 					await writeFile(new URL('_redirects', dir), renderHostRedirects([...pages].filter(([, page]) => !page.error && !page.redirect).map(([path]) => path)), { flag: 'wx' });
 					if (configuredEnv === 'production') {
+						await bundleHomeStyles(dir, locales);
 						await Promise.all(previewAssets.map((path) => rm(new URL(path.slice(1), dir), { force: true })));
 					}
 				},
@@ -136,6 +139,17 @@ export default defineConfig({
 		}),
 	],
 	vite: {
-		plugins: [tailwindcss()],
+		plugins: [
+			{
+				name: 'barq-public-tailwind-sources',
+				enforce: 'pre',
+				transform(css, id) {
+					if (configuredEnv !== 'production' || !id.endsWith('/src/styles/global.css')) return;
+					// These components are used by the design previews, which are removed from the public build.
+					return `${css}\n${catalogOnlySources.map((source) => `@source not '${source}';`).join('\n')}`;
+				},
+			},
+			tailwindcss(),
+		],
 	},
 });

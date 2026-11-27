@@ -5,6 +5,7 @@ import { readBuild } from './build-output.mjs';
 
 const BUILD_DIR = path.resolve('dist');
 const DIST_DIR = path.join(BUILD_DIR, '_astro');
+const mode = process.argv[2] ?? 'preview';
 const CSS_BASELINE = {
 	'/ar/': { files: 1, gzipBytes: 19065 },
 	'/en/': { files: 1, gzipBytes: 18739 },
@@ -16,6 +17,7 @@ async function checkRouteCss(failures) {
 	const { pages } = await readBuild(BUILD_DIR);
 	const report = {};
 	for (const [route, baseline] of Object.entries(CSS_BASELINE)) {
+		if (mode === 'production' && route.endsWith('/components/')) continue;
 		const page = pages.get(route);
 		if (!page) {
 			failures.push('Missing CSS reference route ' + route);
@@ -94,6 +96,9 @@ function matchShared(name) {
 }
 
 async function main() {
+	if (mode !== 'preview' && mode !== 'production') {
+		throw new Error('Usage: pnpm run verify:budget [preview|production]');
+	}
 	const files = await listJsFiles(DIST_DIR);
 	if (files.length === 0) {
 		throw new Error(`No JS chunks found under ${DIST_DIR}. Run a production build first.`);
@@ -121,6 +126,7 @@ async function main() {
 
 	const failures = [];
 	const report = {
+		mode,
 		chunkCount: measured.length,
 		islands: {},
 		topChunks: [...measured]
