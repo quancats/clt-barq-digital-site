@@ -1,0 +1,382 @@
+---
+import { Icon } from 'astro-icon/components';
+import { render, type CollectionEntry } from 'astro:content';
+import type { BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Disclosure from '@/components/astro/content/Disclosure.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+
+interface Props {
+	entry: CollectionEntry<'services'>;
+	breadcrumbs: BreadcrumbItem[];
+	related: readonly { title: string; description: string; href: string }[];
+	consultationHref: string | undefined;
+}
+
+const { entry, breadcrumbs, related, consultationHref } = Astro.props;
+const { locale, title, description, scope, deliverables, media, sections = [], faq = [] } = entry.data;
+const copy = locale === 'ar' ? { breadcrumb: 'مسار التنقّل', index: 'في هذه الصفحة', scope: 'نطاق العمل المحتمل', deliverables: 'مخرجات الخدمة', media: 'معرض الصور', faq: 'الأسئلة الشائعة', related: 'محتوى ذو صلة', contact: 'اطلب استشارة', closing: 'ناقش احتياج مؤسستك' } : { breadcrumb: 'Breadcrumb', index: 'On this page', scope: 'Potential scope', deliverables: 'Deliverables', media: 'Image gallery', faq: 'Frequently asked questions', related: 'Related content', contact: 'Request a consultation', closing: 'Discuss your organizational needs' };
+const fit = sections.find(({ key }) => key === 'fit');
+const approach = sections.find(({ key }) => key === 'approach');
+const consultation = sections.find(({ key }) => key === 'consultation');
+const extraSections = sections.filter(({ key }) => key !== 'fit' && key !== 'approach' && key !== 'consultation');
+const Content = entry.body?.trim() ? (await render(entry)).Content : undefined;
+const index = [...(fit ? [{ id: 'service-fit', label: fit.title }] : []), { id: 'service-scope', label: copy.scope }, { id: 'service-deliverables', label: copy.deliverables }, ...(approach ? [{ id: 'service-approach', label: approach.title }] : []), ...(faq.length > 0 ? [{ id: 'service-faq', label: copy.faq }] : [])];
+---
+
+<div class="service-detail">
+	<PageHeading id="service-title" {title} {description} {breadcrumbs} breadcrumbLabel={copy.breadcrumb}>
+		{consultationHref && <CallToAction href={consultationHref} label={consultation?.body ?? copy.contact} analyticsAction="consultation_cta" />}
+	</PageHeading>
+
+	<Container>
+		<div class="service-layout py-section">
+			<nav class="service-index" aria-labelledby="service-index-title">
+				<Heading level={2} id="service-index-title" class="service-index-title">{copy.index}</Heading>
+				<ul role="list">
+					{
+						index.map(({ id, label }) => (
+							<li>
+								<a href={`#${id}`}>{label}</a>
+							</li>
+						))
+					}
+				</ul>
+			</nav>
+
+			<div class="service-content">
+				{
+					fit && (
+						<section id="service-fit" class="service-fit" aria-labelledby="service-fit-title">
+							<Heading level={2} id="service-fit-title" class="service-section-title">
+								{fit.title}
+							</Heading>
+							<p>{fit.body}</p>
+						</section>
+					)
+				}
+
+				<div class="service-plan">
+					<section id="service-scope" class="scope-panel" aria-labelledby="service-scope-title">
+						<Heading level={2} id="service-scope-title" class="service-section-title">{copy.scope}</Heading>
+						<ul class="scope-list" role="list">
+							{
+								scope.map((item) => (
+									<li>
+										<>
+											<Icon name="lucide:check" size={18} class="shrink-0" aria-hidden="true" />
+											<span>{item}</span>
+										</>
+									</li>
+								))
+							}
+						</ul>
+					</section>
+
+					<section id="service-deliverables" class="deliverables-panel" aria-labelledby="service-deliverables-title">
+						<span class="deliverables-icon" aria-hidden="true"><Icon name="lucide:clipboard-check" size={25} /></span>
+						<Heading level={2} id="service-deliverables-title" class="service-section-title">{copy.deliverables}</Heading>
+						{
+							deliverables.length === 1 ? (
+								<p>{deliverables[0]}</p>
+							) : (
+								<ul class="deliverables-list">
+									{deliverables.map((item) => (
+										<li>{item}</li>
+									))}
+								</ul>
+							)
+						}
+					</section>
+				</div>
+
+				{
+					approach && (
+						<section id="service-approach" class="service-approach" aria-labelledby="service-approach-title">
+							<Heading level={2} id="service-approach-title" class="service-section-title">
+								{approach.title}
+							</Heading>
+							<p>{approach.body}</p>
+						</section>
+					)
+				}
+
+				{
+					Content && (
+						<div class="prose">
+							<Content />
+						</div>
+					)
+				}
+				{
+					extraSections.map(({ key, title, body }) => (
+						<section aria-labelledby={`service-extra-${key}`}>
+							<Heading id={`service-extra-${key}`} level={2} class="service-section-title">
+								{title}
+							</Heading>
+							<p class="extra-copy">{body}</p>
+						</section>
+					))
+				}
+				{
+					media.length > 0 && (
+						<section aria-labelledby="service-media-title">
+							<Heading id="service-media-title" level={2} class="service-section-title">
+								{copy.media}
+							</Heading>
+							<div class="service-gallery">
+								{media.map((image) => (
+									<CorporateMedia {image} />
+								))}
+							</div>
+						</section>
+					)
+				}
+				{
+					faq.length > 0 && (
+						<section id="service-faq" aria-labelledby="service-faq-title">
+							<Heading id="service-faq-title" level={2} class="service-section-title">
+								{copy.faq}
+							</Heading>
+							<div class="service-faq-list">
+								{faq.map(({ question, answer }) => (
+									<Disclosure label={question}>
+										<p>{answer}</p>
+									</Disclosure>
+								))}
+							</div>
+						</section>
+					)
+				}
+				{
+					related.length > 0 && (
+						<section aria-labelledby="service-related-title">
+							<Heading level={2} id="service-related-title" class="service-section-title">
+								{copy.related}
+							</Heading>
+							<ul class="service-related" role="list">
+								{related.map(({ title, description, href }) => (
+									<li>
+										<Heading level={3} class="text-lg">
+											<a {href}>{title}</a>
+										</Heading>
+										<p>{description}</p>
+									</li>
+								))}
+							</ul>
+						</section>
+					)
+				}
+			</div>
+		</div>
+	</Container>
+
+	{
+		consultationHref && (
+			<section class="section-divider section-wash py-section" aria-labelledby="service-contact-title">
+				<Container>
+					<div class="service-contact-panel">
+						<Heading level={2} id="service-contact-title" class="service-section-title">
+							{consultation?.title ?? copy.closing}
+						</Heading>
+						<CallToAction href={consultationHref} label={consultation?.body ?? copy.contact} analyticsAction="consultation_cta" />
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.service-detail {
+		--detail-rule: var(--section-rule);
+		--detail-tint: var(--brand-section-tint);
+	}
+	.service-layout {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		align-items: start;
+		gap: clamp(1.4rem, 4vi, 3.5rem);
+	}
+	.service-index {
+		padding: 1rem;
+		border: 1px solid var(--detail-rule);
+		border-radius: 0.8rem;
+		background: var(--brand-frame-surface);
+	}
+	.service-index :global(.service-index-title) {
+		font-size: 1.08rem;
+	}
+	.service-index ul {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0.15rem;
+		margin-block-start: 0.6rem;
+	}
+	.service-index a {
+		display: flex;
+		align-items: center;
+		min-block-size: 2.65rem;
+		padding: 0.45rem 0.65rem;
+		border-radius: 0.4rem;
+		color: var(--primary-link);
+		font-size: 0.92rem;
+		font-weight: 650;
+	}
+	.service-index a:is(:hover, :focus-visible) {
+		background: var(--detail-tint);
+		text-decoration: underline;
+		text-underline-offset: 0.22em;
+	}
+	.service-content {
+		display: grid;
+		min-inline-size: 0;
+		gap: clamp(1.35rem, 3.6vi, 2.6rem);
+	}
+	.service-content section[id] {
+		scroll-margin-block-start: 6rem;
+	}
+	.service-detail :global(.service-section-title) {
+		font-size: clamp(1.35rem, 1.1rem + 1.2vi, 2rem);
+		line-height: 1.26;
+		text-wrap: balance;
+	}
+	.service-fit p,
+	.service-approach p,
+	.deliverables-panel p,
+	.deliverables-list,
+	.service-related p,
+	.extra-copy {
+		max-inline-size: 68ch;
+		margin-block-start: 0.65rem;
+		color: var(--muted-foreground);
+		line-height: 1.72;
+	}
+	.extra-copy {
+		white-space: pre-line;
+	}
+	.service-plan {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1px;
+		border: 1px solid var(--detail-rule);
+		border-radius: 0.95rem;
+		background: var(--detail-rule);
+	}
+	.scope-panel {
+		border-start-start-radius: 0.9rem;
+		border-start-end-radius: 0.9rem;
+		background: var(--brand-frame-surface);
+	}
+	.deliverables-panel {
+		border-end-start-radius: 0.9rem;
+		border-end-end-radius: 0.9rem;
+		background: var(--detail-tint);
+	}
+	.scope-panel,
+	.deliverables-panel {
+		min-inline-size: 0;
+		padding: clamp(1rem, 2.7vi, 1.85rem);
+	}
+	.scope-list {
+		margin-block-start: 0.9rem;
+	}
+	.scope-list li {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.65rem;
+		padding-block: 0.65rem;
+		border-block-start: 1px solid var(--detail-rule);
+		line-height: 1.65;
+	}
+	.scope-list :global(svg) {
+		margin-block-start: 0.2rem;
+		color: var(--primary-link);
+	}
+	.deliverables-icon {
+		display: grid;
+		inline-size: 2.85rem;
+		block-size: 2.85rem;
+		place-items: center;
+		margin-block-end: 0.65rem;
+		border: 1px solid var(--detail-rule);
+		border-radius: 0.65rem;
+		background: var(--brand-frame-surface);
+		color: var(--primary-link);
+	}
+	.deliverables-list {
+		list-style: disc;
+		padding-inline-start: 1.2rem;
+	}
+	.deliverables-list li + li {
+		margin-block-start: 0.4rem;
+	}
+	.service-approach {
+		padding-block: 0.2rem;
+		padding-inline-start: clamp(0.85rem, 2.3vi, 1.4rem);
+		border-inline-start: 2px solid var(--primary-link);
+	}
+	.service-gallery,
+	.service-faq-list,
+	.service-related {
+		display: grid;
+		gap: 0.75rem;
+		margin-block-start: 0.85rem;
+	}
+	.service-related li {
+		padding: 1rem;
+		border: 1px solid var(--detail-rule);
+		border-radius: 0.65rem;
+	}
+	.service-related a {
+		color: var(--primary-link);
+		text-decoration: underline;
+		text-underline-offset: 0.22em;
+	}
+	.service-contact-panel {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		padding: clamp(1.15rem, 4vi, 2.8rem);
+		border: 1px solid var(--detail-rule);
+		border-radius: 0.95rem;
+		background: var(--detail-tint);
+	}
+	@media (min-width: 42rem) {
+		.service-index ul,
+		.service-gallery,
+		.service-related {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+	@media (min-width: 60rem) {
+		.service-layout {
+			grid-template-columns: minmax(12rem, 0.7fr) minmax(0, 2.45fr);
+		}
+		.service-index {
+			position: sticky;
+			inset-block-start: 6rem;
+		}
+		.service-index ul {
+			grid-template-columns: minmax(0, 1fr);
+		}
+	}
+	@media (min-width: 70rem) {
+		.service-plan {
+			grid-template-columns: minmax(0, 1.24fr) minmax(0, 0.9fr);
+		}
+		.scope-panel {
+			border-start-end-radius: 0;
+			border-end-start-radius: 0.9rem;
+		}
+		.deliverables-panel {
+			border-start-end-radius: 0.9rem;
+			border-end-start-radius: 0;
+		}
+	}
+</style>

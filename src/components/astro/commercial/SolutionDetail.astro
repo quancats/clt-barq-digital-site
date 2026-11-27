@@ -1,0 +1,287 @@
+---
+import { Icon } from 'astro-icon/components';
+import { render, type CollectionEntry } from 'astro:content';
+import type { BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import Container from '@/components/layout/Container.astro';
+
+interface Props {
+	entry: CollectionEntry<'solutions'>;
+	breadcrumbs: BreadcrumbItem[];
+	related: readonly { title: string; description: string; href: string }[];
+	consultationHref: string | undefined;
+}
+
+const { entry, breadcrumbs, related, consultationHref } = Astro.props;
+const { locale, title, description, problem, media, sections = [] } = entry.data;
+const copy = locale === 'ar' ? { breadcrumb: 'مسار التنقّل', challenge: 'التحدي', approach: 'كيف نعالج التحدي؟', related: 'القدرات ذات الصلة', media: 'معرض الصور', consultation: 'اطلب استشارة', closing: 'لنتحدث عن الحل المناسب لك' } : { breadcrumb: 'Breadcrumb', challenge: 'The challenge', approach: 'How we address the challenge', related: 'Related capabilities', media: 'Image gallery', consultation: 'Request a consultation', closing: 'Discuss the right solution for you' };
+const approach = sections.find(({ key }) => key === 'approach');
+const considerationSection = sections.find(({ key }) => key === 'considerations');
+const considerations =
+	considerationSection?.body
+		.split('\n')
+		.map((line) => line.trim())
+		.filter(Boolean) ?? [];
+const value = sections.find(({ key }) => key === 'value');
+const consultation = sections.find(({ key }) => key === 'consultation');
+const supplementary = sections.filter(({ key }) => !['approach', 'considerations', 'value', 'consultation'].includes(key));
+const Content = entry.body?.trim() ? (await render(entry)).Content : undefined;
+---
+
+<div class="solution-detail">
+	<PageHeading id="solution-title" {title} description={problem} descriptionLabel={copy.challenge} {breadcrumbs} breadcrumbLabel={copy.breadcrumb}>
+		{consultationHref && <CallToAction href={consultationHref} label={consultation?.body ?? copy.consultation} analyticsAction="consultation_cta" />}
+	</PageHeading>
+
+	<Container>
+		<div class="solution-detail-body py-section">
+			{description !== problem && <p class="solution-intro">{description}</p>}
+			{
+				(approach || considerations.length > 0 || value) && (
+					<div class:list={['solution-plan', value && (approach || considerations.length > 0) && 'solution-plan-split']}>
+						{(approach || considerations.length > 0) && (
+							<section class="solution-method" aria-labelledby="solution-method-title">
+								<Heading level={2} id="solution-method-title" class="solution-section-title">
+									{approach?.title ?? copy.approach}
+								</Heading>
+								{approach && <p>{approach.body}</p>}
+								{considerations.length > 0 && (
+									<ul class="solution-considerations" role="list" aria-label={considerationSection?.title}>
+										{considerations.map((item) => (
+											<li>
+												<Icon name="lucide:check" size={18} class="shrink-0" aria-hidden="true" />
+												<span>{item}</span>
+											</li>
+										))}
+									</ul>
+								)}
+							</section>
+						)}
+						{value && (
+							<section class="solution-value" aria-labelledby="solution-value-title">
+								<div class="value-icon" aria-hidden="true">
+									<Icon name="lucide:target" size={25} />
+								</div>
+								<Heading level={2} id="solution-value-title" class="solution-section-title">
+									{value.title}
+								</Heading>
+								<p>{value.body}</p>
+							</section>
+						)}
+					</div>
+				)
+			}
+
+			{
+				Content && (
+					<div class="prose">
+						<Content />
+					</div>
+				)
+			}
+			{
+				supplementary.map(({ key, title, body }) => (
+					<section aria-labelledby={`solution-section-${key}`}>
+						<Heading level={2} id={`solution-section-${key}`} class="solution-section-title">
+							{title}
+						</Heading>
+						<p class="supplementary-copy">{body}</p>
+					</section>
+				))
+			}
+			{
+				media.length > 0 && (
+					<section aria-labelledby="solution-media-title">
+						<Heading level={2} id="solution-media-title" class="solution-section-title">
+							{copy.media}
+						</Heading>
+						<div class="solution-gallery">
+							{media.map((image) => (
+								<CorporateMedia {image} />
+							))}
+						</div>
+					</section>
+				)
+			}
+			{
+				related.length > 0 && (
+					<section class="solution-capabilities" aria-labelledby="solution-related-title">
+						<Heading level={2} id="solution-related-title" class="solution-section-title">
+							{copy.related}
+						</Heading>
+						<ul role="list">
+							{related.map(({ title, description, href }, index) => (
+								<li>
+									<a {href} aria-labelledby={`solution-related-${index}`}>
+										<div>
+											<Heading level={3} id={`solution-related-${index}`} class="text-lg">
+												{title}
+											</Heading>
+											<p>{description}</p>
+										</div>
+										<Icon name="lucide:arrow-right" size={21} class="shrink-0 rtl:rotate-180" aria-hidden="true" />
+									</a>
+								</li>
+							))}
+						</ul>
+					</section>
+				)
+			}
+		</div>
+	</Container>
+
+	{
+		consultationHref && (
+			<section class="section-divider section-wash py-section" aria-labelledby="solution-contact-title">
+				<Container>
+					<div class="solution-contact-panel">
+						<Heading level={2} id="solution-contact-title" class="solution-section-title">
+							{consultation?.title ?? copy.closing}
+						</Heading>
+						<CallToAction href={consultationHref} label={consultation?.body ?? copy.consultation} analyticsAction="consultation_cta" />
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.solution-detail {
+		--solution-rule: var(--section-rule);
+		--solution-tint: var(--brand-section-tint);
+	}
+	.solution-detail-body {
+		display: grid;
+		gap: clamp(1.5rem, 4vi, 3rem);
+	}
+	.solution-plan {
+		display: grid;
+		align-items: start;
+		gap: clamp(1.15rem, 4vi, 3.3rem);
+	}
+	.solution-method,
+	.solution-value {
+		min-inline-size: 0;
+	}
+	.solution-detail :global(.solution-section-title) {
+		font-size: clamp(1.45rem, 1.05rem + 1.55vi, 2.3rem);
+		line-height: 1.24;
+		text-wrap: balance;
+	}
+	.solution-method p,
+	.solution-intro,
+	.supplementary-copy,
+	.solution-capabilities p {
+		max-inline-size: 68ch;
+		margin-block-start: 0.65rem;
+		color: var(--muted-foreground);
+		line-height: 1.72;
+	}
+	.supplementary-copy {
+		white-space: pre-line;
+	}
+	.solution-considerations {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0 1.1rem;
+		margin-block-start: 1rem;
+	}
+	.solution-considerations li {
+		display: flex;
+		align-items: start;
+		gap: 0.55rem;
+		padding-block: 0.75rem;
+		border-block-start: 1px solid var(--solution-rule);
+		line-height: 1.55;
+	}
+	.solution-considerations :global(svg) {
+		margin-block-start: 0.15rem;
+		color: var(--primary-link);
+	}
+	.solution-value {
+		padding: clamp(1.1rem, 3.4vi, 2.25rem);
+		border: 1px solid var(--brand-navy-border);
+		border-radius: 0.95rem;
+		background: radial-gradient(ellipse at top, var(--brand-panel-glow), var(--brand-panel-surface) 75%);
+		color: var(--brand-on-navy);
+	}
+	.solution-value :global(.solution-section-title) {
+		color: inherit;
+	}
+	.solution-value p {
+		margin-block-start: 0.65rem;
+		color: var(--brand-panel-copy);
+		line-height: 1.72;
+	}
+	.value-icon {
+		display: grid;
+		inline-size: 2.85rem;
+		block-size: 2.85rem;
+		place-items: center;
+		margin-block-end: 0.9rem;
+		border: 1px solid var(--brand-navy-border);
+		border-radius: 0.65rem;
+		color: var(--brand-on-panel);
+	}
+	.solution-gallery {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0.75rem;
+		margin-block-start: 0.85rem;
+	}
+	.solution-capabilities {
+		border-block-start: 1px solid var(--solution-rule);
+		padding-block-start: clamp(1rem, 3vi, 1.8rem);
+	}
+	.solution-capabilities ul {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0.7rem;
+		margin-block-start: 0.85rem;
+	}
+	.solution-capabilities a {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding: clamp(0.85rem, 2.3vi, 1.45rem);
+		border: 1px solid var(--solution-rule);
+		border-radius: 0.7rem;
+		background: var(--brand-frame-surface);
+	}
+	.solution-capabilities a:is(:hover, :focus-visible) {
+		background: var(--solution-tint);
+	}
+	.solution-capabilities a :global(svg) {
+		color: var(--primary-link);
+	}
+	.solution-capabilities p {
+		margin-block-start: 0.3rem;
+	}
+	.solution-contact-panel {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.9rem 1.5rem;
+		padding: clamp(1rem, 3.5vi, 2.35rem);
+		border: 1px solid var(--solution-rule);
+		border-radius: 0.85rem;
+		background: var(--solution-tint);
+	}
+	@media (min-width: 40rem) {
+		.solution-considerations,
+		.solution-gallery {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+	@media (min-width: 57rem) {
+		.solution-plan-split {
+			grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.85fr);
+		}
+	}
+</style>

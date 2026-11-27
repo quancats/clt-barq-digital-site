@@ -1,0 +1,160 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { CollectionEntry } from 'astro:content';
+import type { BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import Container from '@/components/layout/Container.astro';
+import type { Locale } from '@/i18n/config';
+import { industryIcons } from '@/lib/ui/industryIcons';
+import IndustryVisual from './IndustryVisual.astro';
+
+interface Props {
+	locale: Locale;
+	overview: CollectionEntry<'pages'>['data'] | undefined;
+	entries: readonly { key: string; title: string; description: string; href: string }[];
+	breadcrumbs: BreadcrumbItem[];
+	consultationHref: string | undefined;
+}
+
+const { locale, overview, entries, breadcrumbs, consultationHref } = Astro.props;
+const copy = locale === 'ar' ? { title: 'القطاعات', breadcrumb: 'مسار التنقّل', directory: 'القطاعات المستهدفة', details: 'تفاصيل القطاع', contact: 'تحدث معنا' } : { title: 'Industries', breadcrumb: 'Breadcrumb', directory: 'Industries we serve', details: 'Industry details', contact: 'Talk to us' };
+const consultation = overview?.sections.find(({ key }) => key === 'consultation');
+---
+
+<div class="industries-overview">
+	<PageHeading id="industries-title" title={overview?.title ?? copy.title} description={overview?.description} {breadcrumbs} breadcrumbLabel={copy.breadcrumb} />
+
+	<section class="industry-directory py-section" aria-labelledby="industry-directory-title">
+		<Container>
+			<Heading level={2} id="industry-directory-title" class="industry-section-title">{copy.directory}</Heading>
+			<ul class="industry-index" role="list">
+				{
+					entries.map(({ key, title, description, href }) => (
+						<li>
+							<a {href} class="industry-entry" aria-labelledby={`industry-${key}-title industry-${key}-action`}>
+								<IndustryVisual icon={industryIcons[key] ?? 'lucide:building-2'} />
+								<div class="industry-copy">
+									<Heading level={3} id={`industry-${key}-title`} class="industry-entry-title">
+										{title}
+									</Heading>
+									<p>{description}</p>
+								</div>
+								<span id={`industry-${key}-action`} class="industry-action">
+									{copy.details}
+									<Icon name="lucide:arrow-right" size={18} class="shrink-0 rtl:rotate-180" aria-hidden="true" />
+								</span>
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</Container>
+	</section>
+
+	{
+		consultation && consultationHref && (
+			<section class="section-wash py-section" aria-labelledby="industry-consultation-title">
+				<Container>
+					<div class="industry-invitation-panel">
+						<div>
+							<Heading level={2} id="industry-consultation-title" class="industry-section-title">
+								{consultation.title}
+							</Heading>
+							<p>{consultation.body}</p>
+						</div>
+						<CallToAction href={consultationHref} label={copy.contact} analyticsAction="consultation_cta" />
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.industries-overview {
+		--industry-line: var(--section-rule);
+		--industry-tint: var(--brand-section-tint);
+	}
+	.industries-overview :global(.industry-section-title) {
+		font-size: clamp(1.5rem, 1.15rem + 1.25vi, 2.3rem);
+		line-height: 1.25;
+	}
+	.industry-index {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: clamp(0.9rem, 2vi, 1.35rem);
+		margin-block-start: clamp(1.1rem, 2.8vi, 1.6rem);
+	}
+	.industry-entry {
+		display: grid;
+		grid-template-rows: auto 1fr auto;
+		block-size: 100%;
+		overflow: clip;
+		border: 1px solid var(--industry-line);
+		border-radius: 1rem;
+		background: var(--brand-frame-surface);
+	}
+	.industry-entry:is(:hover, :focus-visible) {
+		border-color: var(--primary-link);
+	}
+	.industry-entry:focus-visible {
+		outline-offset: 3px;
+	}
+	.industry-copy {
+		min-inline-size: 0;
+		padding: clamp(0.95rem, 2.2vi, 1.5rem);
+	}
+	.industry-copy :global(.industry-entry-title) {
+		font-size: clamp(1.1rem, 0.96rem + 0.75vi, 1.45rem);
+		line-height: 1.27;
+		text-wrap: pretty;
+		overflow-wrap: anywhere;
+	}
+	.industry-copy p,
+	.industry-invitation p {
+		max-inline-size: 65ch;
+		margin-block-start: 0.45rem;
+		color: var(--muted-foreground);
+		line-height: 1.68;
+	}
+	.industry-action {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.45rem;
+		min-block-size: 2.8rem;
+		padding: 0.65rem clamp(0.95rem, 2.2vi, 1.5rem);
+		border-block-start: 1px solid var(--industry-line);
+		color: var(--primary-link);
+		font-size: 0.92rem;
+		font-weight: 650;
+	}
+	.industry-entry:is(:hover, :focus-visible) .industry-action {
+		background: var(--industry-tint);
+		text-decoration: underline;
+		text-underline-offset: 0.22em;
+	}
+	.industry-invitation-panel {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 1rem 2rem;
+		padding: clamp(1rem, 3vi, 1.8rem);
+		border: 1px solid var(--industry-line);
+		border-radius: 0.8rem;
+		background: var(--industry-tint);
+	}
+	@media (min-width: 40rem) {
+		.industry-index {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+	@media (min-width: 65rem) {
+		.industry-index {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+</style>

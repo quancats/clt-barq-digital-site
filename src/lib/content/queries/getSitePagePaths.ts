@@ -4,7 +4,7 @@ import { commercialFamilies, corporatePaths, getSiteContent, getSiteSections, ty
 
 type CommercialEntry = CollectionEntry<CommercialFamily>;
 type DetailEntry = CommercialEntry | CollectionEntry<'projects'>;
-type RelatedLink = { title: string; description: string; href: string };
+export type RelatedLink = { title: string; description: string; href: string; family: CommercialFamily | 'projects' };
 
 export async function getSitePagePaths(locale: Locale) {
 	const other = locale === 'ar' ? 'en' : 'ar';
@@ -13,10 +13,20 @@ export async function getSitePagePaths(locale: Locale) {
 	const projects = content.projects.filter(({ data }) => data.locale === locale);
 	const localPath = (route: string) => localizePath(locale, route);
 	const section = (key: string) => sections.find((item) => item.key === key);
+	const bimProduct = content.products.find(({ data }) => data.locale === locale && data.translationKey === 'bim');
+	const bimProject = projects.find(({ data }) => data.kind === 'owned-product' && data.translationKey === 'bim');
+	const bim = bimProduct
+		? {
+				product: bimProduct.data,
+				href: localPath(`products/${bimProduct.data.slug}`),
+				storyHref: bimProject ? localPath(`projects/${bimProject.data.slug}`) : undefined,
+				demoHref: section('demo')?.href,
+			}
+		: undefined;
 	const catalogRelated = (entry: DetailEntry): RelatedLink[] =>
 		commercialFamilies.flatMap((family) => {
 			const references = family in entry.data ? ((entry.data as Partial<Record<CommercialFamily, string[]>>)[family] ?? []) : [];
-			return content[family].filter(({ data }) => data.locale === locale && references.includes(data.translationKey)).map(({ data }) => ({ title: data.title, description: data.description, href: localPath(`${family}/${data.slug}`) }));
+			return content[family].filter(({ data }) => data.locale === locale && references.includes(data.translationKey)).map(({ data }) => ({ title: data.title, description: data.description, href: localPath(`${family}/${data.slug}`), family }));
 		});
 	const corporate = Object.entries(corporatePaths).flatMap(([key, route]) => {
 		const entry = content.pages.find(({ data }) => data.locale === locale && data.translationKey === key);
@@ -32,7 +42,7 @@ export async function getSitePagePaths(locale: Locale) {
 						kind: 'projects' as const,
 						projects: projects.map((project) => ({
 							entry: project,
-							href: (project.data.kind === 'owned-product' && project.data.translationKey === 'bim' ? section('bim')?.href : undefined) ?? localPath(`projects/${project.data.slug}`),
+							href: localPath(`projects/${project.data.slug}`),
 						})),
 					}
 				: {
@@ -60,6 +70,7 @@ export async function getSitePagePaths(locale: Locale) {
 	});
 	const catalogs = commercialFamilies.flatMap((family) => {
 		const entries = content[family].filter(({ data }) => data.locale === locale);
+		const overview = content.pages.find(({ data }) => data.locale === locale && data.translationKey === family);
 		if (family === 'products') entries.sort((left, right) => Number(right.data.translationKey === 'bim') - Number(left.data.translationKey === 'bim'));
 		if (!entries.length) return [];
 		const alternatePath = content[family].some(({ data }) => data.locale === other) ? localizePath(other, family) : undefined;
@@ -73,12 +84,17 @@ export async function getSitePagePaths(locale: Locale) {
 					path: localPath(family),
 					alternatePath,
 					entries: entries.map(({ data }) => ({
+						key: data.translationKey,
 						title: data.title,
 						description: data.description,
 						href: localPath(`${family}/${data.slug}`),
 						featured: data.featured || (family === 'products' && data.translationKey === 'bim'),
 						...('category' in data && data.category ? { category: data.category } : {}),
+						...('problem' in data ? { problem: data.problem } : {}),
 					})),
+					overview,
+					bim: family === 'products' ? bim : undefined,
+					consultationHref: section('consultation')?.href,
 				},
 			},
 		];
@@ -103,6 +119,7 @@ export async function getSitePagePaths(locale: Locale) {
 								title: project.title,
 								description: project.description,
 								href: localPath(`projects/${project.slug}`),
+								family: 'projects' as const,
 							})),
 					);
 				}

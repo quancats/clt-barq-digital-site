@@ -1,0 +1,275 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { CollectionEntry } from 'astro:content';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import Container from '@/components/layout/Container.astro';
+import type { Locale } from '@/i18n/config';
+
+interface Props {
+	locale: Locale;
+	overview: CollectionEntry<'pages'>['data'] | undefined;
+	entries: readonly { key: string; title: string; description: string; href: string }[];
+	breadcrumbs: { label: string; href?: string }[];
+	consultationHref: string | undefined;
+}
+
+const { locale, overview, entries, breadcrumbs, consultationHref } = Astro.props;
+const copy = locale === 'ar' ? { title: 'الخدمات', breadcrumb: 'مسار التنقل', directory: 'مجالات الخدمات', details: 'تفاصيل الخدمة', contact: 'تحدث إلى فريقنا' } : { title: 'Services', breadcrumb: 'Breadcrumb', directory: 'Service areas', details: 'Service details', contact: 'Talk to our team' };
+const families = [
+	{ id: 'protection', icon: 'lucide:shield-check', ar: 'الحماية والحوكمة', en: 'Security and governance', keys: ['cybersecurity', 'governance-risk-compliance'] },
+	{ id: 'infrastructure', icon: 'lucide:server', ar: 'البنية التحتية والسحابة', en: 'Infrastructure and cloud', keys: ['it-infrastructure', 'cloud-solutions'] },
+	{ id: 'engineering', icon: 'lucide:workflow', ar: 'التطبيقات والتكامل والبيانات', en: 'Applications, integration, and data', keys: ['software-engineering', 'digital-transformation', 'systems-integration', 'data-analytics-ai'] },
+	{ id: 'advisory', icon: 'lucide:settings', ar: 'الاستشارات والتشغيل', en: 'Consulting and operations', keys: ['technical-consulting', 'managed-services'] },
+];
+const summaries = new Map(overview?.sections.map(({ key, body }) => [key, body]));
+const assigned = new Set(families.flatMap(({ keys }) => keys));
+const groups = [...families.map((family) => ({ id: family.id, icon: family.icon, title: family[locale], items: entries.filter(({ key }) => family.keys.includes(key)) })), { id: 'other-services', icon: 'lucide:layers', title: locale === 'ar' ? 'خدمات أخرى' : 'Other services', items: entries.filter(({ key }) => !assigned.has(key)) }].filter(({ items }) => items.length > 0);
+const consultation = overview?.sections.find(({ key }) => key === 'consultation');
+---
+
+<div class="services-overview">
+	<PageHeading id="services-title" title={overview?.title ?? copy.title} description={overview?.description} {breadcrumbs} breadcrumbLabel={copy.breadcrumb} />
+
+	<div class="service-directory py-section">
+		<Container>
+			<nav class="directory-index" aria-labelledby="service-areas">
+				<Heading level={2} id="service-areas" class="directory-title">{copy.directory}</Heading>
+				<ul role="list">
+					{
+						groups.map(({ id, title, icon }) => (
+							<li>
+								<a href={`#${id}`}>
+									<Icon name={icon} size={21} class="shrink-0" aria-hidden="true" />
+									<span>{title}</span>
+									<Icon name="lucide:arrow-down" size={16} class="shrink-0" aria-hidden="true" />
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</nav>
+
+			<div class="directory-content">
+				{
+					groups.map(({ id, title, icon, items }) => (
+						<section {id} class="service-family" aria-labelledby={`${id}-title`}>
+							<header class="family-header">
+								<Icon name={icon} size={27} class="shrink-0" aria-hidden="true" />
+								<Heading id={`${id}-title`} level={2} class="family-title">
+									{title}
+								</Heading>
+							</header>
+							<ul class="family-services" role="list">
+								{items.map(({ key, title, description, href }) => (
+									<li>
+										<a {href} class="service-tile" aria-labelledby={`service-${key}-title service-${key}-action`}>
+											<Heading level={3} id={`service-${key}-title`} class="service-title">
+												{title}
+											</Heading>
+											<p>{summaries.get(`summary-${key}`) ?? description}</p>
+											<span class="service-details" id={`service-${key}-action`}>
+												{copy.details}
+												<Icon name="lucide:arrow-right" size={17} class="shrink-0 rtl:rotate-180" aria-hidden="true" />
+											</span>
+										</a>
+									</li>
+								))}
+							</ul>
+						</section>
+					))
+				}
+			</div>
+		</Container>
+	</div>
+
+	{
+		consultation && consultationHref && (
+			<section class="section-divider section-wash py-section" aria-labelledby="service-consultation">
+				<Container>
+					<div class="closing-inner">
+						<div>
+							<Heading level={2} id="service-consultation" class="family-title">
+								{consultation.title}
+							</Heading>
+							<p>{consultation.body}</p>
+						</div>
+						<CallToAction href={consultationHref} label={copy.contact} analyticsAction="consultation_cta" />
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.services-overview {
+		--service-rule: var(--section-rule);
+		--service-tint: var(--brand-section-tint);
+	}
+	.directory-index {
+		margin-block-end: clamp(1.5rem, 4vi, 3rem);
+	}
+	.directory-index ul,
+	.family-services {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.directory-index ul {
+		gap: 1px;
+		overflow: clip;
+		border: 1px solid var(--service-rule);
+		border-radius: 0.8rem;
+		background: var(--service-rule);
+	}
+	.directory-index li {
+		display: grid;
+	}
+	.directory-index a {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.6rem;
+		min-block-size: 3.4rem;
+		padding: 0.65rem 0.85rem;
+		background: var(--brand-frame-surface);
+		font-size: 0.92rem;
+		font-weight: 650;
+	}
+	.directory-index a:focus-visible {
+		outline-offset: -3px;
+	}
+	.directory-index a:is(:hover, :focus-visible) {
+		background: var(--service-tint);
+	}
+	.directory-index a :global(svg),
+	.service-details {
+		color: var(--primary-link);
+	}
+	.directory-content {
+		display: grid;
+		gap: clamp(0.9rem, 2.2vi, 1.5rem);
+	}
+	.service-family {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		border: 1px solid var(--service-rule);
+		border-radius: 0.85rem;
+		scroll-margin-block-start: 6rem;
+		background: var(--brand-frame-surface);
+	}
+	.family-header {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		padding: 1rem;
+		border-block-end: 1px solid var(--service-rule);
+		border-radius: 0.85rem 0.85rem 0 0;
+		background: var(--service-tint);
+		color: var(--primary-link);
+	}
+	.services-overview :global(.family-title) {
+		font-size: clamp(1.16rem, 1.04rem + 0.85vi, 1.7rem);
+		line-height: 1.3;
+		text-wrap: pretty;
+	}
+	.directory-index :global(.directory-title) {
+		margin-block-end: 0.9rem;
+		font-size: clamp(1.45rem, 1.13rem + 1.1vi, 2rem);
+	}
+	.family-services {
+		gap: 1px;
+		overflow: clip;
+		border-end-start-radius: 0.8rem;
+		border-end-end-radius: 0.8rem;
+		background: var(--service-rule);
+	}
+	.service-tile {
+		display: flex;
+		min-inline-size: 0;
+		block-size: 100%;
+		align-items: start;
+		flex-direction: column;
+		gap: 0.55rem;
+		padding: clamp(1rem, 2vi, 1.45rem);
+		background: var(--brand-frame-surface);
+	}
+	.service-tile:is(:hover, :focus-visible) {
+		background: var(--service-tint);
+	}
+	.service-tile:focus-visible {
+		outline-offset: -3px;
+	}
+	.service-tile :global(.service-title) {
+		font-size: clamp(1rem, 0.95rem + 0.45vi, 1.22rem);
+		line-height: 1.35;
+	}
+	.service-tile p,
+	.closing-inner p {
+		max-inline-size: 65ch;
+		color: var(--muted-foreground);
+		line-height: 1.65;
+	}
+	.service-tile p {
+		flex: 1;
+		font-size: 0.94rem;
+	}
+	.service-details {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		min-block-size: 2rem;
+		font-size: 0.9rem;
+		font-weight: 650;
+	}
+	.service-tile:is(:hover, :focus-visible) .service-details {
+		text-decoration: underline;
+		text-underline-offset: 0.22em;
+	}
+	.closing-inner {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: clamp(1rem, 3vi, 2rem);
+		border: 1px solid var(--service-rule);
+		border-radius: 0.9rem;
+		background: var(--service-tint);
+	}
+	.closing-inner p {
+		margin-block-start: 0.45rem;
+	}
+	@media (min-width: 36rem) {
+		.directory-index ul,
+		.family-services {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.family-services li:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
+		}
+	}
+	@media (min-width: 62rem) {
+		.directory-index ul {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+		.service-family {
+			grid-template-columns: minmax(0, 0.72fr) minmax(0, 2.2fr);
+		}
+		.family-header {
+			flex-direction: column;
+			align-items: start;
+			padding: 1.5rem;
+			border-block-end: 0;
+			border-inline-end: 1px solid var(--service-rule);
+			border-radius: 0;
+			border-start-start-radius: 0.8rem;
+			border-end-start-radius: 0.8rem;
+		}
+		.family-services {
+			border-end-start-radius: 0;
+			border-start-end-radius: 0.8rem;
+		}
+	}
+</style>

@@ -1,7 +1,10 @@
 ---
 import CorporatePage from './CorporatePage.astro';
-import CommercialCatalog from '@/components/astro/commercial/CommercialCatalog.astro';
 import CommercialDetail from '@/components/astro/commercial/CommercialDetail.astro';
+import IndustryDetail from '@/components/astro/commercial/IndustryDetail.astro';
+import ServiceDetail from '@/components/astro/commercial/ServiceDetail.astro';
+import SolutionDetail from '@/components/astro/commercial/SolutionDetail.astro';
+import CommercialCatalog from '@/components/astro/commercial/CommercialCatalog.astro';
 import { localizePath } from '@/i18n/config';
 import { getDictionary } from '@/i18n/helpers';
 import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
@@ -12,6 +15,9 @@ import { createLocaleAlternates } from '@/lib/seo/createLocaleAlternates';
 import { createPageSeo } from '@/lib/seo/createPageSeo';
 import { createBreadcrumbListJsonLd } from '@/lib/seo/structured-data/createBreadcrumbListJsonLd';
 import { createCanonicalUrl } from '@/lib/seo/createCanonicalUrl';
+import IndustriesOverview from '../sections/IndustriesOverview.astro';
+import ServicesOverview from '../sections/ServicesOverview.astro';
+import SolutionsOverview from '../sections/SolutionsOverview.astro';
 
 type Props = SitePageProps;
 
@@ -24,7 +30,7 @@ const metadata =
 		const { locale, family, path, alternatePath } = commercial;
 		const dictionary = getDictionary(locale);
 		const familyTitle = sectionTitles[locale][family];
-		const entry = commercial.kind === 'commercial' ? commercial.entry.data : undefined;
+		const entry = commercial.kind === 'commercial' ? commercial.entry.data : commercial.overview?.data;
 		const title = entry?.title ?? familyTitle;
 		const other = locale === 'ar' ? 'en' : 'ar';
 		const breadcrumbs = [{ label: dictionary.layout.nav_home, href: localizePath(locale) }, { label: familyTitle, href: localizePath(locale, family) }, { label: title }];
@@ -58,7 +64,7 @@ const metadata =
 {
 	commercial && metadata && (
 		<WebsiteLayout locale={commercial.locale} alternatePath={commercial.alternatePath} seo={metadata.seo} alternates={metadata.alternates} jsonLd={metadata.jsonLd}>
-			{commercial.kind === 'catalog' ? <CommercialCatalog locale={commercial.locale} family={commercial.family} entries={commercial.entries} /> : <CommercialDetail locale={commercial.locale} entry={commercial.entry} breadcrumbs={metadata.breadcrumbs} related={commercial.related} {...(commercial.cta ? { cta: commercial.cta } : {})} {...(commercial.officialLink ? { officialLink: commercial.officialLink } : {})} />}
+			{commercial.kind === 'catalog' ? commercial.family === 'products' ? <CommercialCatalog locale={commercial.locale} family={commercial.family} entries={commercial.entries} /> : commercial.family === 'services' ? <ServicesOverview locale={commercial.locale} entries={commercial.entries} overview={commercial.overview?.data} breadcrumbs={metadata.breadcrumbs} consultationHref={commercial.consultationHref} /> : commercial.family === 'solutions' ? <SolutionsOverview locale={commercial.locale} entries={commercial.entries} overview={commercial.overview?.data} breadcrumbs={metadata.breadcrumbs} consultationHref={commercial.consultationHref} /> : <IndustriesOverview locale={commercial.locale} entries={commercial.entries} overview={commercial.overview?.data} breadcrumbs={metadata.breadcrumbs} consultationHref={commercial.consultationHref} /> : commercial.entry.collection === 'services' ? <ServiceDetail entry={commercial.entry} breadcrumbs={metadata.breadcrumbs} related={commercial.related} consultationHref={commercial.cta?.href} /> : commercial.entry.collection === 'solutions' ? <SolutionDetail entry={commercial.entry} breadcrumbs={metadata.breadcrumbs} related={commercial.related} consultationHref={commercial.cta?.href} /> : commercial.entry.collection === 'industries' ? <IndustryDetail entry={commercial.entry} breadcrumbs={metadata.breadcrumbs} related={commercial.related} consultationHref={commercial.cta?.href} /> : <CommercialDetail locale={commercial.locale} entry={commercial.entry} breadcrumbs={metadata.breadcrumbs} related={commercial.related} {...(commercial.cta ? { cta: commercial.cta } : {})} {...(commercial.officialLink ? { officialLink: commercial.officialLink } : {})} />}
 		</WebsiteLayout>
 	)
 }

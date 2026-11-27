@@ -1,0 +1,38 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+	icon: string;
+}
+
+const { icon } = Astro.props;
+---
+
+<div class="industry-visual">
+	<span class="industry-emblem" aria-hidden="true"><Icon name={icon} size={29} /></span>
+	<slot />
+</div>
+
+<style>
+	.industry-visual {
+		--industry-grid-line: color-mix(in oklab, var(--brand-accent) 8%, transparent);
+		display: flex;
+		align-items: center;
+		gap: 0.8rem;
+		min-block-size: 5rem;
+		padding: 0.8rem clamp(0.95rem, 2.2vi, 1.5rem);
+		border-block-end: 1px solid var(--industry-line);
+		background: repeating-linear-gradient(90deg, transparent 0 23px, var(--industry-grid-line) 23px 24px), repeating-linear-gradient(0deg, transparent 0 23px, var(--industry-grid-line) 23px 24px), var(--industry-tint);
+	}
+	.industry-emblem {
+		display: grid;
+		flex: none;
+		place-items: center;
+		inline-size: 3.15rem;
+		block-size: 3.15rem;
+		border: 1px solid var(--industry-line);
+		border-radius: 0.65rem;
+		background: var(--brand-frame-surface);
+		color: var(--primary-link);
+	}
+</style>

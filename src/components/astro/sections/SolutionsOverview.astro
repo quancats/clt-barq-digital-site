@@ -1,0 +1,207 @@
+---
+import { Icon } from 'astro-icon/components';
+import type { CollectionEntry } from 'astro:content';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import Container from '@/components/layout/Container.astro';
+import type { Locale } from '@/i18n/config';
+
+interface Props {
+	locale: Locale;
+	overview: CollectionEntry<'pages'>['data'] | undefined;
+	entries: readonly { key: string; title: string; description: string; href: string; problem?: string }[];
+	breadcrumbs: { label: string; href?: string }[];
+	consultationHref: string | undefined;
+}
+
+const { locale, overview, entries, breadcrumbs, consultationHref } = Astro.props;
+const copy = locale === 'ar' ? { title: 'الحلول', breadcrumb: 'مسار التنقل', explore: 'استكشف حلولنا', challenge: 'التحدي', outcome: 'المخرجات المتوقعة', details: 'تفاصيل الحل', contact: 'ناقش تحديك معنا' } : { title: 'Solutions', breadcrumb: 'Breadcrumb', explore: 'Explore our solutions', challenge: 'The challenge', outcome: 'Expected outcomes', details: 'Solution details', contact: 'Discuss your challenge' };
+const icons: Record<string, string> = {
+	'secure-enterprise-communication': 'lucide:messages-square',
+	'digital-workplace': 'lucide:monitor',
+	'data-protection': 'lucide:database',
+	'enterprise-identity': 'lucide:key-round',
+	'business-transformation': 'lucide:workflow',
+	'secure-applications': 'lucide:shield-check',
+};
+const outcomes = new Map(overview?.sections.map(({ key, body }) => [key, body]));
+const consultation = overview?.sections.find(({ key }) => key === 'consultation');
+---
+
+<div class="solutions-overview">
+	<PageHeading id="solutions-title" title={overview?.title ?? copy.title} description={overview?.description} {breadcrumbs} breadcrumbLabel={copy.breadcrumb} />
+
+	<section class="solution-catalog py-section" aria-labelledby="solution-directory">
+		<Container>
+			<Heading id="solution-directory" level={2} class="solution-heading">{copy.explore}</Heading>
+			<ul class="solution-cards" role="list">
+				{
+					entries.map(({ key, title, description, problem, href }) => {
+						const outcome = outcomes.get(`summary-${key}`);
+						return (
+							<li>
+								<article class="solution-case" aria-labelledby={`solution-${key}-title`}>
+									<header class="solution-case-heading">
+										<span class="solution-icon">
+											<Icon name={icons[key] ?? 'lucide:layers'} size={24} aria-hidden="true" />
+										</span>
+										<Heading id={`solution-${key}-title`} level={3} class="solution-case-title">
+											{title}
+										</Heading>
+									</header>
+									<dl class="solution-brief">
+										<div>
+											<>
+												<dt>{copy.challenge}</dt>
+												<dd>{problem ?? description}</dd>
+											</>
+										</div>
+										{outcome && (
+											<div>
+												<dt>{copy.outcome}</dt>
+												<dd>{outcome}</dd>
+											</div>
+										)}
+									</dl>
+									<a {href} class="solution-details" aria-labelledby={`solution-${key}-action solution-${key}-title`}>
+										<span id={`solution-${key}-action`}>{copy.details}</span>
+										<Icon name="lucide:arrow-right" size={18} class="shrink-0 rtl:rotate-180" aria-hidden="true" />
+									</a>
+								</article>
+							</li>
+						);
+					})
+				}
+			</ul>
+		</Container>
+	</section>
+
+	{
+		consultation && consultationHref && (
+			<section class="section-wash py-section" aria-labelledby="solution-consultation">
+				<Container>
+					<div class="solution-invitation">
+						<div>
+							<Heading id="solution-consultation" level={2} class="solution-heading">
+								{consultation.title}
+							</Heading>
+							<p>{consultation.body}</p>
+						</div>
+						<CallToAction href={consultationHref} label={copy.contact} analyticsAction="consultation_cta" />
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.solutions-overview {
+		--solution-line: var(--section-rule);
+		--solution-tint: var(--brand-section-tint);
+	}
+	.solutions-overview :global(.solution-heading) {
+		font-size: clamp(1.45rem, 1.05rem + 1.35vi, 2.3rem);
+		line-height: 1.25;
+	}
+	.solution-cards {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: clamp(0.8rem, 2vi, 1.3rem);
+		margin-block-start: 1.4rem;
+	}
+	.solution-case {
+		display: flex;
+		flex-direction: column;
+		block-size: 100%;
+		min-inline-size: 0;
+		padding: clamp(1rem, 2.15vi, 1.55rem);
+		border: 1px solid var(--solution-line);
+		border-radius: 0.9rem;
+		background: var(--brand-frame-surface);
+	}
+	.solution-case-heading {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-block-end: 1rem;
+	}
+	.solution-icon {
+		display: grid;
+		flex: none;
+		place-items: center;
+		inline-size: 2.65rem;
+		block-size: 2.65rem;
+		border-radius: 0.6rem;
+		background: var(--solution-tint);
+		color: var(--primary-link);
+	}
+	.solution-case :global(.solution-case-title) {
+		font-size: clamp(1.05rem, 0.92rem + 0.52vi, 1.3rem);
+		line-height: 1.3;
+		overflow-wrap: anywhere;
+	}
+	.solution-brief {
+		display: grid;
+		align-content: start;
+		gap: 0.65rem;
+		flex: 1;
+	}
+	.solution-brief div {
+		padding-block-start: 0.55rem;
+		border-block-start: 1px solid var(--solution-line);
+	}
+	.solution-brief dt {
+		font-size: 0.82rem;
+		font-weight: 700;
+	}
+	.solution-brief dd {
+		margin-block-start: 0.25rem;
+		color: var(--muted-foreground);
+		font-size: 0.94rem;
+		line-height: 1.65;
+	}
+	.solution-details {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.6rem;
+		min-block-size: 2.75rem;
+		margin-block-start: 1rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: 0.45rem;
+		background: var(--solution-tint);
+		color: var(--primary-link);
+		font-weight: 650;
+	}
+	.solution-details:is(:hover, :focus-visible) {
+		text-decoration: underline;
+		text-underline-offset: 0.22em;
+	}
+	.solution-invitation {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		padding-block-start: clamp(1.1rem, 3vi, 2rem);
+		border-block-start: 1px solid var(--solution-line);
+	}
+	.solution-invitation p {
+		max-inline-size: 68ch;
+		margin-block-start: 0.55rem;
+		color: var(--muted-foreground);
+		line-height: 1.7;
+	}
+	@media (min-width: 40rem) {
+		.solution-cards {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+	@media (min-width: 65rem) {
+		.solution-cards {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+</style>

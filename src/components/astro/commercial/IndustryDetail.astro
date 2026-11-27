@@ -1,0 +1,314 @@
+---
+import { Icon } from 'astro-icon/components';
+import { render, type CollectionEntry } from 'astro:content';
+import type { BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import CallToAction from '@/components/astro/content/CallToAction.astro';
+import Heading from '@/components/astro/content/Heading.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import CorporateMedia from '@/components/astro/pages/CorporateMedia.astro';
+import IndustryVisual from '@/components/astro/sections/IndustryVisual.astro';
+import Container from '@/components/layout/Container.astro';
+import type { RelatedLink } from '@/lib/content/queries/getSitePagePaths';
+import { industryIcons } from '@/lib/ui/industryIcons';
+
+interface Props {
+	entry: CollectionEntry<'industries'>;
+	breadcrumbs: BreadcrumbItem[];
+	related: readonly RelatedLink[];
+	consultationHref: string | undefined;
+}
+
+const { entry, breadcrumbs, related, consultationHref } = Astro.props;
+const { locale, title, description, translationKey, needs, limitations, media, sections = [] } = entry.data;
+const copy = locale === 'ar' ? { breadcrumb: 'مسار التنقّل', needs: 'احتياجات نركز عليها', limitations: 'ضوابط ومتطلبات القطاع', related: 'حلول يمكن دراستها', details: 'عرض التفاصيل', media: 'معرض الصور', contact: 'تواصل لمناقشة احتياجك', closing: 'ابدأ بتحديد متطلبات مؤسستك', families: { products: 'منتج', solutions: 'حل', services: 'خدمة', industries: 'قطاع', projects: 'مشروع' } } : { breadcrumb: 'Breadcrumb', needs: 'Needs we focus on', limitations: 'Sector requirements and constraints', related: 'Solutions to evaluate', details: 'View details', media: 'Image gallery', contact: 'Discuss your needs', closing: 'Start with your organization’s requirements', families: { products: 'Product', solutions: 'Solution', services: 'Service', industries: 'Industry', projects: 'Project' } };
+const optionIcons: Record<RelatedLink['family'], string> = {
+	products: 'lucide:layers',
+	solutions: 'lucide:workflow',
+	services: 'lucide:settings',
+	industries: 'lucide:building-2',
+	projects: 'lucide:briefcase',
+};
+const options = sections.find(({ key }) => key === 'considerations');
+const consultation = sections.find(({ key }) => key === 'consultation');
+const supplementary = sections.filter(({ key }) => key !== 'considerations' && key !== 'consultation');
+const order = ['products', 'solutions', 'services', 'industries', 'projects'];
+const orderedLinks = [...related].sort((a, b) => order.indexOf(a.family) - order.indexOf(b.family));
+const Content = entry.body?.trim() ? (await render(entry)).Content : undefined;
+---
+
+<div class="industry-detail">
+	<PageHeading id="industry-title" {title} {description} {breadcrumbs} breadcrumbLabel={copy.breadcrumb}>
+		{consultationHref && <CallToAction href={consultationHref} label={consultation?.body ?? copy.contact} analyticsAction="consultation_cta" />}
+	</PageHeading>
+	<Container>
+		<div class="industry-detail-body py-section">
+			<section class="industry-needs" aria-labelledby="industry-needs-title">
+				<IndustryVisual icon={industryIcons[translationKey] ?? 'lucide:building-2'}>
+					<Heading level={2} id="industry-needs-title" class="industry-section-title">{copy.needs}</Heading>
+				</IndustryVisual>
+				<ul class="industry-needs-list" role="list">
+					{
+						needs.map((need) => (
+							<li>
+								<span class="industry-need-mark" aria-hidden="true">
+									<Icon name="lucide:check" size={18} class="shrink-0" aria-hidden="true" />
+								</span>
+								<span>{need}</span>
+							</li>
+						))
+					}
+				</ul>
+			</section>
+
+			{
+				limitations.length > 0 && (
+					<section class="industry-limitations" aria-labelledby="industry-limitations-title">
+						<Heading id="industry-limitations-title" level={2} class="industry-section-title">
+							{copy.limitations}
+						</Heading>
+						<ul>
+							{limitations.map((item) => (
+								<li>{item}</li>
+							))}
+						</ul>
+					</section>
+				)
+			}
+
+			{
+				(options || orderedLinks.length > 0) && (
+					<section class="industry-options" aria-labelledby="industry-options-title">
+						<header>
+							<Heading id="industry-options-title" level={2} class="industry-section-title">
+								{options?.title ?? copy.related}
+							</Heading>
+							{options && <p>{options.body}</p>}
+						</header>
+						{orderedLinks.length > 0 && (
+							<ul class="industry-options-list" role="list">
+								{orderedLinks.map(({ title, description, href, family }, index) => (
+									<li>
+										<a {href} class="industry-option" aria-labelledby={`industry-option-${index} industry-option-action-${index}`}>
+											<IndustryVisual icon={optionIcons[family]}>
+												<span class="industry-option-kind">{copy.families[family]}</span>
+											</IndustryVisual>
+											<div class="industry-option-copy">
+												<Heading level={3} id={`industry-option-${index}`} class="industry-option-title">
+													{title}
+												</Heading>
+												<p>{description}</p>
+											</div>
+											<span id={`industry-option-action-${index}`} class="industry-option-action">
+												{copy.details}
+												<Icon name="lucide:arrow-right" size={18} class="shrink-0 rtl:rotate-180" aria-hidden="true" />
+											</span>
+										</a>
+									</li>
+								))}
+							</ul>
+						)}
+					</section>
+				)
+			}
+
+			{
+				Content && (
+					<div class="prose">
+						<Content />
+					</div>
+				)
+			}
+			{
+				supplementary.map(({ key, title, body }) => (
+					<section aria-labelledby={`industry-section-${key}`}>
+						<Heading level={2} id={`industry-section-${key}`} class="industry-section-title">
+							{title}
+						</Heading>
+						<p class="industry-supplementary">{body}</p>
+					</section>
+				))
+			}
+			{
+				media.length > 0 && (
+					<section aria-labelledby="industry-media-title">
+						<Heading level={2} id="industry-media-title" class="industry-section-title">
+							{copy.media}
+						</Heading>
+						<div class="industry-gallery">
+							{media.map((image) => (
+								<CorporateMedia {image} />
+							))}
+						</div>
+					</section>
+				)
+			}
+		</div>
+	</Container>
+
+	{
+		consultationHref && (
+			<section class="section-divider section-wash py-section" aria-labelledby="industry-contact-title">
+				<Container>
+					<div class="industry-contact-panel">
+						<Heading level={2} id="industry-contact-title" class="industry-section-title">
+							{consultation?.title ?? copy.closing}
+						</Heading>
+						<CallToAction href={consultationHref} label={consultation?.body ?? copy.contact} analyticsAction="consultation_cta" />
+					</div>
+				</Container>
+			</section>
+		)
+	}
+</div>
+
+<style>
+	.industry-detail {
+		--industry-line: var(--section-rule);
+		--industry-tint: var(--brand-section-tint);
+	}
+	.industry-detail-body {
+		display: grid;
+		gap: clamp(1.5rem, 4vi, 3rem);
+	}
+	.industry-detail :global(.industry-section-title) {
+		font-size: clamp(1.45rem, 1.1rem + 1.45vi, 2.25rem);
+		line-height: 1.25;
+		text-wrap: balance;
+	}
+	.industry-needs {
+		overflow: clip;
+		border: 1px solid var(--industry-line);
+		border-radius: 1rem;
+	}
+	.industry-needs-list {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1px;
+		background: var(--industry-line);
+	}
+	.industry-needs-list li {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		min-block-size: 4.45rem;
+		padding: clamp(0.85rem, 2.2vi, 1.45rem);
+		background: var(--brand-frame-surface);
+		line-height: 1.6;
+	}
+	.industry-need-mark {
+		display: grid;
+		flex: none;
+		place-items: center;
+		inline-size: 2rem;
+		block-size: 2rem;
+		border-radius: 0.45rem;
+		background: var(--industry-tint);
+		color: var(--primary-link);
+	}
+	.industry-limitations ul {
+		margin-block-start: 0.8rem;
+		padding-inline-start: 1.25rem;
+		list-style: disc;
+		color: var(--muted-foreground);
+	}
+	.industry-limitations li + li {
+		margin-block-start: 0.4rem;
+	}
+	.industry-options p,
+	.industry-supplementary {
+		max-inline-size: 66ch;
+		margin-block-start: 0.5rem;
+		color: var(--muted-foreground);
+		line-height: 1.7;
+	}
+	.industry-supplementary {
+		white-space: pre-line;
+	}
+	.industry-options-list {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: clamp(0.85rem, 2vi, 1.35rem);
+		margin-block-start: 1rem;
+	}
+	.industry-option {
+		display: grid;
+		grid-template-rows: auto 1fr auto;
+		block-size: 100%;
+		min-inline-size: 0;
+		overflow: clip;
+		border: 1px solid var(--industry-line);
+		border-radius: 1rem;
+		background: var(--brand-frame-surface);
+	}
+	.industry-option:is(:hover, :focus-visible) {
+		border-color: var(--primary-link);
+	}
+	.industry-option:focus-visible {
+		outline-offset: 3px;
+	}
+	.industry-option-kind {
+		color: var(--primary-link-hover);
+		font-size: 0.9rem;
+		font-weight: 700;
+	}
+	.industry-option-copy {
+		min-inline-size: 0;
+		padding: clamp(0.95rem, 2.2vi, 1.5rem);
+	}
+	.industry-option :global(.industry-option-title) {
+		font-size: clamp(1rem, 0.94rem + 0.54vi, 1.25rem);
+		line-height: 1.35;
+		overflow-wrap: anywhere;
+	}
+	.industry-option p {
+		font-size: 0.94rem;
+	}
+	.industry-option-action {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.45rem;
+		min-block-size: 2.8rem;
+		padding: 0.65rem clamp(0.95rem, 2.2vi, 1.5rem);
+		border-block-start: 1px solid var(--industry-line);
+		color: var(--primary-link);
+		font-size: 0.92rem;
+		font-weight: 650;
+	}
+	.industry-option:is(:hover, :focus-visible) .industry-option-action {
+		background: var(--industry-tint);
+		text-decoration: underline;
+		text-underline-offset: 0.22em;
+	}
+	.industry-gallery {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0.75rem;
+		margin-block-start: 0.8rem;
+	}
+	.industry-contact-panel {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.85rem 1.2rem;
+		padding: clamp(1rem, 3.7vi, 2.25rem);
+		border: 1px solid var(--industry-line);
+		border-radius: 0.85rem;
+		background: var(--industry-tint);
+	}
+	@media (min-width: 40rem) {
+		.industry-needs-list,
+		.industry-gallery {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.industry-needs-list li:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
+		}
+	}
+	@media (min-width: 57rem) {
+		.industry-options-list {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+</style>

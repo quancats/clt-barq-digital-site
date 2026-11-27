@@ -1,7 +1,7 @@
 ---
-import type { CollectionEntry } from 'astro:content';
+import { render, type CollectionEntry } from 'astro:content';
 import Badge from '@/components/astro/content/Badge.astro';
-import Breadcrumbs from '@/components/astro/content/Breadcrumbs.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
 import CallToAction from '@/components/astro/content/CallToAction.astro';
 import Card from '@/components/astro/content/Card.astro';
 import Disclosure from '@/components/astro/content/Disclosure.astro';
@@ -14,7 +14,7 @@ import TextLink from '@/components/astro/content/TextLink.astro';
 import type { Locale } from '@/i18n/config';
 import CommercialList from './CommercialList.astro';
 
-type CommercialEntry = CollectionEntry<'products' | 'services' | 'solutions' | 'industries'>;
+type CommercialEntry = CollectionEntry<'products'>;
 
 interface Link {
 	href: string;
@@ -32,6 +32,7 @@ interface Props {
 
 const { locale, entry, breadcrumbs = [], related = [], cta, officialLink } = Astro.props;
 const { title, description, media } = entry.data;
+const Content = entry.body?.trim() ? (await render(entry)).Content : undefined;
 const gallery = media.map((asset) => {
 	const sources = new Map(asset.variants?.map(({ path, width }) => [width, path]));
 	if (sources.size === 0) return { ...asset, srcset: undefined };
@@ -39,11 +40,8 @@ const gallery = media.map((asset) => {
 	const srcset = Array.from(sources, ([width, path]) => `${path} ${width}w`).join(', ');
 	return { ...asset, srcset };
 });
-const product = entry.collection === 'products' ? entry.data : undefined;
-const service = entry.collection === 'services' ? entry.data : undefined;
-const solution = entry.collection === 'solutions' ? entry.data : undefined;
-const industry = entry.collection === 'industries' ? entry.data : undefined;
-const faq = product?.faq ?? service?.faq ?? [];
+const product = entry.data;
+const faq = product.faq ?? [];
 const copy = {
 	ar: {
 		breadcrumbs: 'مسار التنقّل',
@@ -51,11 +49,6 @@ const copy = {
 		platforms: 'المنصات',
 		usage: 'حالات الاستخدام',
 		media: 'معرض الصور',
-		scope: 'نطاق الخدمة',
-		deliverables: 'المخرجات',
-		problem: 'التحدّي',
-		needs: 'الاحتياجات',
-		limitations: 'القيود',
 		faq: 'الأسئلة الشائعة',
 		related: 'محتوى ذو صلة',
 		externalLinks: 'روابط المنتج',
@@ -69,11 +62,6 @@ const copy = {
 		platforms: 'Platforms',
 		usage: 'Use cases',
 		media: 'Image gallery',
-		scope: 'Service scope',
-		deliverables: 'Deliverables',
-		problem: 'Challenge',
-		needs: 'Needs',
-		limitations: 'Limitations',
 		faq: 'Frequently asked questions',
 		related: 'Related content',
 		externalLinks: 'Product links',
@@ -85,45 +73,39 @@ const copy = {
 const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-link';
 ---
 
-<Section labelledBy="commercial-heading" tone="muted">
-	<Stack>
-		{breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} label={copy.breadcrumbs} />}
-		<Heading id="commercial-heading" size="display">{title}</Heading>
-		{
-			product && (
-				<div class="flex flex-wrap items-center gap-3">
-					{product.brand && <bdi class="font-medium wrap-anywhere">{product.brand}</bdi>}
-					<Badge variant={product.availability === 'released' ? 'secondary' : 'outline'}>{copy[product.availability]}</Badge>
-				</div>
-			)
-		}
-		<ProseText>{description}</ProseText>
-		{
-			(cta || officialLink) && (
-				<div class="flex flex-wrap gap-3">
-					{cta && <CallToAction {...cta} analyticsAction={product?.translationKey === 'bim' ? 'demo_cta' : 'consultation_cta'} />}
-					{officialLink && <CallToAction {...officialLink} variant={cta ? 'outline' : 'default'} external {...(product?.translationKey === 'bim' ? { analyticsAction: 'bim_outbound' as const } : {})} />}
-				</div>
-			)
-		}
-	</Stack>
-</Section>
+<PageHeading id="commercial-heading" {title} {description} {breadcrumbs} breadcrumbLabel={copy.breadcrumbs}>
+	{
+		(product || (!Content && (cta || officialLink))) && (
+			<Stack>
+				{product && (
+					<div class="flex flex-wrap items-center gap-3">
+						{product.brand && <bdi class="font-medium wrap-anywhere">{product.brand}</bdi>}
+						<Badge variant={product.availability === 'released' ? 'secondary' : 'outline'}>{copy[product.availability]}</Badge>
+					</div>
+				)}
+				{!Content && (cta || officialLink) && (
+					<div class="flex flex-wrap gap-3">
+						{cta && <CallToAction {...cta} analyticsAction="consultation_cta" />}
+						{officialLink && <CallToAction {...officialLink} variant={cta ? 'outline' : 'default'} external />}
+					</div>
+				)}
+			</Stack>
+		)
+	}
+</PageHeading>
 
 {
-	solution && (
-		<Section labelledBy="commercial-challenge">
-			<Stack>
-				<Heading id="commercial-challenge" level={2} class="text-2xl">
-					{copy.problem}
-				</Heading>
-				<ProseText>{solution.problem}</ProseText>
-			</Stack>
+	Content && (
+		<Section>
+			<div class="prose">
+				<Content />
+			</div>
 		</Section>
 	)
 }
 
 {
-	product && (
+	!Content && product && (
 		<Section labelledBy="commercial-features">
 			<Stack>
 				<Heading id="commercial-features" level={2} class="text-2xl">
@@ -152,7 +134,7 @@ const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 }
 
 {
-	product?.platforms && product.platforms.length > 0 && (
+	!Content && product?.platforms && product.platforms.length > 0 && (
 		<Section labelledBy="commercial-platforms" tone="muted">
 			<Stack>
 				<Heading id="commercial-platforms" level={2} class="text-2xl">
@@ -177,11 +159,7 @@ const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 	)
 }
 
-{product?.useCases && <CommercialList id="commercial-usage" title={copy.usage} items={product.useCases} />}
-{service && <CommercialList id="commercial-scope" title={copy.scope} items={service.scope} />}
-{service && <CommercialList id="commercial-deliverables" title={copy.deliverables} items={service.deliverables} />}
-{industry && <CommercialList id="commercial-needs" title={copy.needs} items={industry.needs} />}
-{industry && <CommercialList id="commercial-limitations" title={copy.limitations} items={industry.limitations} />}
+{!Content && product?.useCases && <CommercialList id="commercial-usage" title={copy.usage} items={product.useCases} />}
 
 {
 	entry.data.sections?.map((item, index) => (
@@ -197,7 +175,7 @@ const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 }
 
 {
-	product?.externalLinks && product.externalLinks.length > 0 && (
+	!Content && product?.externalLinks && product.externalLinks.length > 0 && (
 		<Section labelledBy="commercial-external-links">
 			<Stack>
 				<Heading id="commercial-external-links" level={2} class="text-2xl">
@@ -240,7 +218,7 @@ const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 }
 
 {
-	faq.length > 0 && (
+	!Content && faq.length > 0 && (
 		<Section labelledBy="commercial-faq">
 			<Stack>
 				<Heading id="commercial-faq" level={2} class="text-2xl">
