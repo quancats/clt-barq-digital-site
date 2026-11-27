@@ -4,6 +4,7 @@ export const hostRedirects = [{ from: '/', to: localizePath(defaultLocale), stat
 const legacyMoves = [
 	['/home', '/'],
 	['/blog', '/insights/articles'],
+	['/services/second-service-service', '/services/cybersecurity'],
 ];
 const slashVariants = ['', 'about', 'services', 'projects', 'contact'];
 
