@@ -64,9 +64,9 @@ onUnmounted(() => {
 	<Select :model-value="selectedTheme" @update:model-value="onThemeChange">
 		<SelectTrigger size="sm" :aria-label="themeLabel" :class="iconTriggerClass">
 			<span class="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden="true">
-				<SunIcon v-if="selectedTheme === 'light'" class="size-4" />
-				<MoonIcon v-else-if="selectedTheme === 'dark'" class="size-4" />
-				<MonitorIcon v-else class="size-4" />
+				<SunIcon class="size-4" data-theme-icon="light" />
+				<MoonIcon class="size-4" data-theme-icon="dark" />
+				<MonitorIcon class="size-4" data-theme-icon="auto" />
 			</span>
 			<span class="sr-only">
 				<SelectValue :placeholder="themeLabel" />
@@ -81,3 +81,14 @@ onUnmounted(() => {
 		</SelectContent>
 	</Select>
 </template>
+
+<style scoped>
+[data-theme-icon] {
+	display: none;
+}
+html[data-theme-mode='light'] [data-theme-icon='light'],
+html[data-theme-mode='dark'] [data-theme-icon='dark'],
+html[data-theme-mode='auto'] [data-theme-icon='auto'] {
+	display: block;
+}
+</style>

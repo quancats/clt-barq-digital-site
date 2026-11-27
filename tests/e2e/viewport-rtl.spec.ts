@@ -32,6 +32,41 @@ for (const viewport of VIEWPORTS) {
 }
 
 for (const locale of ['ar', 'en']) {
+	test(`keeps the ${locale} header layout stable while its JavaScript loads`, async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 800 });
+		let release!: () => void;
+		const pending = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		await page.route('**/HeaderChrome.*.js', async (route) => {
+			await pending;
+			await route.continue();
+		});
+		try {
+			await page.goto(`/${locale}/`, { waitUntil: 'domcontentloaded' });
+			const header = page.locator('[data-header-chrome]');
+			const fallback = page.locator('[data-header-fallback]');
+			const language = header.locator('.header-tools [role="combobox"]').first();
+			const languageIcon = language.locator('svg.lucide-languages');
+			const themeIcon = header.locator('[data-theme-icon]:visible');
+			await expect(page.locator('astro-island[ssr] [data-header-chrome]')).toBeVisible();
+			await expect(fallback).toBeHidden();
+			await expect(languageIcon).toBeVisible();
+			await expect(language.locator('.sr-only')).toHaveCount(1);
+			await expect(themeIcon).toHaveCount(1);
+			await page.evaluate(() => document.fonts.ready);
+			const bounds = await header.boundingBox();
+			release();
+			await expect(page.locator('astro-island:not([ssr]) [data-header-chrome]')).toBeVisible();
+			await expect(fallback).toBeHidden();
+			await expect(languageIcon).toBeVisible();
+			await expect(themeIcon).toHaveCount(1);
+			expect(await header.boundingBox()).toEqual(bounds);
+		} finally {
+			release();
+		}
+	});
+
 	test(`scrolls a short ${locale} drawer and follows its last link by keyboard`, async ({ page }) => {
 		await page.setViewportSize({ width: 320, height: 180 });
 		await expectHttpOk(page, `/${locale}/articles/welcome/`);
@@ -81,37 +116,24 @@ for (const locale of ['ar', 'en']) {
 
 for (const locale of ['ar', 'en']) {
 	const other = locale === 'ar' ? 'en' : 'ar';
-	for (const mode of ['disabled', 'blocked', 'delayed'] as const) {
+	for (const mode of ['disabled', 'blocked'] as const) {
 		test(`keeps ${locale} mobile navigation usable with JavaScript ${mode}`, async ({ browser, baseURL }) => {
 			const context = await browser.newContext({ baseURL: baseURL!, javaScriptEnabled: mode !== 'disabled', viewport: { width: 320, height: 220 } });
-			let release = () => {};
-			const pending = new Promise<void>((resolve) => {
-				release = resolve;
-			});
 			try {
 				const page = await context.newPage();
-				if (mode !== 'disabled') {
-					await page.route('**/HeaderChrome.*.js', async (route) => {
-						if (mode === 'blocked') await route.abort();
-						else {
-							await pending;
-							await route.continue();
-						}
-					});
+				if (mode === 'blocked') {
+					await page.route('**/HeaderChrome.*.js', (route) => route.abort());
 					await page.route('**/ComponentCatalog.*.js', (route) => route.abort());
 				}
 				await page.goto(`/${locale}/components/`, { waitUntil: 'commit' });
 				const fallback = page.locator('[data-header-fallback]');
-				await expect(fallback.locator(`a[href="/${locale}/articles/"]`)).toBeVisible();
+				await expect(fallback.locator(`a[href="/${locale}/articles/"]`)).toBeVisible({ timeout: 7500 });
 				await expect(page.locator('[data-catalog-fallback] a[href="#combobox"]')).toBeVisible();
 				await fallback.locator(`a[hreflang="${other}"]`).click();
 				await expect(page).toHaveURL(`/${other}/components/`);
 				await fallback.locator(`a[href="/${other}/articles/"]`).click();
 				await expect(page).toHaveURL(`/${other}/articles/`);
-				release();
-				if (mode === 'delayed') await expect(fallback).toBeHidden();
 			} finally {
-				release();
 				await context.close();
 			}
 		});
@@ -121,7 +143,7 @@ for (const locale of ['ar', 'en']) {
 		await page.setViewportSize({ width: 320, height: 220 });
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await expectHttpOk(page, `/${locale}/`);
-		const menu = page.locator('astro-island:not([ssr]) [data-header-chrome] button[aria-controls="site-mobile-nav"]');
+		const menu = page.locator('astro-island:not([ssr]) [data-header-chrome] button[data-slot="sheet-trigger"]');
 		await menu.press('Enter');
 		await expect(page.getByRole('dialog')).toBeVisible();
 		await expect(page.getByRole('dialog')).toHaveCSS('animation-name', 'none');
@@ -130,7 +152,7 @@ for (const locale of ['ar', 'en']) {
 		await expect(page.getByRole('dialog')).toHaveCount(0);
 		await expect(menu).toBeFocused();
 		const footer = page.locator('footer');
-		const link = footer.locator(`nav a[href="/${locale}/articles/"]`).first();
+		const link = footer.locator(`nav a[href="/${locale}/insights/"]`).first();
 		await link.focus();
 		await expect(link).toBeFocused();
 		const settings = footer.locator('[data-privacy-settings]');

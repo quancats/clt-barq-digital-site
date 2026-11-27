@@ -50,6 +50,19 @@ const brand = { src: logo.src, width: brandWidth, height: Math.round((brandLogo.
 ---
 
 <header class={cn('sticky top-0 z-50 border-b border-border bg-card', className)}>
+	<script is:inline>
+		(() => {
+			const header = document.currentScript?.parentElement;
+			if (!header) return;
+			header.setAttribute('data-header-booting', '');
+			const finish = () => {
+				header.removeAttribute('data-header-booting');
+				window.clearTimeout(timeout);
+			};
+			const timeout = window.setTimeout(finish, 6000);
+			header.addEventListener('astro:hydrate', finish, { capture: true, once: true });
+		})();
+	</script>
 	<HeaderChrome client:load {locale} {brand} {home} {serviceRequest} {menus} {alternatePath} {currentPath} defaultTheme={resolveStoredTheme(PUBLIC_DEFAULT_THEME)} {common} {layout} />
 	<div data-header-fallback>
 		<Container class="header-row">
@@ -100,7 +113,7 @@ const brand = { src: logo.src, width: brandWidth, height: Math.round((brandLogo.
 				{
 					alternatePath ? (
 						<a href={alternatePath} class="nav-link" hreflang={otherLocale} lang={otherLocale} aria-label={common.switch_language}>
-							{otherLocale === 'ar' ? common.language_name_ar : common.language_name_en}
+							<Icon name="lucide:languages" size={16} aria-hidden="true" />
 						</a>
 					) : (
 						<span class="sr-only">{common.translation_unavailable}</span>
@@ -160,7 +173,8 @@ const brand = { src: logo.src, width: brandWidth, height: Math.round((brandLogo.
 </script>
 
 <style>
-	:global(astro-island[ssr] [data-header-chrome]),
+	header:not([data-header-booting]) :global(astro-island[ssr] [data-header-chrome]),
+	header[data-header-booting] > [data-header-fallback],
 	:global(astro-island:not([ssr])) + [data-header-fallback] {
 		display: none;
 	}
