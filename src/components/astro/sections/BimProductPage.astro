@@ -21,7 +21,7 @@ interface Props {
 }
 
 const { product, breadcrumbs, demoHref } = Astro.props;
-const { locale, title, description, features, sections = [], useCases = [], externalLinks = [] } = product;
+const { locale, title, description, features, sections = [], useCases = [], externalLinks = [], faq = [] } = product;
 const ar = locale === 'ar';
 const copy = ar
 	? {
@@ -39,6 +39,7 @@ const copy = ar
 			adminPreview: 'افتح معاينة لوحة الإدارة',
 			securityLink: 'تفاصيل الحماية في BIM',
 			scenarios: 'BIM في يوم العمل',
+			faq: 'تقييم BIM لمؤسستك',
 			closing: 'استكشف BIM مع فريقك',
 			story: 'قصة تطوير BIM',
 		}
@@ -57,6 +58,7 @@ const copy = ar
 			adminPreview: 'Open the admin preview',
 			securityLink: 'Explore BIM security',
 			scenarios: 'BIM in the workday',
+			faq: 'Evaluating BIM for your organization',
 			closing: 'Explore BIM with your team',
 			story: 'The story behind BIM',
 		};
@@ -176,6 +178,25 @@ const icons: Record<string, string> = { messaging: 'lucide:messages-square', 'fi
 		)
 	}
 
+	{
+		faq.length > 0 && (
+			<section id="bim-evaluation" class="py-section" aria-labelledby="bim-evaluation-title">
+				<Container>
+					<Heading id="bim-evaluation-title" level={2} class="product-title">
+						{copy.faq}
+					</Heading>
+					<div class="bim-evaluation-list">
+						{faq.map(({ question, answer }) => (
+							<details>
+								<summary>{question}</summary>
+								<p class="product-description">{answer}</p>
+							</details>
+						))}
+					</div>
+				</Container>
+			</section>
+		)
+	}
 	<section class="product-end py-section" aria-labelledby="bim-end-title">
 		<Container>
 			<div class="product-footer">
@@ -191,6 +212,21 @@ const icons: Record<string, string> = { messaging: 'lucide:messages-square', 'fi
 </div>
 
 <style>
+	.bim-evaluation-list {
+		max-inline-size: 48rem;
+		margin-block-start: 1rem;
+	}
+	.bim-evaluation-list details {
+		padding-block: 0.75rem;
+		border-block-end: 1px solid var(--section-rule);
+	}
+	.bim-evaluation-list summary {
+		cursor: pointer;
+		font-weight: 650;
+	}
+	.bim-evaluation-list p {
+		margin-block-start: 0.5rem;
+	}
 	.bim-product {
 		--bim-accent: var(--primary-link);
 		--bim-tint: var(--brand-section-tint);

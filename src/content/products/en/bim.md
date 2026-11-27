@@ -4,14 +4,14 @@ translationKey: 'bim'
 locale: 'en'
 slug: 'bim'
 title: 'BIM | Team communication and enterprise administration'
-description: 'A Barq Digital platform with Android and iOS apps for chats, file sharing, and one-to-one calls, plus a web console to manage accounts and permissions and monitor the messaging service.'
+description: 'BIM is an enterprise communication platform owned by Barq Digital for Information Technology. Teams share messages and files on Android and iOS, while administrators manage accounts and permissions and monitor the messaging service in the web console.'
 governance: { 'status': 'published', 'approvalRef': 'website-copy-2026-11-26' }
 sortOrder: 4
 seo: { 'title': 'BIM | Team communication and enterprise administration', 'description': 'A Barq Digital platform with Android and iOS apps for chats, file sharing, and one-to-one calls, plus a web console to manage accounts and permissions and monitor the messaging service.' }
 featured: true
 brand: 'BIM'
 availability: 'conditional'
-officialUrl: 'https://site.bimchat.dev/en'
+officialUrl: 'https://bimchat.sa/en'
 features:
     - key: 'messaging'
       title: 'Direct and group chats'
@@ -40,4 +40,13 @@ useCases:
 externalLinks:
     - label: 'Download BIM for Android'
       href: 'https://play.google.com/store/apps/details?id=sa.barq.bim'
+faq:
+    - question: 'How can our team get the BIM app?'
+      answer: 'Android is available through the Google Play link. To confirm iOS availability and access for your team, include your target devices when requesting a demo.'
+    - question: 'How can we assess deployment and integration with our systems?'
+      answer: 'Share your team size, operating environment, and identity and integration requirements. This helps identify what to verify in the demo and agree suitable deployment and integration options before confirming scope.'
+    - question: 'What can we verify in a security and administration demo?'
+      answer: 'Ask to see encrypted chats and linked-device review, then verify how console access is scoped by administrator role, organization, and server.'
+    - question: 'How can we discuss licensing, support, and procurement?'
+      answer: 'Include your estimated user count, procurement and support requirements, and any technical documents you need when requesting a demo, so the assessment and proposal can be scoped.'
 ---
