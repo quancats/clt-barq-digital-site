@@ -1,5 +1,5 @@
 export const common = {
-	brand: 'برق الرقمية',
+	brand: 'برق الرقمي',
 	skip_to_content: 'تخطّي إلى المحتوى',
 	articles: 'المقالات',
 	read_more: 'اقرأ المزيد',

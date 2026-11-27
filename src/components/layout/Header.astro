@@ -1,18 +1,17 @@
 ---
+import { getImage, Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import { PUBLIC_DEFAULT_THEME } from 'astro:env/client';
+import arabicLogo from '@/assets/images/brand/logo.png';
+import englishLogo from '@/assets/images/brand/logo-en.png';
 import HeaderChrome from '@/components/islands/interactive/HeaderChrome.vue';
 import Container from '@/components/layout/Container.astro';
-import NativeThemePicker from '@/components/layout/NativeThemePicker.astro';
-import brandLogo from '@/assets/images/brand/logo.png';
-import { getImage } from 'astro:assets';
-import { primaryNavPaths } from '@/data/navigation';
 import { localizePath, type Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/helpers';
-import { getRouteAvailability } from '@/lib/navigation/getRouteAvailability';
-import { getSiteSections } from '@/lib/content/queries/getSiteRoutes';
-import { getEditorialNavigation } from '@/lib/content/queries/getEditorialPaths';
+import { commercialFamilies, getSiteContent } from '@/lib/content/queries/getSiteRoutes';
+import { getCorporateNavigation } from '@/lib/navigation/getCorporateNavigation';
 import { cn } from '@/lib/utils';
 import { resolveStoredTheme } from '@/scripts/theme';
-import { PUBLIC_DEFAULT_THEME } from 'astro:env/client';
 
 interface Props {
 	locale: Locale;
@@ -21,108 +20,275 @@ interface Props {
 }
 
 const { locale, alternatePath, class: className } = Astro.props;
-const dictionary = getDictionary(locale);
-const logoWidth = 56;
-const logo = await getImage({ src: brandLogo, width: logoWidth * 2 });
-const brand = { src: logo.src, width: logoWidth, height: Math.round((brandLogo.height / brandLogo.width) * logoWidth), label: dictionary.common.brand };
-const availability = await getRouteAvailability(locale);
-const [sections, editorial] = await Promise.all([getSiteSections(locale), getEditorialNavigation(locale)]);
-const knowledge = editorial.find(({ key }) => key === 'insights');
-const siteLinks = [...sections.filter(({ key }) => ['about', 'products', 'services', 'solutions', 'industries', 'projects', 'contact'].includes(key)), ...(knowledge ? [knowledge, ...editorial.filter(({ key }) => key === 'resources')] : editorial)].map(({ href, title }) => ({ href, title }));
-const homeHref = localizePath(locale, primaryNavPaths.home);
-const articlesHref = localizePath(locale, primaryNavPaths.articles);
-const componentsHref = localizePath(locale, primaryNavPaths.components);
-const otherLocale: Locale = locale === 'ar' ? 'en' : 'ar';
-const defaultTheme = resolveStoredTheme(PUBLIC_DEFAULT_THEME);
-
-const chromeCopy = {
-	navLabel: dictionary.layout.nav_label,
-	navMobileLabel: dictionary.layout.nav_mobile_label,
-	navMenu: dictionary.layout.nav_menu,
-	navHome: dictionary.layout.nav_home,
-	navExplore: dictionary.layout.nav_explore,
-	navArticles: dictionary.layout.nav_articles,
-	navComponents: dictionary.layout.nav_components,
-	switchLanguage: dictionary.common.switch_language,
-	translationUnavailable: dictionary.common.translation_unavailable,
-	languageNameAr: dictionary.common.language_name_ar,
-	languageNameEn: dictionary.common.language_name_en,
-	themeLabel: dictionary.common.theme_label,
-	themeLight: dictionary.common.theme_light,
-	themeDark: dictionary.common.theme_dark,
-	themeAuto: dictionary.common.theme_auto,
-	ctaLabel: dictionary.layout.header_cta,
-	close: dictionary.common.close,
-} as const;
-
-const chromePaths = {
-	home: homeHref,
-	articles: availability.articles ? articlesHref : undefined,
-	components: availability.preview ? componentsHref : undefined,
-	alternateHref: alternatePath,
-	siteLinks,
-} as const;
-
-const currentPath = Astro.url.pathname.replace(/\/$/, '') || '/';
-
-function isCurrentPath(href: string): boolean {
-	const normalized = href.replace(/\/$/, '') || '/';
-	return currentPath === normalized;
-}
+const { common, layout } = getDictionary(locale);
+const brandLogo = locale === 'en' ? englishLogo : arabicLogo;
+const brandWidth = locale === 'en' ? 64 : 56;
+const [{ home, contact, groups }, content, logo] = await Promise.all([getCorporateNavigation(locale), getSiteContent(), getImage({ src: brandLogo, width: brandWidth * 2 })]);
+const otherLocale = locale === 'ar' ? 'en' : 'ar';
+const normalize = (path: string) => path.replace(/\/$/, '') || '/';
+const currentPath = normalize(Astro.url.pathname);
+const isCurrent = (href: string) => normalize(href) === currentPath;
+const isSection = (href: string) => isCurrent(href) || currentPath.startsWith(normalize(href) + '/');
+const [company, capabilities, knowledge, inquiries] = groups;
+const request = inquiries?.links.find(({ key }) => key === 'consultation') ?? contact;
+const serviceRequest = request ? { ...request, title: locale === 'ar' ? 'اطلب خدمة' : 'Request a service' } : undefined;
+const demo = inquiries?.links.find(({ key }) => key === 'demo');
+const commercialMenus = ['services', 'solutions', 'products', 'industries'].flatMap((key) => {
+	const section = capabilities?.links.find((link) => link.key === key);
+	const family = commercialFamilies.find((family) => family === key);
+	if (!section || !family) return [];
+	const entries = content[family]
+		.filter(({ data }) => data.locale === locale)
+		.map(({ data }) => ({
+			href: localizePath(locale, `${family}/${data.slug}`),
+			title: family === 'products' && data.translationKey === 'bim' ? (locale === 'ar' ? 'منصة BIM للتواصل المؤسسي' : 'BIM enterprise communications') : data.title,
+		}));
+	return [{ key, title: section.title, overview: section, links: [section, ...entries, ...(family === 'products' && demo ? [demo] : [])] }];
+});
+const menus = [...commercialMenus, ...(company ? [{ key: 'company', ...company }] : []), ...(knowledge ? [{ key: 'knowledge', ...knowledge }] : []), ...(contact ? [{ key: 'contact', title: contact.title, links: [contact] }] : [])].filter(({ links }) => links.length);
+const brand = { src: logo.src, width: brandWidth, height: Math.round((brandLogo.height / brandLogo.width) * brandWidth), label: common.brand };
 ---
 
 <header class={cn('sticky top-0 z-50 border-b border-border bg-card', className)}>
-	<Container class="py-4">
-		{availability.preview && <HeaderChrome client:load locale={locale} defaultTheme={defaultTheme} {brand} copy={chromeCopy} paths={chromePaths} currentPath={currentPath} />}
-		<div data-header-fallback>
-			<div class="flex flex-wrap items-center justify-between gap-3 text-sm font-medium">
-				<nav aria-label={dictionary.layout.nav_label} class="flex flex-wrap items-center gap-x-3">
-					<a class="inline-flex min-h-11 items-center gap-2 wrap-anywhere underline focus-visible:outline-2" href={homeHref} data-astro-prefetch aria-current={isCurrentPath(homeHref) ? 'page' : undefined}>
-						<img src={brand.src} alt="" width={brand.width} height={brand.height} />
-						<span class="sr-only">{dictionary.layout.nav_home}</span>
-					</a>
+	<HeaderChrome client:load {locale} {brand} {home} {serviceRequest} {menus} {alternatePath} {currentPath} defaultTheme={resolveStoredTheme(PUBLIC_DEFAULT_THEME)} {common} {layout} />
+	<div data-header-fallback>
+		<Container class="header-row">
+			<a href={home.href} aria-current={isCurrent(home.href) ? 'page' : undefined} class="brand">
+				<Image src={brandLogo} alt={common.brand} width={brandWidth} densities={[1, 2]} />
+			</a>
+
+			<nav aria-label={layout.nav_label} class="navigation">
+				<button class="menu-toggle nav-link" type="button" aria-expanded="false" aria-controls="corporate-navigation" hidden>
+					<Icon name="lucide:menu" size={20} aria-hidden="true" />
+					{layout.nav_menu}
+				</button>
+				<ul id="corporate-navigation" class="nav-list">
+					<li>
+						<a href={home.href} class="nav-link" aria-current={isCurrent(home.href) ? 'page' : undefined}>{home.title}</a>
+					</li>
 					{
-						siteLinks.map(({ href, title }) => (
-							<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" {href} data-astro-prefetch aria-current={isCurrentPath(href) ? 'page' : undefined}>
-								{title}
-							</a>
+						menus.map(({ title, links }) => (
+							<li>
+								{links.length === 1 && links[0] ? (
+									<a href={links[0].href} class="nav-link" aria-current={isCurrent(links[0].href) ? 'page' : undefined}>
+										{title}
+									</a>
+								) : (
+									<details class="nav-group">
+										<summary class:list={['nav-link', { 'active-group': links.some(({ href }) => isSection(href)) }]}>
+											{title}
+											<Icon name="lucide:chevron-down" size={16} aria-hidden="true" />
+										</summary>
+										<ul class="dropdown">
+											{links.map(({ href, title }) => (
+												<li>
+													<a {href} class="nav-link" aria-current={isCurrent(href) ? 'page' : undefined}>
+														{title}
+													</a>
+												</li>
+											))}
+										</ul>
+									</details>
+								)}
+							</li>
 						))
 					}
-					{
-						availability.articles && (
-							<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" href={articlesHref} data-astro-prefetch aria-current={isCurrentPath(articlesHref) ? 'page' : undefined}>
-								{dictionary.layout.nav_articles}
-							</a>
-						)
-					}
-					{
-						availability.preview && (
-							<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" href={componentsHref} data-astro-prefetch aria-current={isCurrentPath(componentsHref) ? 'page' : undefined}>
-								{dictionary.layout.nav_components}
-							</a>
-						)
-					}
-				</nav>
+				</ul>
+			</nav>
+
+			<div class="header-actions">
 				{
 					alternatePath ? (
-						<nav aria-label={dictionary.common.switch_language}>
-							<a class="inline-flex min-h-11 items-center wrap-anywhere underline focus-visible:outline-2" href={alternatePath} hreflang={otherLocale} lang={otherLocale}>
-								{otherLocale === 'ar' ? dictionary.common.language_name_ar : dictionary.common.language_name_en}
-							</a>
-						</nav>
+						<a href={alternatePath} class="nav-link" hreflang={otherLocale} lang={otherLocale} aria-label={common.switch_language}>
+							{otherLocale === 'ar' ? common.language_name_ar : common.language_name_en}
+						</a>
 					) : (
-						<span class="text-muted-foreground">{dictionary.common.translation_unavailable}</span>
+						<span class="sr-only">{common.translation_unavailable}</span>
 					)
 				}
-				{!availability.preview && <NativeThemePicker {locale} />}
+				{
+					serviceRequest && (
+						<a href={serviceRequest.href} class="brand-request-action contact-link" aria-current={isCurrent(serviceRequest.href) ? 'page' : undefined}>
+							{serviceRequest.title}
+						</a>
+					)
+				}
 			</div>
-		</div>
-	</Container>
+		</Container>
+	</div>
 </header>
+
+<script>
+	const nav = document.querySelector<HTMLElement>('.navigation');
+	const toggle = nav?.querySelector<HTMLButtonElement>('.menu-toggle');
+	const groups = nav?.querySelectorAll<HTMLDetailsElement>('.nav-group');
+
+	if (nav && toggle) {
+		toggle.hidden = false;
+		nav.classList.add('enhanced');
+
+		toggle.addEventListener('click', () => {
+			const expanded = toggle.getAttribute('aria-expanded') === 'true';
+			toggle.setAttribute('aria-expanded', String(!expanded));
+			if (expanded)
+				groups?.forEach((group) => {
+					group.open = false;
+				});
+		});
+
+		document.addEventListener('click', (event) => {
+			if (!(event.target instanceof Node)) return;
+			const target = event.target;
+			groups?.forEach((group) => {
+				if (!group.contains(target)) group.open = false;
+			});
+			if (!nav.contains(target)) toggle.setAttribute('aria-expanded', 'false');
+		});
+
+		nav.addEventListener('keydown', (event) => {
+			if (!(event instanceof KeyboardEvent) || event.key !== 'Escape' || !(event.target instanceof Element)) return;
+			const group = event.target.closest<HTMLDetailsElement>('details[open]');
+			if (group) {
+				group.open = false;
+				group.querySelector('summary')?.focus();
+			} else if (toggle.getAttribute('aria-expanded') === 'true') {
+				toggle.setAttribute('aria-expanded', 'false');
+				toggle.focus();
+			}
+		});
+	}
+</script>
 
 <style>
 	:global(astro-island[ssr] [data-header-chrome]),
 	:global(astro-island:not([ssr])) + [data-header-fallback] {
 		display: none;
+	}
+	[data-header-fallback] > :global(.header-row) {
+		display: flex;
+		min-height: 5rem;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem 1.25rem;
+		padding-block: 0.65rem;
+	}
+	.brand,
+	.header-actions,
+	.nav-list {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.brand {
+		font-weight: 700;
+		white-space: nowrap;
+	}
+	.brand img {
+		flex: none;
+	}
+	.nav-link,
+	.contact-link {
+		display: flex;
+		min-height: 2.75rem;
+		align-items: center;
+		gap: 0.4rem;
+		padding-inline: 0.7rem;
+		border-radius: var(--radius-md);
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+	.nav-link:is(:hover, :focus-visible, [aria-current]),
+	.active-group,
+	.nav-group[open] > summary {
+		background: var(--accent);
+		color: var(--accent-foreground);
+	}
+	summary {
+		cursor: pointer;
+		list-style: none;
+	}
+	summary::-webkit-details-marker {
+		display: none;
+	}
+	.nav-group {
+		position: relative;
+	}
+	.dropdown {
+		position: absolute;
+		inset-block-start: 100%;
+		inset-inline-start: 0;
+		width: max-content;
+		min-width: 12rem;
+		max-width: min(20rem, 80vw);
+		padding: 0.35rem;
+		border: 1px solid var(--border);
+		border-radius: var(--radius-lg);
+		background: var(--card);
+		box-shadow: 0 12px 26px rgb(0 0 0 / 0.12);
+	}
+	.contact-link {
+		padding-inline: 1rem;
+		white-space: nowrap;
+	}
+	.menu-toggle {
+		display: none;
+	}
+	@media (width < 70rem) {
+		[data-header-fallback] > :global(.header-row) {
+			flex-wrap: wrap;
+		}
+		.navigation {
+			order: 3;
+			width: 100%;
+		}
+		.nav-list {
+			align-items: stretch;
+			flex-direction: column;
+		}
+		.enhanced .menu-toggle {
+			display: flex;
+		}
+		.enhanced .menu-toggle[aria-expanded='false'] + .nav-list {
+			display: none;
+		}
+		.enhanced .nav-list {
+			position: absolute;
+			inset-block-start: 100%;
+			inset-inline: 0;
+			max-height: 54dvh;
+			overflow-y: auto;
+			padding: 0.5rem 1rem;
+			border-block-end: 1px solid var(--border);
+			background: var(--card);
+			box-shadow: 0 12px 26px rgb(0 0 0 / 0.12);
+		}
+		.dropdown {
+			position: static;
+			width: auto;
+			max-width: none;
+			margin-inline-start: 0.75rem;
+			box-shadow: none;
+		}
+	}
+	@media (max-width: 30rem) {
+		[data-header-fallback] > :global(.header-row) {
+			gap: 0.25rem 0.5rem;
+		}
+		[data-header-fallback] > :global(.header-row):has(.enhanced) {
+			display: grid;
+			grid-template-columns: 1fr auto;
+		}
+		.enhanced {
+			grid-column: 2;
+			grid-row: 1;
+			width: auto;
+		}
+		.header-actions {
+			flex-wrap: wrap;
+		}
+		[data-header-fallback] > :global(.header-row):has(.enhanced) .header-actions {
+			grid-column: 1 / -1;
+			grid-row: 2;
+		}
 	}
 </style>

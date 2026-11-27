@@ -1,17 +1,16 @@
 ---
-import { Icon } from 'astro-icon/components';
 import { Image } from 'astro:assets';
-import brandLogo from '@/assets/images/brand/logo.png';
+import { getCollection } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+import arabicLogo from '@/assets/images/brand/logo.png';
+import englishLogo from '@/assets/images/brand/logo-en.png';
 import Container from '@/components/layout/Container.astro';
-import { socialLinks } from '@/data/social';
-import { localizePath, type Locale } from '@/i18n/config';
+import type { Locale } from '@/i18n/config';
 import { getDictionary } from '@/i18n/helpers';
 import { parseAnalyticsMode, shouldShowAnalyticsPreferenceUi } from '@/lib/analytics/consent';
 import { isGoogleAnalyticsEnabled } from '@/lib/analytics/googleAnalytics';
-import { PRIMARY_NAV_PREFETCH_ATTRS } from '@/lib/navigation/prefetch';
-import { getRouteAvailability } from '@/lib/navigation/getRouteAvailability';
-import { getSiteSections } from '@/lib/content/queries/getSiteRoutes';
-import { getEditorialNavigation } from '@/lib/content/queries/getEditorialPaths';
+import { getSitePagePaths } from '@/lib/content/queries/getSitePagePaths';
+import { getCorporateNavigation } from '@/lib/navigation/getCorporateNavigation';
 import { cn } from '@/lib/utils';
 import { PUBLIC_GOOGLE_ANALYTICS_ENABLED, PUBLIC_GOOGLE_ANALYTICS_MODE } from 'astro:env/client';
 
@@ -20,116 +19,303 @@ interface Props {
 	class?: string | undefined;
 }
 
+interface FooterColumn {
+	title: string;
+	icon: string;
+	href: string | undefined;
+	moreHref?: string | undefined;
+	links: { title: string; href: string }[];
+}
+
 const { locale, class: className } = Astro.props;
-const dictionary = getDictionary(locale);
-const availability = await getRouteAvailability(locale);
-const [sections, editorial] = await Promise.all([getSiteSections(locale), getEditorialNavigation(locale)]);
-const siteLinks = [...sections, ...editorial];
-const columns = dictionary.layout.footer_columns
-	.map((column) => ({
-		...column,
-		links: column.links.filter(({ path }) => {
-			if (path === '/articles') return availability.articles;
-			if (path.startsWith('/articles/')) return availability.articlePaths.includes(path);
-			return availability.preview || path === '/';
-		}),
-	}))
-	.filter((column) => column.links.length);
-const year = new Date().getFullYear();
-const homeHref = localizePath(locale, '/');
-const social = dictionary.layout.footer_social;
-const copyright = dictionary.layout.footer_copyright.replace('{year}', String(year)).replace('{brand}', dictionary.common.brand);
-const analyticsMode = parseAnalyticsMode(PUBLIC_GOOGLE_ANALYTICS_MODE);
+const currentPath = Astro.url.pathname;
+const currentPage = (href: string) => (href === currentPath ? 'page' : undefined);
+const { common, layout } = getDictionary(locale);
+const [{ home, groups, legal }, sitePages] = await Promise.all([getCorporateNavigation(locale), getSitePagePaths(locale)]);
+const ar = locale === 'ar';
+const brandLogo = ar ? arabicLogo : englishLogo;
+const visibleLinkLimit = 5;
+const [company, capabilities, knowledge, contact] = groups;
+const primaryContactHref = contact?.links.find(({ key }) => key === 'consultation')?.href;
+const serviceRequestLabel = ar ? 'اطلب خدمة' : 'Request a service';
+const demo = contact?.links.find(({ key }) => key === 'demo');
+const about = company?.links.find(({ key }) => key === 'about');
+const projects = company?.links.find(({ key }) => key === 'projects');
+const knowledgeHub = knowledge?.links.find(({ key }) => key === 'insights');
+const contactPage = contact?.links.find(({ key }) => key === 'contact');
+const contactDetails = sitePages.flatMap(({ props }) => (props.kind === 'page' && props.path === contactPage?.href ? (props.entry.data.contactLinks ?? []).map(({ href, label }) => ({ href, title: label })) : []));
+
+// Put the most useful links for a security buyer first, regardless of content publishing order.
+const commercialPriorities = [
+	{ key: 'services', icon: 'shield-check', slugs: ['cybersecurity', 'governance-risk-compliance', 'systems-integration', 'it-infrastructure', 'cloud-solutions'] },
+	{ key: 'solutions', icon: 'layers', slugs: ['data-protection', 'enterprise-identity', 'secure-applications', 'secure-enterprise-communication', 'digital-workplace'] },
+	{ key: 'products', icon: 'package', slugs: ['bim'] },
+	{ key: 'industries', icon: 'building-2', slugs: ['government', 'financial-services', 'enterprise', 'healthcare', 'industrial'] },
+];
+const commercialColumns = commercialPriorities.flatMap<FooterColumn>(({ key, icon, slugs }) => {
+	const section = capabilities?.links.find((link) => link.key === key);
+	if (!section) return [];
+	const rank = new Map(slugs.map((slug, index) => [`${key}/${slug}`, index]));
+	const entries = sitePages
+		.filter(({ params, props }) => props.kind === 'commercial' && params.barq.startsWith(`${key}/`))
+		.sort((left, right) => (rank.get(left.params.barq) ?? slugs.length) - (rank.get(right.params.barq) ?? slugs.length))
+		.flatMap(({ params, props }) => (props.kind === 'commercial' ? [{ href: props.path, title: params.barq === 'products/bim' ? (ar ? 'منصة BIM للتواصل المؤسسي' : 'BIM enterprise communications') : props.entry.data.title }] : []));
+	return [{ title: section.title, icon, href: section.href, links: [...entries, ...(key === 'products' && demo ? [demo] : [])] }];
+});
+const companyLinks = (company?.links ?? []).filter(({ key }) => key !== 'projects');
+const workLinks = sitePages.flatMap(({ props }) => (props.kind === 'project' ? [{ href: props.path, title: props.entry.data.slug === 'bim-product' ? (ar ? 'قصة تطوير منصة BIM' : 'The story behind BIM') : props.entry.data.title }] : []));
+const knowledgeLinks = ['articles', 'resources', 'news'].flatMap((key) => knowledge?.links.filter((link) => link.key === key) ?? []);
+const contactLinks = contactPage ? [{ href: contactPage.href, title: ar ? 'استفسار عام' : 'General inquiries' }, ...contactDetails] : [];
+const companyColumns: FooterColumn[] = [...(company && companyLinks.length ? [{ title: company.title, icon: 'landmark', href: undefined, moreHref: about?.href, links: companyLinks }] : []), ...(projects ? [{ title: projects.title, icon: 'briefcase-business', href: projects.href, links: workLinks }] : []), ...(knowledge && (knowledgeHub || knowledgeLinks.length) ? [{ title: knowledge.title, icon: 'book-open', href: knowledgeHub?.href, links: knowledgeLinks }] : []), ...(contact && contactLinks.length ? [{ title: contact.title, icon: 'messages-square', href: undefined, moreHref: contactPage?.href, links: contactLinks }] : [])];
+const directoryRows = [commercialColumns, companyColumns].filter((columns) => columns.length);
+const policyLabels = [
+	{ key: 'privacy', title: ar ? 'سياسة الخصوصية' : 'Privacy Policy' },
+	{ key: 'terms', title: ar ? 'شروط الاستخدام' : 'Terms of Use' },
+];
+const previews = import.meta.env.DEV && legal.length < policyLabels.length ? await getCollection('review', ({ data }) => data.locale === locale && data.section === 'legal') : [];
+const policies = policyLabels.flatMap(({ key, title }) => {
+	const published = legal.find((policy) => policy.key === key);
+	if (published) return [{ title, href: published.href }];
+	return previews.some(({ data }) => data.id === key) ? [{ title, href: `/design-preview/content/${ar ? 'arabic' : 'english'}/${key}/` }] : [];
+});
+const copyright = layout.footer_copyright.replace('{year}', String(new Date().getFullYear())).replace('{brand}', common.brand);
 const showPrivacySettings = shouldShowAnalyticsPreferenceUi({
-	mode: analyticsMode,
+	mode: parseAnalyticsMode(PUBLIC_GOOGLE_ANALYTICS_MODE),
 	analyticsEnabled: isGoogleAnalyticsEnabled(PUBLIC_GOOGLE_ANALYTICS_ENABLED),
 });
-
-function resolveFooterHref(path: string): string {
-	if (path === '#' || path.startsWith('http://') || path.startsWith('https://')) {
-		return path;
-	}
-	return localizePath(locale, path);
-}
 ---
 
-<footer class={cn('border-t border-border bg-card', className)}>
-	<Container class="py-12 lg:py-16">
-		<div class="space-y-12">
-			<div class="max-w-sm space-y-4">
-				<a href={homeHref} class="inline-flex items-center text-primary-link transition-opacity hover:opacity-80" {...PRIMARY_NAV_PREFETCH_ATTRS}>
-					<Image src={brandLogo} alt={dictionary.common.brand} width={96} densities={[1, 2]} />
+<footer class={cn('site-footer', className)}>
+	<Container class="py-6 lg:py-8">
+		<div class="footer-masthead grid items-center gap-5 border-b border-border pb-5 md:grid-cols-2 lg:gap-10 lg:pb-6">
+			<div class="flex min-w-0 items-center gap-4 sm:gap-5">
+				<a href={home.href} aria-label={common.brand} class="inline-flex min-h-11 shrink-0 items-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-4">
+					<Image src={brandLogo} alt="" width={ar ? 76 : 96} densities={[1, 2]} class:list={['footer-logo', ar ? 'w-14 sm:w-[4.75rem]' : 'w-20 sm:w-24']} />
 				</a>
-				{availability.preview && <p class="text-sm leading-relaxed text-muted-foreground">{dictionary.layout.footer_note}</p>}
-				{
-					availability.preview && (
-						<ul class="flex flex-wrap items-center gap-5" aria-label={dictionary.layout.footer_social_label}>
-							{socialLinks.map((link, index) => (
-								<li>
-									<a href={social[index]?.href ?? link.href} class="inline-flex size-11 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2" aria-label={social[index]?.label ?? link.label}>
-										<Icon name={link.icon} size={20} aria-hidden="true" />
-									</a>
-								</li>
-							))}
-						</ul>
-					)
-				}
+				<div class="min-w-0 border-s border-border ps-4 sm:ps-5">
+					<p class="text-base font-semibold text-foreground">{common.brand}</p>
+					<p class="mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">{ar ? 'الأمن السيبراني والحلول الرقمية والمنتجات المؤسسية.' : 'Cybersecurity, digital solutions and enterprise products.'}</p>
+				</div>
 			</div>
-
-			<nav aria-label={dictionary.layout.footer_nav_label} class="grid grid-cols-2 gap-4 wrap-anywhere sm:grid-cols-4 sm:gap-8">
-				{
-					siteLinks.length > 0 && (
-						<ul class="col-span-full flex flex-wrap gap-x-4">
-							{siteLinks.map(({ href, title }) => (
+			{
+				primaryContactHref && (
+					<div class="footer-cta flex flex-wrap items-center justify-between gap-x-5 gap-y-3 rounded-lg px-4 py-4 sm:px-5">
+						<p class="max-w-xs text-sm leading-relaxed">{ar ? 'حدّد الخدمة التي تحتاجها وأخبرنا بأهداف مؤسستك.' : 'Tell us which service you need and what your organization wants to achieve.'}</p>
+						<a href={primaryContactHref} aria-current={currentPage(primaryContactHref)} class="brand-request-action footer-request inline-flex min-h-11 shrink-0 items-center rounded-md px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-4">
+							{serviceRequestLabel}
+						</a>
+					</div>
+				)
+			}
+		</div>
+		<nav aria-label={layout.footer_nav_label} class="mt-3 divide-y divide-border lg:mt-5">
+			{
+				directoryRows.map((columns) => (
+					<div class="footer-columns">
+						{columns.map(({ title, icon, href, moreHref, links }) => {
+							const sectionHref = href ?? moreHref;
+							const showMore = sectionHref && links.length + Number(Boolean(href)) > visibleLinkLimit;
+							const headingHref = showMore ? undefined : href;
+							const limit = visibleLinkLimit - Number(Boolean(headingHref));
+							return (
+								<section class="min-w-0">
+									<div class="footer-column-header">
+										<h2 class="footer-column-heading">
+											<Icon name={`lucide:${icon}`} size={16} class="footer-section-icon shrink-0" aria-hidden="true" />
+											{headingHref ? (
+												<a href={headingHref} aria-current={currentPage(headingHref)}>
+													{title}
+												</a>
+											) : (
+												title
+											)}
+										</h2>
+										{showMore && (
+											<a href={sectionHref} aria-current={currentPage(sectionHref)} class="footer-more">
+												{ar ? 'المزيد' : 'More'}
+												<span class="sr-only"> · {title}</span>
+											</a>
+										)}
+									</div>
+									{links.length > 0 && (
+										<ul>
+											{links.slice(0, limit).map(({ href, title }) => (
+												<li class="min-w-0">
+													<a {href} aria-current={currentPage(href)} class="footer-link">
+														<bdi>{title}</bdi>
+													</a>
+												</li>
+											))}
+										</ul>
+									)}
+								</section>
+							);
+						})}
+					</div>
+				))
+			}
+		</nav>
+	</Container>
+	<div class="footer-legal">
+		<Container class="footer-legal-row">
+			<p class="footer-copyright">{copyright}</p>
+			{
+				(policies.length > 0 || showPrivacySettings) && (
+					<nav aria-label={ar ? 'السياسات وإعدادات الخصوصية' : 'Policies and privacy settings'} class="footer-policies">
+						<ul role="list">
+							{policies.map(({ href, title }) => (
 								<li>
-									<a {href} class="flex min-h-11 items-center text-sm text-muted-foreground hover:text-foreground focus-visible:outline-2">
+									<a {href} aria-current={currentPage(href)} class="footer-policy-link">
 										{title}
 									</a>
 								</li>
 							))}
+							{showPrivacySettings && (
+								<li>
+									<button type="button" class="footer-policy-link cursor-pointer" data-privacy-settings aria-controls="cookie-consent" aria-expanded="false">
+										{common.cookie_consent.privacy_settings}
+									</button>
+								</li>
+							)}
 						</ul>
-					)
-				}
-				{
-					columns.map((column) => (
-						<div>
-							<h2 class="text-sm font-semibold text-foreground">{column.title}</h2>
-							<ul class="mt-2">
-								{column.links.map((link) => (
-									<li>
-										<a href={resolveFooterHref(link.path)} class="flex min-h-11 items-center rounded-sm text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2">
-											{link.label}
-										</a>
-									</li>
-								))}
-							</ul>
-						</div>
-					))
-				}
-			</nav>
-		</div>
-
-		<div class="mt-12 flex flex-col gap-3 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
-			<p class="text-sm text-muted-foreground">{copyright}</p>
-			<div class="flex flex-col gap-2 sm:items-end">
-				{
-					showPrivacySettings ? (
-						<button type="button" class="inline-flex min-h-11 items-center justify-center self-start rounded-lg px-2 text-sm font-medium text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline sm:self-end" data-privacy-settings>
-							{dictionary.common.cookie_consent.privacy_settings}
-						</button>
-					) : null
-				}
-				{
-					availability.preview && (
-						<p class="text-sm text-muted-foreground">
-							{dictionary.layout.footer_made_with}{' '}
-							<a href="https://quancats.com" class="font-medium text-primary-link underline-offset-4 hover:underline" rel="noopener noreferrer" target="_blank">
-								{dictionary.layout.footer_made_with_brand}
-							</a>
-						</p>
-					)
-				}
-			</div>
-		</div>
-	</Container>
+					</nav>
+				)
+			}
+			<p class="footer-credit">
+				<bdi lang="en" dir="ltr">Designed, built and managed by <a href="https://quancats.com/">Quancats</a></bdi>
+			</p>
+		</Container>
+	</div>
 </footer>
+
+<style>
+	.site-footer {
+		--footer-accent: var(--primary-link);
+		--footer-top-border: color-mix(in oklab, var(--section-rule) 65%, var(--border));
+		--footer-cta-surface: var(--brand-section-tint);
+		--footer-cta-text: var(--brand-navy);
+		--footer-cta-border: var(--section-rule);
+		--footer-cta-accent: var(--footer-accent);
+		border-block-start: 1px solid var(--footer-top-border);
+		background: var(--brand-frame-surface);
+	}
+	:global(.dark) .site-footer {
+		--footer-accent: var(--brand-accent);
+		--footer-cta-text: var(--brand-on-navy);
+		--footer-cta-border: var(--brand-navy-border);
+		--footer-cta-accent: var(--brand-accent);
+		background: linear-gradient(var(--background), var(--brand-frame-surface) 70%);
+	}
+	:global(.dark) .footer-logo {
+		filter: brightness(1.24);
+	}
+	.footer-cta {
+		border: 1px solid var(--footer-cta-border);
+		border-inline-start: 3px solid var(--footer-cta-accent);
+		background: var(--footer-cta-surface);
+		color: var(--footer-cta-text);
+	}
+	.footer-request {
+		outline-color: var(--footer-cta-accent);
+	}
+	.footer-legal {
+		border-block-start: 1px solid var(--footer-top-border);
+	}
+	.footer-legal > :global(.footer-legal-row) {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.2rem 1.15rem;
+		padding-block: 0.7rem;
+		color: var(--muted-foreground);
+		font-size: 0.875rem;
+	}
+	.footer-credit {
+		overflow-wrap: anywhere;
+	}
+	.footer-credit a {
+		color: var(--footer-accent);
+		font-weight: 600;
+		text-decoration: underline;
+		text-underline-offset: 0.22em;
+	}
+	.footer-policies ul {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0 0.85rem;
+	}
+	.footer-policy-link {
+		display: inline-flex;
+		align-items: center;
+		min-block-size: 2.25rem;
+		color: inherit;
+		text-underline-offset: 0.22em;
+	}
+	@media (max-width: 42rem) {
+		.footer-policies {
+			flex-basis: 100%;
+		}
+	}
+	.footer-section-icon {
+		color: var(--footer-accent);
+	}
+	.footer-columns {
+		display: grid;
+		gap: 1rem clamp(1rem, 3vi, 2.75rem);
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+		padding-block: 1rem;
+	}
+	.footer-column-header {
+		display: flex;
+		min-height: 2.75rem;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.35rem;
+	}
+	.footer-column-heading {
+		display: flex;
+		min-width: 0;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--foreground);
+		font-size: 1rem;
+		font-weight: 650;
+		overflow-wrap: anywhere;
+	}
+	@media (min-width: 64rem) {
+		.footer-columns {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			padding-block: 1.25rem;
+		}
+	}
+	.footer-link {
+		display: flex;
+		min-height: 2.5rem;
+		align-items: center;
+		font-size: 0.875rem;
+		color: var(--muted-foreground);
+		overflow-wrap: anywhere;
+		text-underline-offset: 0.25em;
+	}
+	.footer-more {
+		display: flex;
+		min-height: 2.75rem;
+		flex: none;
+		align-items: center;
+		color: var(--footer-accent);
+		font-size: 0.875rem;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+	.footer-column-heading a:is(:hover, :focus-visible, [aria-current]),
+	.footer-link:is(:hover, :focus-visible, [aria-current]),
+	.footer-more:is(:hover, :focus-visible, [aria-current]),
+	.footer-policy-link:is(:hover, :focus-visible, [aria-current], [aria-expanded='true']),
+	.footer-credit a:is(:hover, :focus-visible) {
+		color: var(--primary-link-hover);
+		text-decoration: underline;
+		text-underline-offset: 0.25em;
+	}
+</style>
