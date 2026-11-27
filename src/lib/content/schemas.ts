@@ -64,6 +64,7 @@ const editorial = {
 const article = z.strictObject({
 	...common,
 	...editorial,
+	publishedAt: date.optional(),
 });
 const previewArticle = z.strictObject({
 	locale,
@@ -79,7 +80,7 @@ const previewArticle = z.strictObject({
 export const contentSchemas = {
 	pages: z.strictObject({
 		...common,
-		sections: sections.min(1),
+		sections: sections.default([]),
 		contactLinks: z.array(z.strictObject({ label: text, href: z.string().regex(/^(?:mailto:[^\s?<>@]+@[^\s?<>@]+|tel:\+?[0-9][0-9()-]*)$/) })).optional(),
 		profile: resourceFile.optional(),
 	}),

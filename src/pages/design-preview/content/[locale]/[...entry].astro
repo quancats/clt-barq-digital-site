@@ -1,0 +1,83 @@
+---
+import { getCollection, render } from 'astro:content';
+import Heading from '@/components/astro/content/Heading.astro';
+import Section from '@/components/astro/content/Section.astro';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
+import LegalLayout from '@/layouts/LegalLayout.astro';
+import { locales } from '@/i18n/config';
+
+export async function getStaticPaths() {
+	if (!import.meta.env.DEV) return [];
+	const previewLanguages = { ar: 'arabic', en: 'english' } as const;
+	const entries = (await getCollection('review')).sort((left, right) => left.data.sortOrder - right.data.sortOrder);
+	return locales.flatMap((locale) => {
+		const localized = entries.filter(({ data }) => data.locale === locale);
+		const other = locale === 'ar' ? 'en' : 'ar';
+		const indexPath = `/design-preview/content/${previewLanguages[locale]}/`;
+		const alternateIndex = `/design-preview/content/${previewLanguages[other]}/`;
+		const index = {
+			params: { locale: previewLanguages[locale], entry: undefined },
+			props: { locale, indexPath, entries: localized, entry: undefined, alternatePath: alternateIndex },
+		};
+		return [
+			index,
+			...localized.map((entry) => {
+				const translation = entries.find(({ data }) => data.locale === other && data.translationKey === entry.data.translationKey);
+				return {
+					params: { locale: previewLanguages[locale], entry: entry.data.id },
+					props: { locale, indexPath, entries: localized, entry, alternatePath: translation && `${alternateIndex}${translation.data.id}/` },
+				};
+			}),
+		];
+	});
+}
+
+const { locale, indexPath, entries, entry, alternatePath } = Astro.props;
+const copy = locale === 'ar' ? { title: 'مسودات محتوى برق الرقمية', description: 'معاينة محلية للنصوص قبل اعتمادها للنشر.', back: 'جميع المسودات' } : { title: 'Barq Digital content drafts', description: 'Local preview of copy awaiting approval.', back: 'All drafts' };
+const rendered = entry && (await render(entry));
+const seo = {
+	title: entry?.data.seoTitle ?? entry?.data.title ?? copy.title,
+	description: entry?.data.seoDescription ?? entry?.data.description ?? copy.description,
+	canonicalPath: Astro.url.pathname,
+	noindex: true,
+};
+const legalPreview = entry?.data.section === 'legal';
+const siblingPolicy = legalPreview ? entries.find(({ data }) => data.section === 'legal' && data.id !== entry?.data.id) : undefined;
+const relatedPolicy = siblingPolicy ? { href: `${indexPath}${siblingPolicy.data.id}/`, label: siblingPolicy.data.title } : undefined;
+const previewNotice = locale === 'ar' ? 'مسودة للمعاينة المحلية قيد المراجعة القانونية.' : 'Local draft preview. Legal review is pending.';
+---
+
+{
+	entry && rendered && legalPreview ? (
+		<LegalLayout {locale} {alternatePath} {seo} title={entry.data.title} breadcrumbs={[{ href: indexPath, label: copy.title }, { label: entry.data.title }]} headings={rendered.headings} {previewNotice} {...(relatedPolicy ? { relatedPolicy } : {})}>
+			<rendered.Content />
+		</LegalLayout>
+	) : (
+		<WebsiteLayout {locale} {alternatePath} {seo}>
+			<Section>
+				{rendered ? (
+					<>
+						<a class="underline underline-offset-4" href={indexPath}>
+							{copy.back}
+						</a>
+						<article class="prose mt-6">
+							<rendered.Content />
+						</article>
+					</>
+				) : (
+					<div class="prose">
+						<Heading size="display">{copy.title}</Heading>
+						<p>{copy.description}</p>
+						<ul>
+							{entries.map(({ data }) => (
+								<li>
+									<a href={`${indexPath}${data.id}/`}>{data.title}</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+			</Section>
+		</WebsiteLayout>
+	)
+}

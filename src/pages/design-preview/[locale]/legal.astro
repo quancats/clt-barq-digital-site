@@ -20,7 +20,7 @@ const { locale, alternatePath } = Astro.props;
 const copy = locale === 'ar' ? { title: 'معاينة القالب القانوني', description: 'معاينة داخلية لتنسيق الوثائق القانونية.', effective: 'تاريخ سريان المثال', heading: 'بنية الوثيقة', body: 'يُعرض هنا عنوان القسم والنص المعتمد عند توفره.' } : { title: 'Legal layout preview', description: 'Internal preview of the legal document layout.', effective: 'Example effective date', heading: 'Document structure', body: 'The section heading and approved text appear here when available.' };
 ---
 
-<LegalLayout {locale} {alternatePath} title={copy.title} effective={{ label: copy.effective, date: new Date('2026-01-01') }} seo={{ title: copy.title, description: copy.description, canonicalPath: Astro.url.pathname, noindex: true }}>
+<LegalLayout {locale} {alternatePath} title={copy.title} description={copy.description} effective={{ label: copy.effective, date: new Date('2026-01-01') }} seo={{ title: copy.title, description: copy.description, canonicalPath: Astro.url.pathname, noindex: true }}>
 	<h2>{copy.heading}</h2>
 	<p>{copy.body}</p>
 </LegalLayout>

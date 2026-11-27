@@ -3,10 +3,10 @@ import { relative, resolve, sep } from 'node:path';
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { isPublishedContent, validatePublication, type PublicationCandidate } from '@/lib/content/publication';
 import type { Locale } from '@/i18n/config';
-import type { collections } from '@/content.config';
+import type { contentSchemas } from '@/lib/content/schemas';
 import { isPreviewAsset } from '@/data/previewAssets';
 
-type CollectionName = keyof typeof collections;
+type CollectionName = keyof typeof contentSchemas;
 const collectionNames = ['pages', 'products', 'services', 'solutions', 'industries', 'projects', 'articles', 'news', 'resources', 'authors', 'legal'] as const satisfies readonly CollectionName[];
 
 function asCandidate(entry: CollectionEntry<CollectionName>): PublicationCandidate[] {
@@ -37,6 +37,7 @@ async function validateAllContent() {
 	const approvedDownloads = new Map<string, number | undefined>();
 	for (const { body, collection, data, id } of entries.flat()) {
 		if (!('governance' in data) || !isPublishedContent(data)) continue;
+		if (collection === 'pages' && !body?.trim() && !('sections' in data && data.sections?.length)) throw new Error(`Approved page needs content: ${id}`);
 		if ((collection === 'articles' || collection === 'news') && !body?.trim()) throw new Error(`Approved editorial entry needs a body: ${collection}/${id}`);
 		const file = 'file' in data ? data.file : 'profile' in data ? data.profile : undefined;
 		if (!file) continue;

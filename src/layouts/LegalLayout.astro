@@ -1,34 +1,230 @@
 ---
-import Heading from '@/components/astro/content/Heading.astro';
-import ContentLayout from '@/layouts/ContentLayout.astro';
+import { Icon } from 'astro-icon/components';
+import type { BreadcrumbItem } from '@/components/astro/content/Breadcrumbs.astro';
+import PageHeading from '@/components/astro/content/PageHeading.astro';
+import Container from '@/components/layout/Container.astro';
+import WebsiteLayout from '@/layouts/WebsiteLayout.astro';
 import { formatDate } from '@/i18n/format';
 import type { Locale } from '@/i18n/config';
+import { getDictionary } from '@/i18n/helpers';
 import type { LocaleAlternate, PageSeo } from '@/lib/seo/types';
 
 interface Props {
 	locale: Locale;
 	seo: PageSeo;
 	title: string;
+	description?: string;
+	breadcrumbs?: BreadcrumbItem[];
+	headings?: { depth: number; slug: string; text: string }[];
+	relatedPolicy?: { href: string; label: string };
+	previewNotice?: string;
 	effective?: { label: string; date: Date };
 	alternatePath?: string | undefined;
 	alternates?: LocaleAlternate[];
 }
 
-const { locale, seo, title, effective, alternatePath, alternates } = Astro.props;
+const { locale, seo, title, description, breadcrumbs = [], headings = [], relatedPolicy, previewNotice, effective, alternatePath, alternates } = Astro.props;
+const chapters = headings.filter(({ depth }) => depth === 2);
+const contents = locale === 'ar' ? 'محتويات الوثيقة' : 'Document contents';
 ---
 
-<ContentLayout {locale} {seo} {alternatePath} {alternates}>
-	<header class="mb-8 border-b border-border pb-6">
-		<Heading class="wrap-anywhere" size="display">{title}</Heading>
-		{
-			effective && (
-				<p class="mt-3 text-sm text-muted-foreground">
-					{effective.label} <time datetime={effective.date.toISOString().slice(0, 10)}>{formatDate(locale, effective.date)}</time>
-				</p>
-			)
+<WebsiteLayout {locale} {seo} {alternatePath} {alternates}>
+	<article class="legal-document" aria-labelledby="legal-title">
+		<PageHeading id="legal-title" {title} {description} {breadcrumbs} breadcrumbLabel={getDictionary(locale).layout.breadcrumbs_label}>
+			{
+				effective && (
+					<p class="legal-date">
+						<Icon name="lucide:calendar-days" size={18} aria-hidden="true" />
+						<span>
+							{effective.label} <time datetime={effective.date.toISOString().slice(0, 10)}>{formatDate(locale, effective.date)}</time>
+						</span>
+					</p>
+				)
+			}
+		</PageHeading>
+		<Container class="py-section">
+			{
+				previewNotice && (
+					<p class="legal-preview-note" role="note">
+						<Icon name="lucide:info" size={19} aria-hidden="true" />
+						{previewNotice}
+					</p>
+				)
+			}
+			<div class:list={['legal-reading', { 'has-contents': chapters.length > 0 }]}>
+				{
+					chapters.length > 0 && (
+						<nav class="legal-contents" aria-labelledby="legal-contents-title">
+							<p id="legal-contents-title">{contents}</p>
+							<ul role="list">
+								{chapters.map(({ slug, text }) => (
+									<li>
+										<a href={`#${encodeURIComponent(slug)}`}>{text}</a>
+									</li>
+								))}
+							</ul>
+						</nav>
+					)
+				}
+				<div class="legal-column">
+					<div class:list={['prose legal-prose', { 'legal-preview-body': previewNotice }]}>
+						<slot />
+					</div>
+					{
+						relatedPolicy && (
+							<a class="legal-related" href={relatedPolicy.href}>
+								<Icon name="lucide:file-text" size={20} aria-hidden="true" />
+								<span>{relatedPolicy.label}</span>
+								<Icon name="lucide:arrow-right" size={17} class="rtl:rotate-180" aria-hidden="true" />
+							</a>
+						)
+					}
+				</div>
+			</div>
+		</Container>
+	</article>
+</WebsiteLayout>
+
+<style>
+	:global(html:has(.legal-contents)) {
+		scroll-behavior: auto;
+	}
+	.legal-document {
+		--legal-border: var(--section-rule);
+		--legal-surface: var(--brand-section-tint);
+	}
+	.legal-date {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.55rem 0.8rem;
+		border: 1px solid var(--legal-border);
+		border-radius: 0.5rem;
+		background: var(--card);
+		color: var(--muted-foreground);
+		font-size: 0.875rem;
+	}
+	.legal-date time {
+		margin-inline-start: 0.25em;
+		color: var(--foreground);
+		font-weight: 650;
+	}
+	.legal-date svg,
+	.legal-preview-note svg,
+	.legal-related svg {
+		flex: none;
+		color: var(--primary-link);
+	}
+	.legal-preview-note {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		margin-block-end: clamp(1rem, 2.7vi, 1.8rem);
+		padding: 0.85rem 1rem;
+		border: 1px solid var(--legal-border);
+		border-radius: 0.65rem;
+		background: var(--legal-surface);
+		color: var(--foreground);
+	}
+	.legal-reading {
+		display: grid;
+		align-items: start;
+		gap: clamp(1.25rem, 4.5vi, 4rem);
+	}
+	.legal-contents {
+		padding: clamp(0.95rem, 2.2vi, 1.45rem);
+		border: 1px solid var(--legal-border);
+		border-block-start: 0.2rem solid var(--primary-link);
+		border-radius: 0.85rem;
+		background: var(--legal-surface);
+	}
+	.legal-contents p {
+		margin-block-end: 0.4rem;
+		font-weight: 700;
+	}
+	.legal-contents li + li {
+		border-block-start: 1px solid var(--legal-border);
+	}
+	.legal-contents a {
+		display: flex;
+		align-items: center;
+		min-block-size: 2.75rem;
+		padding-block: 0.55rem;
+		color: var(--muted-foreground);
+		line-height: 1.45;
+		overflow-wrap: anywhere;
+	}
+	.legal-contents a:is(:hover, :focus-visible) {
+		color: var(--primary-link);
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+	}
+	.legal-column {
+		inline-size: min(100%, 76ch);
+		min-inline-size: 0;
+		margin-inline: auto;
+	}
+	.legal-prose {
+		max-inline-size: none;
+		line-height: 1.85;
+		overflow-wrap: anywhere;
+	}
+	.legal-preview-body > :global(h1:first-child) {
+		display: none;
+	}
+	.legal-prose :global(:is(h2, h3, h4)[id]) {
+		scroll-margin-block-start: 6rem;
+	}
+	.legal-prose :global(h2) {
+		margin-block-start: 1.6rem;
+		padding-block-start: 1.2rem;
+		border-block-start: 1px solid var(--legal-border);
+		font-size: clamp(1.22rem, 1.03rem + 0.8vi, 1.75rem);
+		line-height: 1.35;
+	}
+	.legal-prose > :global(h2:first-child),
+	.legal-prose > :global(h1:first-child + h2) {
+		margin-block-start: 0;
+		padding-block-start: 0;
+		border-block-start: 0;
+	}
+	.legal-prose :global(table),
+	.legal-prose :global(pre) {
+		display: block;
+		max-inline-size: 100%;
+		overflow-x: auto;
+	}
+	.legal-related {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin-block-start: clamp(1.15rem, 3vi, 2rem);
+		padding: 1rem;
+		border: 1px solid var(--legal-border);
+		border-radius: 0.65rem;
+		background: var(--legal-surface);
+		color: var(--foreground);
+		font-weight: 650;
+	}
+	.legal-related:is(:hover, :focus-visible) {
+		border-color: var(--primary-link);
+		color: var(--primary-link);
+	}
+	.legal-related span {
+		flex: 1;
+	}
+	@media (min-width: 54rem) {
+		.legal-reading.has-contents {
+			grid-template-columns: minmax(13rem, 0.34fr) minmax(0, 1fr);
 		}
-	</header>
-	<div class="prose">
-		<slot />
-	</div>
-</ContentLayout>
+		.legal-contents {
+			position: sticky;
+			inset-block-start: 6rem;
+			max-block-size: calc(100dvh - 7rem);
+			overflow-y: auto;
+		}
+		.has-contents .legal-column {
+			margin-inline-start: 0;
+		}
+	}
+</style>

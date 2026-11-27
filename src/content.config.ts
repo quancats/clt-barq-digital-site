@@ -1,5 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { z } from 'astro/zod';
+import { locales } from './i18n/config';
 import { contentSchemas } from './lib/content/schemas';
 
 function localLoader(name: keyof typeof contentSchemas) {
@@ -15,6 +17,24 @@ function localLoader(name: keyof typeof contentSchemas) {
 }
 
 export const collections = {
+	review: defineCollection({
+		loader: glob({ base: './src/content/review', pattern: '**/*.md' }),
+		schema: z.strictObject({
+			id: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+			translationKey: z.string().min(1),
+			locale: z.enum(locales),
+			route: z.string().startsWith('/').optional(),
+			section: z.string().min(1),
+			title: z.string().min(1),
+			description: z.string().min(1).optional(),
+			status: z.literal('draft'),
+			reviewStatus: z.enum(['review', 'review-service', 'review-solution', 'review-industry', 'review-editorial', 'hold-legal', 'hold-until-launch']),
+			seoTitle: z.string().min(1).optional(),
+			seoDescription: z.string().min(1).optional(),
+			indexableAfterApproval: z.boolean(),
+			sortOrder: z.number().int().nonnegative(),
+		}),
+	}),
 	pages: defineCollection({ loader: localLoader('pages'), schema: contentSchemas.pages }),
 	products: defineCollection({ loader: localLoader('products'), schema: contentSchemas.products }),
 	services: defineCollection({ loader: localLoader('services'), schema: contentSchemas.services }),
